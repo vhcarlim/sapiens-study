@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Imported activities (Duolingo/TryHackMe public profiles via `src/lib/sync.functions.ts`) are diffed against `import_snapshots` and inserted as `status='pending'`; only approved rows feed the dashboard. Why: user wants review before anything counts, and no credentials are stored.
