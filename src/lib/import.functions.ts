@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Input = z.object({
   text: z.string().trim().min(1).max(30000),
+  track_id: z.string().uuid(),
   source_id: z.string().uuid().nullable(),
   default_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
@@ -16,15 +17,18 @@ export const importPastedText = createServerFn({ method: "POST" })
   .inputValidator((d) => Input.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    const { data: track, error: trackError } = await supabase.from("study_tracks").select("id").eq("id", data.track_id).eq("archived", false).single();
+    if (trackError || !track) throw new Error("Trilha indisponível");
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("IA não configurada");
 
     const [{ data: skills }, { data: source }] = await Promise.all([
-      supabase.from("skills").select("id,name"),
+      supabase.from("skills").select("id,name").eq("track_id", data.track_id),
       data.source_id
-        ? supabase.from("sources").select("name").eq("id", data.source_id).maybeSingle()
+        ? supabase.from("sources").select("name").eq("id", data.source_id).eq("track_id", data.track_id).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
+    if (data.source_id && !source) throw new Error("Fonte indisponível nesta trilha");
     const skillNames = (skills ?? []).map((s) => s.name);
 
     const system = `Você extrai atividades de estudo de textos colados (históricos, listas de aulas, JSON, CSV) de plataformas como ${source?.name ?? "Alura, Coursera, TryHackMe, PortSwigger, Duolingo"}.
@@ -136,6 +140,7 @@ skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo 
       xp: clampInt(a.xp, 10000000),
       notes: ["Importado por texto colado", a.notes].filter(Boolean).join(" · ").slice(0, 2000),
       source_id: data.source_id,
+      track_id: data.track_id,
       status: "pending",
     }));
     const { data: inserted, error } = await supabase.from("activities").insert(rows).select("id");
@@ -143,8 +148,8 @@ skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo 
 
     const byName = new Map((skills ?? []).map((s) => [s.name.toLowerCase(), s.id]));
     const links = inserted.flatMap((row, i) =>
-      [...new Set((items[i]?.skills ?? []).map((n) => byName.get(String(n).toLowerCase())).filter(Boolean))].map(
-        (skill_id) => ({ activity_id: row.id, skill_id: skill_id! }),
+      [...new Set((items[i]?.skills ?? []).map((n) => byName.get(String(n).toLowerCase())).filter((id): id is string => typeof id === "string"))].map(
+        (skill_id) => ({ activity_id: row.id, skill_id }),
       ),
     );
     if (links.length) await supabase.from("activity_skills").insert(links);

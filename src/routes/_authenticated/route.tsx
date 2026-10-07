@@ -1,3 +1,5 @@
+import { TrackProvider, useTrack } from "@/lib/tracks";
+import { TrackSelector } from "@/components/TrackSelector";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus, Wand2 } from "lucide-react";
@@ -27,9 +29,15 @@ const nav = [
 ] as const;
 
 function Layout() {
+  const { user } = Route.useRouteContext();
+  return <TrackProvider userId={user.id}><TrackLayout /></TrackProvider>;
+}
+
+function TrackLayout() {
+  const { trackId, track, loading, error } = useTrack();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data: pending } = useQuery(activitiesQuery("pending"));
+  const { data: pending } = useQuery(activitiesQuery("pending", trackId));
   const [open, setOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
 
@@ -60,13 +68,14 @@ function Layout() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-track-color={track?.color ?? "green"}>
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
           <Link to="/dashboard" className="font-mono text-sm font-bold text-primary">
             xp.log
           </Link>
-          <nav className="flex flex-1 gap-1 overflow-x-auto">
+          <TrackSelector />
+          <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1">
             {nav.map((n) => (
               <Link
                 key={n.to}
@@ -84,10 +93,10 @@ function Layout() {
               </Link>
             ))}
           </nav>
-          <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)} title="Importar colando texto (Ctrl/⌘ + I)">
+          <Button size="sm" variant="outline" disabled={!trackId} onClick={() => setPasteOpen(true)} title="Importar colando texto (Ctrl/⌘ + I)">
             <Wand2 className="size-4" /> <span className="hidden md:inline">Colar</span>
           </Button>
-          <Button size="sm" onClick={() => setOpen(true)} title="Registro rápido (Ctrl/⌘ + K)">
+          <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)} title="Registro rápido (Ctrl/⌘ + K)">
             <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
             <kbd className="ml-1 hidden rounded border border-primary-foreground/30 px-1 font-mono text-[10px] lg:inline">⌘K</kbd>
           </Button>
@@ -97,10 +106,12 @@ function Layout() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <Outlet />
+        {loading ? <p className="text-muted-foreground">Carregando trilhas…</p> : error ? <p className="text-destructive">Não foi possível carregar suas trilhas. Tente recarregar a página.</p> : trackId ? <div key={trackId} className="border-t-2 border-track-accent pt-6"><Outlet /></div> : <div className="py-16 text-center"><LayersEmpty /></div>}
       </main>
-      <ActivityDialog open={open} onOpenChange={setOpen} />
-      <PasteImportDialog open={pasteOpen} onOpenChange={setPasteOpen} />
+      <ActivityDialog key={`activity-${trackId}`} open={open && !!trackId} onOpenChange={setOpen} />
+      <PasteImportDialog key={`paste-${trackId}`} open={pasteOpen && !!trackId} onOpenChange={setPasteOpen} />
     </div>
   );
 }
+
+function LayersEmpty() { return <><h1 className="text-2xl font-bold">Nenhuma trilha ativa</h1><p className="mt-2 text-muted-foreground">Crie uma trilha ou restaure uma trilha arquivada.</p></>; }

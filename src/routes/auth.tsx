@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Entrar — XP Log" },
       { name: "description", content: "Acesse seu painel pessoal de evolução nos estudos." },
       { property: "og:title", content: "Entrar — XP Log" },

@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -39,8 +40,9 @@ export function ActivityDialog({
   approveOnSave?: boolean;
 }) {
   const qc = useQueryClient();
-  const { data: sources = [] } = useQuery(sourcesQuery);
-  const { data: skills = [] } = useQuery(skillsQuery);
+  const { trackId, track } = useTrack();
+  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
+  const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const [f, setF] = useState({
     source_id: "",
     date: todayStr(),
@@ -71,12 +73,13 @@ export function ActivityDialog({
         skill_ids: activity.activity_skills.map((s) => s.skill_id),
       });
     } else {
-      setF((p) => ({ ...p, title: "", notes: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
+      setF((p) => ({ ...p, source_id: "", title: "", notes: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
     }
-  }, [open, activity]);
+  }, [open, activity, trackId]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!trackId || (activity && activity.track_id !== trackId)) return;
     const minutes = (parseInt(f.hours) || 0) * 60 + (parseInt(f.mins) || 0);
     const parsed = schema.safeParse({
       title: f.title,
@@ -90,6 +93,7 @@ export function ActivityDialog({
     setBusy(true);
     try {
       await saveActivity({
+        track_id: trackId,
         id: activity?.id,
         source_id: f.source_id || null,
         type: f.type,
@@ -120,6 +124,7 @@ export function ActivityDialog({
           <DialogTitle>
             {approveOnSave ? "Revisar e aprovar" : activity ? "Editar atividade" : "Registrar atividade"}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground">{track?.name}</p>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-2">

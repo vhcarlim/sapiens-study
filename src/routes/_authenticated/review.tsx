@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -10,15 +11,16 @@ import { ActivityDialog } from "@/components/ActivityDialog";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/review")({
-  head: () => ({ meta: [{ title: "Revisão — XP Log" }] }),
+  head: () => ({ meta: [{ title: "Revisão — XP Log" }, { name: "description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:title", content: "Revisão — XP Log" }, { property: "og:description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: ReviewPage,
 });
 
 function ReviewPage() {
+  const { trackId, track } = useTrack();
   const qc = useQueryClient();
-  const { data: items = [] } = useQuery(activitiesQuery("pending"));
-  const { data: sources = [] } = useQuery(sourcesQuery);
-  const { data: skills = [] } = useQuery(skillsQuery);
+  const { data: items = [] } = useQuery(activitiesQuery("pending", trackId));
+  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
+  const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const [editing, setEditing] = useState<Activity | null>(null);
 
   async function setStatus(ids: string[], status: "approved" | "rejected") {

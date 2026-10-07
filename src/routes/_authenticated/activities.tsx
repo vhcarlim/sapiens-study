@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -11,15 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/activities")({
-  head: () => ({ meta: [{ title: "Atividades — XP Log" }] }),
+  head: () => ({ meta: [{ title: "Atividades — XP Log" }, { name: "description", content: "Consulte e edite as atividades da sua trilha de estudos." }, { property: "og:title", content: "Atividades — XP Log" }, { property: "og:description", content: "Consulte e edite as atividades da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: ActivitiesPage,
 });
 
 function ActivitiesPage() {
+  const { trackId, track } = useTrack();
   const qc = useQueryClient();
-  const { data: items = [] } = useQuery(activitiesQuery("approved"));
-  const { data: sources = [] } = useQuery(sourcesQuery);
-  const { data: skills = [] } = useQuery(skillsQuery);
+  const { data: items = [] } = useQuery(activitiesQuery("approved", trackId));
+  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
+  const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const [editing, setEditing] = useState<Activity | null>(null);
   const [q, setQ] = useState("");
   const filtered = useMemo(
