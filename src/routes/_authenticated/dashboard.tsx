@@ -26,7 +26,7 @@ import {
   YAxis,
 } from "recharts";
 import { Award, Clock, Flame, Layers } from "lucide-react";
-import { type Activity, activitiesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
+import { type Activity, activitiesQuery, fmtMinutes, levelInfo, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
 
@@ -197,18 +197,34 @@ function Dashboard() {
               <p className="text-sm text-muted-foreground">Crie ao menos 3 competências.</p>
             )}
           </div>
-          <div className="mt-2 space-y-2">
-            {skillData.map((s) => (
-              <div key={s.name} className="text-sm">
-                <div className="flex justify-between">
-                  <span>{s.name}</span>
-                  <span className="font-mono text-muted-foreground">{fmtMinutes(s.minutes)} · {s.quantity}</span>
+          <div className="mt-2 space-y-3">
+            {skillData.map((s) => {
+              const li = levelInfo(s.minutes, s.quantity);
+              return (
+                <div key={s.name} className="text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary-foreground"
+                        style={{ background: s.color }}
+                      >
+                        NV {li.level}
+                      </span>
+                      <span>{s.name}</span>
+                      <span className="text-xs text-muted-foreground">{li.name}</span>
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">{li.xp} XP</span>
+                  </div>
+                  <div className="mt-1 h-2 rounded-full bg-secondary">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${li.progress * 100}%`, background: s.color }} />
+                  </div>
+                  <div className="mt-0.5 flex justify-between font-mono text-[10px] text-muted-foreground">
+                    <span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span>
+                    <span>{li.maxed ? "nível máximo" : `faltam ${fmtMinutes(li.minutesToNext)} p/ NV ${li.level + 1}`}</span>
+                  </div>
                 </div>
-                <div className="mt-1 h-1.5 rounded-full bg-secondary">
-                  <div className="h-full rounded-full" style={{ width: `${(s.minutes / maxSkill) * 100}%`, background: s.color }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
