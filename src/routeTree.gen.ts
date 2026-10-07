@@ -18,6 +18,7 @@ import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSkillsRouteImport } from './routes/_authenticated/skills'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
 import { Route as ApiReviewChatRouteImport } from './routes/api/review-chat'
+import { Route as AuthenticatedArguicaoThreadIdRouteImport } from './routes/_authenticated/arguicao.$threadId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,6 +64,12 @@ const ApiReviewChatRoute = ApiReviewChatRouteImport.update({
   path: '/api/review-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedArguicaoThreadIdRoute =
+  AuthenticatedArguicaoThreadIdRouteImport.update({
+    id: '/arguicao/$threadId',
+    path: '/arguicao/$threadId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
+  '/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
+  '/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/skills': typeof AuthenticatedSkillsRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
+  '/_authenticated/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/skills'
     | '/sources'
     | '/api/review-chat'
+    | '/arguicao/$threadId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/skills'
     | '/sources'
     | '/api/review-chat'
+    | '/arguicao/$threadId'
   id:
     | '__root__'
     | '/'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/skills'
     | '/_authenticated/sources'
     | '/api/review-chat'
+    | '/_authenticated/arguicao/$threadId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReviewChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/arguicao/$threadId': {
+      id: '/_authenticated/arguicao/$threadId'
+      path: '/arguicao/$threadId'
+      fullPath: '/arguicao/$threadId'
+      preLoaderRoute: typeof AuthenticatedArguicaoThreadIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -211,6 +231,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedSkillsRoute: typeof AuthenticatedSkillsRoute
   AuthenticatedSourcesRoute: typeof AuthenticatedSourcesRoute
+  AuthenticatedArguicaoThreadIdRoute: typeof AuthenticatedArguicaoThreadIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -219,6 +240,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedSkillsRoute: AuthenticatedSkillsRoute,
   AuthenticatedSourcesRoute: AuthenticatedSourcesRoute,
+  AuthenticatedArguicaoThreadIdRoute: AuthenticatedArguicaoThreadIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
