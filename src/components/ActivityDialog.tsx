@@ -26,6 +26,7 @@ const schema = z.object({
   minutes: z.number().int().min(0).max(100000),
   xp: z.number().int().min(0).max(10000000),
   notes: z.string().max(2000),
+  knowledge_summary: z.string().trim().max(12000, "O resumo deve ter até 12.000 caracteres"),
 });
 
 export function ActivityDialog({
@@ -53,6 +54,7 @@ export function ActivityDialog({
     mins: "30",
     xp: "0",
     notes: "",
+    knowledge_summary: "",
     skill_ids: [] as string[],
   });
   const [busy, setBusy] = useState(false);
@@ -70,10 +72,11 @@ export function ActivityDialog({
         mins: String(activity.minutes % 60),
         xp: String(activity.xp),
         notes: activity.notes ?? "",
+        knowledge_summary: activity.knowledge_summary ?? "",
         skill_ids: activity.activity_skills.map((s) => s.skill_id),
       });
     } else {
-      setF((p) => ({ ...p, source_id: "", title: "", notes: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
+      setF((p) => ({ ...p, source_id: "", title: "", notes: "", knowledge_summary: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
     }
   }, [open, activity, trackId]);
 
@@ -88,6 +91,7 @@ export function ActivityDialog({
       minutes,
       xp: parseInt(f.xp) || 0,
       notes: f.notes,
+      knowledge_summary: f.knowledge_summary,
     });
     if (!parsed.success) return void toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos");
     setBusy(true);
@@ -100,6 +104,7 @@ export function ActivityDialog({
         skill_ids: f.skill_ids,
         ...parsed.data,
         notes: parsed.data.notes || null,
+        knowledge_summary: parsed.data.knowledge_summary || null,
         ...(approveOnSave || !activity ? { status: "approved" } : {}),
       });
       toast.success(approveOnSave ? "Aprovada e adicionada ao painel" : "Atividade salva");
@@ -198,6 +203,11 @@ export function ActivityDialog({
                 );
               })}
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="knowledge-summary">O que aprendi / Resumo do conhecimento</Label>
+            <Textarea id="knowledge-summary" rows={4} maxLength={12000} placeholder="Com minhas palavras, aprendi que…" value={f.knowledge_summary} onChange={(e) => setF({ ...f, knowledge_summary: e.target.value })} />
+            <span className="text-xs text-muted-foreground">Opcional · {f.knowledge_summary.length}/12.000</span>
           </div>
           <div className="space-y-2">
             <Label>Notas</Label>

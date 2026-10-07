@@ -67,6 +67,7 @@ export type ActivityInput = {
   minutes: number;
   xp: number;
   notes: string | null;
+  knowledge_summary?: string | null;
   skill_ids: string[];
   status?: string;
 };
