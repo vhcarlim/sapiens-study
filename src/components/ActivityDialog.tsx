@@ -109,6 +109,7 @@ export function ActivityDialog({
       });
       toast.success(approveOnSave ? "Aprovada e adicionada ao painel" : "Atividade salva");
       qc.invalidateQueries({ queryKey: ["activities"] });
+      qc.invalidateQueries({ queryKey: ["review-threads", trackId] });
       onOpenChange(false);
     } catch {
       toast.error("Não foi possível salvar");

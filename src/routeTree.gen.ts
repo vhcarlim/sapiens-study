@@ -17,6 +17,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedSkillsRouteImport } from './routes/_authenticated/skills'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
+import { Route as ApiReviewChatRouteImport } from './routes/api/review-chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -57,6 +58,11 @@ const AuthenticatedSourcesRoute = AuthenticatedSourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiReviewChatRoute = ApiReviewChatRouteImport.update({
+  id: '/api/review-chat',
+  path: '/api/review-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/review': typeof AuthenticatedReviewRoute
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
+  '/api/review-chat': typeof ApiReviewChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/review': typeof AuthenticatedReviewRoute
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
+  '/api/review-chat': typeof ApiReviewChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/skills': typeof AuthenticatedSkillsRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
+  '/api/review-chat': typeof ApiReviewChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/review'
     | '/skills'
     | '/sources'
+    | '/api/review-chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/review'
     | '/skills'
     | '/sources'
+    | '/api/review-chat'
   id:
     | '__root__'
     | '/'
@@ -116,12 +127,14 @@ export interface FileRouteTypes {
     | '/_authenticated/review'
     | '/_authenticated/skills'
     | '/_authenticated/sources'
+    | '/api/review-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiReviewChatRoute: typeof ApiReviewChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -182,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSourcesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/review-chat': {
+      id: '/api/review-chat'
+      path: '/api/review-chat'
+      fullPath: '/api/review-chat'
+      preLoaderRoute: typeof ApiReviewChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiReviewChatRoute: ApiReviewChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
