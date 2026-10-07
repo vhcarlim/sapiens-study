@@ -1,4 +1,4 @@
-- [ ] Criar trilhas e migrar os estudos existentes sem perda de dados.
-- [ ] Adicionar seletor, criação, edição, arquivamento e exclusão com cor própria.
-- [ ] Isolar consultas, registros, importações e métricas por trilha.
-- [ ] Verificar o fluxo completo e a compilação.
+- [x] Criar trilhas e migrar os estudos existentes sem perda de dados.
+- [x] Adicionar seletor, criação, edição, arquivamento e exclusão com cor própria.
+- [x] Isolar consultas, registros, importações e métricas por trilha.
+- [x] Verificar o fluxo completo e a compilação.
