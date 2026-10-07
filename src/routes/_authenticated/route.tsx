@@ -1,11 +1,12 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus } from "lucide-react";
-import { useState } from "react";
+import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus, Wand2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
+import { PasteImportDialog } from "@/components/PasteImportDialog";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -30,6 +31,26 @@ function Layout() {
   const qc = useQueryClient();
   const { data: pending } = useQuery(activitiesQuery("pending"));
   const [open, setOpen] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+
+  // Ctrl/Cmd+K = quick log, Ctrl/Cmd+I = paste import
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "k") {
+        e.preventDefault();
+        setPasteOpen(false);
+        setOpen((o) => !o);
+      } else if (k === "i") {
+        e.preventDefault();
+        setOpen(false);
+        setPasteOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -63,8 +84,12 @@ function Layout() {
               </Link>
             ))}
           </nav>
-          <Button size="sm" onClick={() => setOpen(true)}>
+          <Button size="sm" variant="outline" onClick={() => setPasteOpen(true)} title="Importar colando texto (Ctrl/⌘ + I)">
+            <Wand2 className="size-4" /> <span className="hidden md:inline">Colar</span>
+          </Button>
+          <Button size="sm" onClick={() => setOpen(true)} title="Registro rápido (Ctrl/⌘ + K)">
             <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
+            <kbd className="ml-1 hidden rounded border border-primary-foreground/30 px-1 font-mono text-[10px] lg:inline">⌘K</kbd>
           </Button>
           <Button size="icon" variant="ghost" onClick={signOut} aria-label="Sair">
             <LogOut className="size-4" />
@@ -75,6 +100,7 @@ function Layout() {
         <Outlet />
       </main>
       <ActivityDialog open={open} onOpenChange={setOpen} />
+      <PasteImportDialog open={pasteOpen} onOpenChange={setPasteOpen} />
     </div>
   );
 }
