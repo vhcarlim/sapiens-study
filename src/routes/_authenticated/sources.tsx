@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,12 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/sources")({
-  head: () => ({ meta: [{ title: "Fontes — XP Log" }] }),
+  head: () => ({ meta: [{ title: "Fontes — XP Log" }, { name: "description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:title", content: "Fontes — XP Log" }, { property: "og:description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SourcesPage,
 });
 
 function SourcesPage() {
-  const { data: sources = [] } = useQuery(sourcesQuery);
+  const { trackId, track } = useTrack();
+  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#22d3ee");
@@ -28,7 +30,7 @@ function SourcesPage() {
     e.preventDefault();
     const n = name.trim().slice(0, 60);
     if (!n) return;
-    const { error } = await supabase.from("sources").insert({ name: n, color });
+    const { error } = await supabase.from("sources").insert({ name: n, color, track_id: trackId });
     if (error) return void toast.error("Falha ao criar");
     setName("");
     qc.invalidateQueries({ queryKey: ["sources"] });
@@ -69,6 +71,7 @@ function SourcesPage() {
 }
 
 function SourceCard({ s }: { s: Source }) {
+  const { trackId } = useTrack();
   const qc = useQueryClient();
   const sync = useServerFn(syncSource);
   const [name, setName] = useState(s.name);
@@ -86,7 +89,7 @@ function SourceCard({ s }: { s: Source }) {
     setSyncing(true);
     try {
       if (username.trim() !== (s.username ?? "")) await update({ username: username.trim().slice(0, 80) });
-      const r = await sync({ data: { sourceId: s.id, today: todayStr() } });
+      const r = await sync({ data: { sourceId: s.id, trackId, today: todayStr() } });
       r.ok ? toast.success(r.message) : toast.error(r.message);
       qc.invalidateQueries();
     } catch {

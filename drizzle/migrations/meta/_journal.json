@@ -8,6 +8,27 @@
       "when": 1791222329031,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791378556507,
+      "tag": "0001_study_tracks_isolation",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791378700865,
+      "tag": "0002_validate_track_relationships_by_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791378907175,
+      "tag": "0003_skill_names_unique_per_track",
+      "breakpoints": true
     }
   ]
 }

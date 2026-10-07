@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "XP Log — todas as suas evoluções num só lugar" },
       { name: "description", content: "Painel pessoal que soma lições, salas, cursos e certificados em gráficos diários, mensais e anuais." },
       { property: "og:title", content: "XP Log — todas as suas evoluções num só lugar" },

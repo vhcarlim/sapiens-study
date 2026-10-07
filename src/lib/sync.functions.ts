@@ -100,7 +100,7 @@ function diffTryHackMe(prev: ThmSnap, next: ThmSnap): NewActivity[] {
 export const syncSource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({ sourceId: z.string().uuid(), today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(d),
+    z.object({ trackId: z.string().uuid(), sourceId: z.string().uuid(), today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -108,8 +108,11 @@ export const syncSource = createServerFn({ method: "POST" })
       .from("sources")
       .select("*")
       .eq("id", data.sourceId)
+      .eq("track_id", data.trackId)
       .single();
     if (error || !source) return { ok: false, message: "Fonte não encontrada", created: 0 };
+    const { data: track } = await supabase.from("study_tracks").select("id").eq("id", data.trackId).eq("archived", false).maybeSingle();
+    if (!track) return { ok: false, message: "Trilha indisponível", created: 0 };
     if (!source.username) return { ok: false, message: "Informe o nome de usuário público primeiro.", created: 0 };
     if (source.kind !== "duolingo" && source.kind !== "tryhackme")
       return { ok: false, message: "Esta fonte é manual.", created: 0 };
@@ -140,12 +143,12 @@ export const syncSource = createServerFn({ method: "POST" })
 
     let created = 0;
     if (items.length) {
-      const { data: skills } = await supabase.from("skills").select("id,name");
+      const { data: skills } = await supabase.from("skills").select("id,name").eq("track_id", data.trackId);
       for (const it of items) {
         const { skill, ...row } = it;
         const { data: ins, error: insErr } = await supabase
           .from("activities")
-          .insert({ ...row, source_id: source.id, date: data.today, status: "pending", user_id: userId })
+          .insert({ ...row, source_id: source.id, track_id: data.trackId, date: data.today, status: "pending", user_id: userId })
           .select("id")
           .single();
         if (insErr || !ins) continue;

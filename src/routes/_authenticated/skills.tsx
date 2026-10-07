@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -9,12 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/skills")({
-  head: () => ({ meta: [{ title: "Competências — XP Log" }] }),
+  head: () => ({ meta: [{ title: "Competências — XP Log" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — XP Log" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SkillsPage,
 });
 
 function SkillsPage() {
-  const { data: skills = [] } = useQuery(skillsQuery);
+  const { trackId, track } = useTrack();
+  const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#a3e635");
@@ -23,7 +25,7 @@ function SkillsPage() {
     e.preventDefault();
     const n = name.trim().slice(0, 60);
     if (!n) return;
-    const { error } = await supabase.from("skills").insert({ name: n, color });
+    const { error } = await supabase.from("skills").insert({ name: n, color, track_id: trackId });
     if (error) return void toast.error(error.code === "23505" ? "Já existe" : "Falha ao criar");
     setName("");
     qc.invalidateQueries({ queryKey: ["skills"] });

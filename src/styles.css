@@ -28,6 +28,8 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-warning: var(--warning);
+  --color-track-accent: var(--track-accent);
+  --color-track-contrast: var(--track-contrast);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -48,6 +50,8 @@
 }
 
 :root {
+  --track-accent: oklch(0.82 0.19 145);
+  --track-contrast: oklch(0.16 0.012 200);
   --radius: 0.5rem;
   --background: oklch(0.16 0.012 200);
   --foreground: oklch(0.95 0.01 160);
@@ -83,6 +87,13 @@
   --sidebar-border: oklch(0.3 0.016 200);
   --sidebar-ring: oklch(0.88 0.2 128);
 }
+
+[data-track-color="green"] { --track-accent: oklch(0.82 0.19 145); }
+[data-track-color="blue"] { --track-accent: oklch(0.73 0.16 255); }
+[data-track-color="cyan"] { --track-accent: oklch(0.8 0.13 200); }
+[data-track-color="amber"] { --track-accent: oklch(0.82 0.16 80); }
+[data-track-color="rose"] { --track-accent: oklch(0.76 0.17 10); }
+[data-track-color="violet"] { --track-accent: oklch(0.75 0.16 300); }
 
 @layer base {
   * {

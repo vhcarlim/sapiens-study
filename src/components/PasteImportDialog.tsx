@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,19 +15,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export function PasteImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const qc = useQueryClient();
+  const { trackId, track } = useTrack();
   const navigate = useNavigate();
   const run = useServerFn(importPastedText);
-  const { data: sources = [] } = useQuery(sourcesQuery);
+  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
   const [text, setText] = useState("");
   const [sourceId, setSourceId] = useState("none");
   const [busy, setBusy] = useState(false);
 
   async function submit() {
+    if (!trackId) return;
     if (!text.trim()) return void toast.error("Cole algum texto primeiro");
     setBusy(true);
     try {
       const r = await run({
-        data: { text: text.slice(0, 30000), source_id: sourceId === "none" ? null : sourceId, default_date: todayStr() },
+        data: { track_id: trackId, text: text.slice(0, 30000), source_id: sourceId === "none" ? null : sourceId, default_date: todayStr() },
       });
       if (!r.count) toast.info("Nenhuma atividade encontrada no texto.");
       else {

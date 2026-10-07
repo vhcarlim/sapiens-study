@@ -1,3 +1,4 @@
+import { useTrack } from "@/lib/tracks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -31,7 +32,7 @@ import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Painel — XP Log" }] }),
+  head: () => ({ meta: [{ title: "Painel — XP Log" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — XP Log" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Dashboard,
 });
 
@@ -39,9 +40,10 @@ type Range = "week" | "month" | "year";
 type Metric = "quantity" | "minutes";
 
 function Dashboard() {
-  const { data: acts = [], isLoading } = useQuery(activitiesQuery("approved"));
-  const { data: sources = [] } = useQuery(sourcesQuery);
-  const { data: skills = [] } = useQuery(skillsQuery);
+  const { trackId, track } = useTrack();
+  const { data: acts = [], isLoading } = useQuery(activitiesQuery("approved", trackId));
+  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
+  const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const [range, setRange] = useState<Range>("week");
   const [metric, setMetric] = useState<Metric>("quantity");
   const [selected, setSelected] = useState<string>(format(new Date(), "yyyy-MM-dd"));
@@ -118,22 +120,22 @@ function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="font-mono text-sm text-primary">// {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
-        <h1 className="mt-1 text-3xl font-bold">Sua evolução</h1>
+        <p className="font-mono text-sm text-track-accent">// {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+        <h1 className="mt-1 text-3xl font-bold">{track?.name}</h1>
       </div>
 
       {(() => {
         const g = levelInfo(stats.minutes, stats.items);
         return (
-          <div className="rounded-xl border border-primary/50 bg-card p-4">
+          <div className="rounded-xl border border-track-accent/50 bg-card p-4">
             <div className="flex items-center justify-between">
               <span className="font-mono text-sm">
-                <span className="text-primary font-bold">NÍVEL {g.level}</span> · {g.name}
+                <span className="text-track-accent font-bold">NÍVEL {g.level}</span> · {g.name}
               </span>
               <span className="font-mono text-sm text-muted-foreground">{g.xp} XP</span>
             </div>
             <div className="mt-2 h-2.5 rounded-full bg-secondary">
-              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${g.progress * 100}%` }} />
+              <div className="h-full rounded-full bg-track-accent transition-all" style={{ width: `${g.progress * 100}%` }} />
             </div>
             <p className="mt-1 text-right font-mono text-[10px] text-muted-foreground">
               {g.maxed ? "nível máximo" : `faltam ${fmtMinutes(g.minutesToNext)} para o nível ${g.level + 1}`}
@@ -210,7 +212,7 @@ function Dashboard() {
                 <RadarChart data={skillData}>
                   <PolarGrid stroke="var(--border)" />
                   <PolarAngleAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
-                  <Radar dataKey="minutes" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.35} />
+                  <Radar dataKey="minutes" stroke="var(--track-accent)" fill="var(--track-accent)" fillOpacity={0.35} />
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
@@ -225,7 +227,7 @@ function Dashboard() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <span
-                        className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary-foreground"
+                        className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-bold text-track-accent-foreground"
                         style={{ background: s.color }}
                       >
                         NV {li.level}
@@ -265,9 +267,9 @@ function Dashboard() {
 
 function Stat({ icon: Icon, label, value, accent }: { icon: typeof Flame; label: string; value: string; accent?: boolean }) {
   return (
-    <div className={cn("rounded-xl border bg-card p-4", accent && "border-primary/50")}>
+    <div className={cn("rounded-xl border bg-card p-4", accent && "border-track-accent/50")}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className={cn("size-4", accent && "text-primary")} /> {label}
+        <Icon className={cn("size-4", accent && "text-track-accent")} /> {label}
       </div>
       <div className="mt-2 font-mono text-2xl font-bold">{value}</div>
     </div>
@@ -283,7 +285,7 @@ function Seg<T extends string>({ value, onChange, opts }: { value: T; onChange: 
           onClick={() => onChange(v)}
           className={cn(
             "rounded px-2.5 py-1 text-xs transition-colors",
-            value === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            value === v ? "bg-track-accent text-track-accent-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {l}
@@ -338,7 +340,7 @@ function Heatmap({
                   onClick={() => onSelect(k)}
                   className={cn(
                     "size-3 rounded-[3px]",
-                    lv === 0 ? "bg-foreground" : "bg-primary",
+                    lv === 0 ? "bg-foreground" : "bg-track-accent",
                     selected === k && "ring-2 ring-accent ring-offset-1 ring-offset-card",
                   )}
                   style={{ opacity: lv === 0 ? 0.07 : opacity[lv] }}
@@ -351,7 +353,7 @@ function Heatmap({
       <div className="mt-2 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
         menos
         {[0, 1, 2, 3, 4].map((l) => (
-          <span key={l} className={cn("size-3 rounded-[3px]", l ? "bg-primary" : "bg-foreground")} style={{ opacity: l ? opacity[l] : 0.07 }} />
+          <span key={l} className={cn("size-3 rounded-[3px]", l ? "bg-track-accent" : "bg-foreground")} style={{ opacity: l ? opacity[l] : 0.07 }} />
         ))}
         mais
       </div>
