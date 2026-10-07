@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/activities")({
-  head: () => ({ meta: [{ title: "Atividades — XP Log" }, { name: "description", content: "Consulte e edite as atividades da sua trilha de estudos." }, { property: "og:title", content: "Atividades — XP Log" }, { property: "og:description", content: "Consulte e edite as atividades da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Atividades — sapiens" }, { name: "description", content: "Consulte e edite as atividades da sua trilha de estudos." }, { property: "og:title", content: "Atividades — sapiens" }, { property: "og:description", content: "Consulte e edite as atividades da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: ActivitiesPage,
 });
 

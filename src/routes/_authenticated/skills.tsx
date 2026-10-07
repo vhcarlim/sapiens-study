@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/skills")({
-  head: () => ({ meta: [{ title: "Competências — XP Log" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — XP Log" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Competências — sapiens" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — sapiens" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SkillsPage,
 });
 

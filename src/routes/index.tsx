@@ -8,10 +8,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "XP Log — todas as suas evoluções num só lugar" },
-      { name: "description", content: "Painel pessoal que soma lições, salas, cursos e certificados em gráficos diários, mensais e anuais." },
-      { property: "og:title", content: "XP Log — todas as suas evoluções num só lugar" },
-      { property: "og:description", content: "Painel pessoal que soma lições, salas, cursos e certificados." },
+      { title: "sapiens — Centralize os seus estudos" },
+      { name: "description", content: "Reúna suas fontes de aprendizado, sua evolução diária e sua árvore de competências em um só lugar" },
+      { property: "og:title", content: "sapiens — Centralize os seus estudos" },
+      { property: "og:description", content: "Reúna suas fontes de aprendizado, sua evolução diária e sua árvore de competências em um só lugar" },
     ],
   }),
   component: Index,
@@ -29,13 +29,12 @@ function Index() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
-      <p className="font-mono text-sm text-primary">// xp.log</p>
+      <p className="font-mono text-sm text-primary">// sapiens</p>
       <h1 className="mt-4 max-w-3xl text-5xl font-bold leading-tight tracking-tight md:text-6xl">
-        Cada lição, sala e certificado <span className="text-primary">somando</span> num só painel.
+        Centralize os seus estudos e <span className="text-primary">domine</span> qualquer conhecimento.
       </h1>
       <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-        Duolingo, TryHackMe, Alura, Coursera, PortSwigger. Importe com segurança, revise antes de
-        contar e veja sua evolução dia a dia.
+        Reúna suas fontes de aprendizado, sua evolução diária e sua árvore de competências em um só lugar
       </p>
       <div className="mt-8 flex gap-3">
         <Button asChild size="lg">

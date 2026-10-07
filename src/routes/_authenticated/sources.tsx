@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/sources")({
-  head: () => ({ meta: [{ title: "Fontes — XP Log" }, { name: "description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:title", content: "Fontes — XP Log" }, { property: "og:description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Fontes — sapiens" }, { name: "description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:title", content: "Fontes — sapiens" }, { property: "og:description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SourcesPage,
 });
 

@@ -11,7 +11,7 @@ import { ActivityDialog } from "@/components/ActivityDialog";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/review")({
-  head: () => ({ meta: [{ title: "Revisão — XP Log" }, { name: "description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:title", content: "Revisão — XP Log" }, { property: "og:description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Revisão — sapiens" }, { name: "description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:title", content: "Revisão — sapiens" }, { property: "og:description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: ReviewPage,
 });
 

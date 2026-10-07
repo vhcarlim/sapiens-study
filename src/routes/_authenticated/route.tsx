@@ -77,7 +77,7 @@ function TrackLayout() {
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
           <Link to="/dashboard" className="font-mono text-sm font-bold text-primary">
-            xp.log
+            sapiens
           </Link>
           <TrackSelector />
           <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1">
