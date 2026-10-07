@@ -20,6 +20,7 @@ export type Database = {
           date: string
           external_key: string | null
           id: string
+          knowledge_summary: string | null
           minutes: number
           notes: string | null
           quantity: number
@@ -36,6 +37,7 @@ export type Database = {
           date?: string
           external_key?: string | null
           id?: string
+          knowledge_summary?: string | null
           minutes?: number
           notes?: string | null
           quantity?: number
@@ -52,6 +54,7 @@ export type Database = {
           date?: string
           external_key?: string | null
           id?: string
+          knowledge_summary?: string | null
           minutes?: number
           notes?: string | null
           quantity?: number
@@ -139,6 +142,199 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "sources"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_ai_access: {
+        Row: {
+          denied: boolean
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          denied?: boolean
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          denied?: boolean
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      review_results: {
+        Row: {
+          activity_id: string
+          created_at: string
+          feedback: string
+          id: string
+          mastery_delta: number
+          round_id: string
+          score: number
+          thread_id: string
+          track_id: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          feedback: string
+          id?: string
+          mastery_delta: number
+          round_id: string
+          score: number
+          thread_id: string
+          track_id: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          feedback?: string
+          id?: string
+          mastery_delta?: number
+          round_id?: string
+          score?: number
+          thread_id?: string
+          track_id?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_results_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_results_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "review_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_results_track_id_user_id_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      review_threads: {
+        Row: {
+          activity_id: string
+          busy_until: string | null
+          id: string
+          interval_days: number
+          last_score: number | null
+          messages: Json
+          next_review_at: string
+          question_open: boolean
+          round_id: string | null
+          stage: number
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          busy_until?: string | null
+          id?: string
+          interval_days?: number
+          last_score?: number | null
+          messages?: Json
+          next_review_at?: string
+          question_open?: boolean
+          round_id?: string | null
+          stage?: number
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          busy_until?: string | null
+          id?: string
+          interval_days?: number
+          last_score?: number | null
+          messages?: Json
+          next_review_at?: string
+          question_open?: boolean
+          round_id?: string | null
+          stage?: number
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_threads_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: true
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_threads_track_id_user_id_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      skill_mastery: {
+        Row: {
+          last_score: number | null
+          mastery: number
+          review_xp: number
+          reviews: number
+          skill_id: string
+          track_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_score?: number | null
+          mastery?: number
+          review_xp?: number
+          reviews?: number
+          skill_id: string
+          track_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_score?: number | null
+          mastery?: number
+          review_xp?: number
+          reviews?: number
+          skill_id?: string
+          track_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_mastery_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: true
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_mastery_track_id_user_id_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
           },
         ]
       }
@@ -259,7 +455,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_active_review: {
+        Args: { p_thread: string; p_user: string }
+        Returns: boolean
+      }
+      finish_active_review: {
+        Args: {
+          p_feedback: string
+          p_messages: Json
+          p_round: string
+          p_score: number
+          p_thread: string
+          p_user: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

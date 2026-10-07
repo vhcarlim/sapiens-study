@@ -13,3 +13,6 @@
 
 - Study tracks are owned by the authenticated user; all source, skill and activity queries and writes carry track_id, with per-track query keys and database relationship validation. Why: switching contexts must never mix study data.
 - TrackProvider owns global selection and mounts track content keyed by track ID; track colors are semantic CSS tokens. Why: local forms reset on switching and secondary accents preserve the existing brand.
+- Active-review threads use activity-specific page URLs, database UIMessage history, authenticated AI SDK streaming and AI Elements controls. Why: reloads preserve each activity's independent conversation.
+- Review scores are generated server-side from authoritative history; service-only atomic review completion deduplicates rounds and updates scheduling, mastery and XP together. Why: client messages cannot forge rewards and concurrent submissions cannot double-count.
+- Study time remains unchanged by reviews; review XP contributes to level progression, while evaluated mastery drives the radar. Why: demonstrated retention is distinct from time invested.

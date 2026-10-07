@@ -19,6 +19,7 @@ import {
   CartesianGrid,
   PolarAngleAxis,
   PolarGrid,
+  PolarRadiusAxis,
   Radar,
   RadarChart,
   ResponsiveContainer,
@@ -30,6 +31,7 @@ import { Award, Clock, Flame, Layers } from "lucide-react";
 import { type Activity, activitiesQuery, fmtMinutes, levelInfo, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
+import { masteryQuery, resultsQuery } from "@/lib/reviews";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — sapiens" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — sapiens" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -44,6 +46,9 @@ function Dashboard() {
   const { data: acts = [], isLoading } = useQuery(activitiesQuery("approved", trackId));
   const { data: sources = [] } = useQuery(sourcesQuery(trackId));
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
+  const { data: mastery = [] } = useQuery(masteryQuery(trackId));
+  const { data: reviewResults = [] } = useQuery(resultsQuery(trackId));
+  const reviewXp = reviewResults.reduce((total, r) => total + r.xp, 0);
   const [range, setRange] = useState<Range>("week");
   const [metric, setMetric] = useState<Metric>("quantity");
   const [selected, setSelected] = useState<string>(format(new Date(), "yyyy-MM-dd"));
@@ -101,17 +106,21 @@ function Dashboard() {
       skills
         .map((s) => {
           const list = acts.filter((a) => a.activity_skills.some((x) => x.skill_id === s.id));
+          const reviewed = mastery.find(m => m.skill_id === s.id);
           return {
             name: s.name,
             color: s.color,
             minutes: list.reduce((t, a) => t + a.minutes, 0),
             quantity: list.reduce((t, a) => t + a.quantity, 0),
+            mastery: reviewed?.mastery ?? 0,
+            reviewXp: reviewed?.review_xp ?? 0,
+            reviewed: !!reviewed,
+            fragile: reviewed?.last_score != null && reviewed.last_score < 70,
           };
         })
         .sort((a, b) => b.minutes - a.minutes),
-    [acts, skills],
+    [acts, skills, mastery],
   );
-  const maxSkill = Math.max(1, ...skillData.map((s) => s.minutes));
   const milestones = acts.filter((a) => a.type === "certificate" || a.type === "level").slice(0, 6);
   const dayList = byDay.get(selected) ?? [];
 
@@ -125,7 +134,7 @@ function Dashboard() {
       </div>
 
       {(() => {
-        const g = levelInfo(stats.minutes, stats.items);
+        const g = levelInfo(stats.minutes + reviewXp, stats.items);
         return (
           <div className="rounded-xl border border-track-accent/50 bg-card p-4">
             <div className="flex items-center justify-between">
@@ -205,14 +214,15 @@ function Dashboard() {
         </section>
 
         <section className="rounded-xl border bg-card p-5 lg:col-span-2">
-          <h2 className="mb-2 font-semibold">Competências</h2>
+          <h2 className="mb-2 font-semibold">Domínio das competências</h2>
           <div className="h-56">
             {skillData.length >= 3 ? (
               <ResponsiveContainer>
                 <RadarChart data={skillData}>
                   <PolarGrid stroke="var(--border)" />
                   <PolarAngleAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
-                  <Radar dataKey="minutes" stroke="var(--track-accent)" fill="var(--track-accent)" fillOpacity={0.35} />
+                  <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                  <Radar dataKey="mastery" name="Domínio" stroke="var(--track-accent)" fill="var(--track-accent)" fillOpacity={0.35} />
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
@@ -221,7 +231,7 @@ function Dashboard() {
           </div>
           <div className="mt-2 space-y-3">
             {skillData.map((s) => {
-              const li = levelInfo(s.minutes, s.quantity);
+              const li = levelInfo(s.minutes + s.reviewXp, s.quantity);
               return (
                 <div key={s.name} className="text-sm">
                   <div className="flex items-center justify-between gap-2">
@@ -244,6 +254,7 @@ function Dashboard() {
                     <span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span>
                     <span>{li.maxed ? "nível máximo" : `faltam ${fmtMinutes(li.minutesToNext)} p/ NV ${li.level + 1}`}</span>
                   </div>
+                  <p className={cn("mt-1 text-xs", s.fragile ? "text-warning" : "text-muted-foreground")}>{s.reviewed ? `${s.mastery}% de domínio${s.fragile ? " · Memória frágil" : ""}` : "Domínio ainda não avaliado"}</p>
                 </div>
               );
             })}
