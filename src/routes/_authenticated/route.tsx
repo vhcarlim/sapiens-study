@@ -41,6 +41,11 @@ function TrackLayout() {
   const [open, setOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
 
+  useEffect(() => {
+    setOpen(false);
+    setPasteOpen(false);
+  }, [trackId]);
+
   // Ctrl/Cmd+K = quick log, Ctrl/Cmd+I = paste import
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -80,6 +85,7 @@ function TrackLayout() {
               <Link
                 key={n.to}
                 to={n.to}
+                aria-label={n.label}
                 className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 activeProps={{ className: "bg-secondary !text-foreground" }}
               >
