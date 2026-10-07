@@ -19,32 +19,36 @@ export const typeLabel = (t: string) => ACTIVITY_TYPES.find((x) => x.value === t
 
 export const todayStr = () => format(new Date(), "yyyy-MM-dd");
 
-export const sourcesQuery = queryOptions({
-  queryKey: ["sources"],
+export const sourcesQuery = (trackId: string) => queryOptions({
+  queryKey: ["sources", trackId],
+  enabled: !!trackId,
   queryFn: async () => {
-    const { data, error } = await supabase.from("sources").select("*").order("created_at");
+    const { data, error } = await supabase.from("sources").select("*").eq("track_id", trackId).order("created_at");
     if (error) throw error;
     return data;
   },
 });
 
-export const skillsQuery = queryOptions({
-  queryKey: ["skills"],
+export const skillsQuery = (trackId: string) => queryOptions({
+  queryKey: ["skills", trackId],
+  enabled: !!trackId,
   queryFn: async () => {
-    const { data, error } = await supabase.from("skills").select("*").order("name");
+    const { data, error } = await supabase.from("skills").select("*").eq("track_id", trackId).order("name");
     if (error) throw error;
     return data;
   },
 });
 
-export const activitiesQuery = (status: "approved" | "pending") =>
+export const activitiesQuery = (status: "approved" | "pending", trackId: string) =>
   queryOptions({
-    queryKey: ["activities", status],
+    queryKey: ["activities", status, trackId],
+    enabled: !!trackId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("activities")
         .select("*, activity_skills(skill_id)")
         .eq("status", status)
+        .eq("track_id", trackId)
         .order("date", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -53,6 +57,7 @@ export const activitiesQuery = (status: "approved" | "pending") =>
   });
 
 export type ActivityInput = {
+  track_id: string;
   id?: string | undefined;
   source_id: string | null;
   date: string;
@@ -70,18 +75,20 @@ export async function saveActivity(input: ActivityInput) {
   const { skill_ids, id, ...row } = input;
   let activityId = id;
   if (id) {
-    const { error } = await supabase.from("activities").update(row).eq("id", id);
+    const { error } = await supabase.from("activities").update(row).eq("id", id).eq("track_id", row.track_id);
     if (error) throw error;
-    await supabase.from("activity_skills").delete().eq("activity_id", id);
+    const { error: linksError } = await supabase.from("activity_skills").delete().eq("activity_id", id);
+    if (linksError) throw linksError;
   } else {
     const { data, error } = await supabase.from("activities").insert(row).select("id").single();
     if (error) throw error;
     activityId = data.id;
   }
   if (skill_ids.length) {
+    if (!activityId) throw new Error("Atividade indisponível");
     const { error } = await supabase
       .from("activity_skills")
-      .insert(skill_ids.map((skill_id) => ({ activity_id: activityId!, skill_id })));
+      .insert(skill_ids.map((skill_id) => ({ activity_id: activityId, skill_id })));
     if (error) throw error;
   }
 }
@@ -94,13 +101,13 @@ export const LEVEL_NAMES = ["Iniciante", "Aprendiz", "Explorador", "Praticante",
 export function levelInfo(minutes: number, quantity = 0) {
   const hours = minutes / 60;
   let lvl = 1;
-  for (let i = 0; i < LEVEL_HOURS.length; i++) if (hours >= LEVEL_HOURS[i]!) lvl = i + 1;
-  const cur = LEVEL_HOURS[lvl - 1]!;
+  for (const [i, threshold] of LEVEL_HOURS.entries()) if (hours >= threshold) lvl = i + 1;
+  const cur = LEVEL_HOURS[lvl - 1] ?? 0;
   const next = LEVEL_HOURS[lvl];
   const progress = next === undefined ? 1 : (hours - cur) / (next - cur);
   return {
     level: lvl,
-    name: LEVEL_NAMES[lvl - 1]!,
+    name: LEVEL_NAMES[lvl - 1] ?? "Iniciante",
     xp: minutes + quantity * 10,
     progress: Math.min(1, Math.max(0, progress)),
     minutesToNext: next === undefined ? 0 : Math.ceil(next * 60 - minutes),
