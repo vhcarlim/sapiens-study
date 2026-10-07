@@ -2,3 +2,7 @@
 - [x] Adicionar seletor, criação, edição, arquivamento e exclusão com cor própria.
 - [x] Isolar consultas, registros, importações e métricas por trilha.
 - [x] Verificar o fluxo completo e a compilação.
+- [ ] Salvar o resumo do conhecimento e agendar revisões espaçadas.
+- [ ] Implementar arguições por atividade com histórico na conta e avaliação segura.
+- [ ] Integrar domínio dinâmico e recompensas ao painel.
+- [ ] Verificar a arguição completa, persistência e isolamento entre trilhas.
