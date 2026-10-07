@@ -15,6 +15,13 @@
       "when": 1791378556507,
       "tag": "0001_study_tracks_isolation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791378700865,
+      "tag": "0002_validate_track_relationships_by_table",
+      "breakpoints": true
     }
   ]
 }
