@@ -26,6 +26,7 @@ export type Database = {
           source_id: string | null
           status: string
           title: string
+          track_id: string | null
           type: string
           user_id: string
           xp: number
@@ -41,6 +42,7 @@ export type Database = {
           source_id?: string | null
           status?: string
           title: string
+          track_id?: string | null
           type?: string
           user_id?: string
           xp?: number
@@ -56,6 +58,7 @@ export type Database = {
           source_id?: string | null
           status?: string
           title?: string
+          track_id?: string | null
           type?: string
           user_id?: string
           xp?: number
@@ -67,6 +70,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sources"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_track_owner_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
           },
         ]
       }
@@ -138,6 +148,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          track_id: string | null
           user_id: string
         }
         Insert: {
@@ -145,6 +156,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          track_id?: string | null
           user_id?: string
         }
         Update: {
@@ -152,9 +164,18 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          track_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "skills_track_owner_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
       }
       sources: {
         Row: {
@@ -166,6 +187,7 @@ export type Database = {
           last_sync_error: string | null
           last_synced_at: string | null
           name: string
+          track_id: string | null
           user_id: string
           username: string | null
         }
@@ -178,6 +200,7 @@ export type Database = {
           last_sync_error?: string | null
           last_synced_at?: string | null
           name: string
+          track_id?: string | null
           user_id?: string
           username?: string | null
         }
@@ -190,8 +213,44 @@ export type Database = {
           last_sync_error?: string | null
           last_synced_at?: string | null
           name?: string
+          track_id?: string | null
           user_id?: string
           username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sources_track_owner_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_tracks: {
+        Row: {
+          archived: boolean
+          color: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id?: string
+        }
+        Update: {
+          archived?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
         }
         Relationships: []
       }
