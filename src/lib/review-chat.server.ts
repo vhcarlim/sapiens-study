@@ -55,6 +55,7 @@ export async function handleReviewChat(request: Request) {
     const run = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
     const provider = createOpenAI({ baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: key, headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: run.fetch });
     let evaluation: z.infer<typeof evaluationSchema> | undefined;
+    let streamFailed = false;
     const result = streamText({
       model: provider.responses("openai/gpt-6-astra"), maxRetries: 0, abortSignal: request.signal,
       instructions: `Você é o examinador sapiens, em português brasileiro. Trilha: ${track.name}. Atividade: ${activity.title}.
@@ -64,22 +65,26 @@ ${question ? "Crie UMA pergunta nova, situacional, desafiadora e curta, baseada 
       messages: await convertToModelMessages(messages),
       providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
       ...(!question ? { tools: { avaliarResposta: tool({ description: "Avalia a argumentação, sem alterar dados. A pontuação é aplicada apenas ao terminar a revisão.", inputSchema: evaluationSchema, strict: true, execute: async (value) => { evaluation = { ...value, score: Math.max(0, Math.min(100, Math.round(value.score))) }; return evaluation; } }) }, stopWhen: isStepCount(50), prepareStep: ({ stepNumber }: { stepNumber: number }) => stepNumber > 0 ? { activeTools: [] } : {} } : {}),
-      onError: async ({ error: e }) => { await persistError(e); await release?.(); },
+      onError: async ({ error: e }) => { streamFailed = true; await persistError(e); await release?.(); },
+      onFinish: ({ finishReason }) => { if (finishReason === "content-filter" || finishReason === "error") streamFailed = true; },
     });
     // Inspect the first upstream outcome before committing browser response headers.
     const iterator = result.fullStream[Symbol.asyncIterator]();
-    const first = await iterator.next();
-    if (!first.done && first.value.type === "error") {
-      const e = first.value.error;
-      await persistError(e); await release();
-      return Response.json({ message: safeError(e) }, { status: APICallError.isInstance(e) ? e.statusCode ?? 500 : 500 });
+    for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
+      if (part.type === "error") {
+        const e = part.error;
+        await persistError(e); await release();
+        return Response.json({ message: safeError(e) }, { status: APICallError.isInstance(e) ? e.statusCode ?? 500 : 500 });
+      }
+      // SDK start events precede the HTTP call; start-step confirms upstream acceptance.
+      if (part.type === "start-step") break;
     }
     const response = result.toUIMessageStreamResponse({
       originalMessages: messages, sendReasoning: true,
       onError: safeError,
       onFinish: async ({ messages: complete, isAborted }) => {
         try {
-          if (isAborted) { await release?.(); return; }
+          if (isAborted || streamFailed || request.signal.aborted) { await release?.(); return; }
           const assistant = complete.at(-1);
           if (!assistant?.parts.some(p => p.type === "text" && p.text.trim())) throw new Error("A IA não retornou uma resposta. Nenhum progresso foi alterado.");
           if (question) {
