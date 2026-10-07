@@ -86,6 +86,28 @@ export async function saveActivity(input: ActivityInput) {
   }
 }
 
+// Hours needed to reach each level (index = level - 1).
+export const LEVEL_HOURS = [0, 2, 5, 10, 20, 35, 55, 80, 120, 170, 250];
+export const LEVEL_NAMES = ["Iniciante", "Aprendiz", "Explorador", "Praticante", "Competente", "Proficiente", "Avançado", "Especialista", "Expert", "Mestre", "Lenda"];
+
+/** XP = minutes + 10 per item concluded. Level is driven by hours studied. */
+export function levelInfo(minutes: number, quantity = 0) {
+  const hours = minutes / 60;
+  let lvl = 1;
+  for (let i = 0; i < LEVEL_HOURS.length; i++) if (hours >= LEVEL_HOURS[i]!) lvl = i + 1;
+  const cur = LEVEL_HOURS[lvl - 1]!;
+  const next = LEVEL_HOURS[lvl];
+  const progress = next === undefined ? 1 : (hours - cur) / (next - cur);
+  return {
+    level: lvl,
+    name: LEVEL_NAMES[lvl - 1]!,
+    xp: minutes + quantity * 10,
+    progress: Math.min(1, Math.max(0, progress)),
+    minutesToNext: next === undefined ? 0 : Math.ceil(next * 60 - minutes),
+    maxed: next === undefined,
+  };
+}
+
 export function fmtMinutes(m: number) {
   if (m < 60) return `${m}min`;
   const h = Math.floor(m / 60);
