@@ -122,6 +122,26 @@ function Dashboard() {
         <h1 className="mt-1 text-3xl font-bold">Sua evolução</h1>
       </div>
 
+      {(() => {
+        const g = levelInfo(stats.minutes, stats.items);
+        return (
+          <div className="rounded-xl border border-primary/50 bg-card p-4">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-sm">
+                <span className="text-primary font-bold">NÍVEL {g.level}</span> · {g.name}
+              </span>
+              <span className="font-mono text-sm text-muted-foreground">{g.xp} XP</span>
+            </div>
+            <div className="mt-2 h-2.5 rounded-full bg-secondary">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${g.progress * 100}%` }} />
+            </div>
+            <p className="mt-1 text-right font-mono text-[10px] text-muted-foreground">
+              {g.maxed ? "nível máximo" : `faltam ${fmtMinutes(g.minutesToNext)} para o nível ${g.level + 1}`}
+            </p>
+          </div>
+        );
+      })()}
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={Flame} label="Sequência" value={`${stats.streak} dia${stats.streak === 1 ? "" : "s"}`} accent />
         <Stat icon={Clock} label="Tempo total" value={fmtMinutes(stats.minutes)} />
