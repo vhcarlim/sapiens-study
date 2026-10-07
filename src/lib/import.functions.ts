@@ -27,71 +27,99 @@ export const importPastedText = createServerFn({ method: "POST" })
     ]);
     const skillNames = (skills ?? []).map((s) => s.name);
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `Você extrai atividades de estudo de textos colados (históricos, listas de aulas, JSON, CSV) de plataformas como ${source?.name ?? "Alura, Coursera, TryHackMe, PortSwigger, Duolingo"}.
+    const system = `Você extrai atividades de estudo de textos colados (históricos, listas de aulas, JSON, CSV) de plataformas como ${source?.name ?? "Alura, Coursera, TryHackMe, PortSwigger, Duolingo"}.
 Regras: uma atividade por item concluído (ou agrupe itens idênticos no mesmo dia usando quantity). Datas em YYYY-MM-DD; se ausente use ${data.default_date}. Datas relativas ("há 2 dias") calcule a partir de ${data.default_date}.
-minutes: use a duração informada; se ausente, estime de forma conservadora (aula ~10, sala/lab ~45, curso inteiro: duração informada ou 0). Ignore menus, navegação e texto irrelevante.
-type ∈ ${TYPES.join(", ")}. skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos em português mantendo nomes originais das aulas.`,
-          },
-          { role: "user", content: data.text },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "save_activities",
-              parameters: {
-                type: "object",
-                properties: {
-                  activities: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        date: { type: "string" },
-                        type: { type: "string", enum: TYPES },
-                        quantity: { type: "integer" },
-                        minutes: { type: "integer" },
-                        xp: { type: "integer" },
-                        skills: { type: "array", items: { type: "string" } },
-                        notes: { type: "string" },
-                      },
-                      required: ["title", "date", "type", "quantity", "minutes"],
-                    },
-                  },
-                },
-                required: ["activities"],
-              },
+minutes: use a duração informada; se ausente, estime de forma conservadora (aula ~10, sala/lab ~45, curso inteiro: duração informada ou 0). xp: só se informado, senão 0. Ignore menus, navegação e texto irrelevante.
+skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo nomes originais das aulas. notes: null se nada relevante. Responda no máximo 200 atividades.`;
+
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["activities"],
+      properties: {
+        activities: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["title", "date", "type", "quantity", "minutes", "xp", "skills", "notes"],
+            properties: {
+              title: { type: "string" },
+              date: { type: "string" },
+              type: { type: "string", enum: TYPES },
+              quantity: { type: "integer" },
+              minutes: { type: "integer" },
+              xp: { type: "integer" },
+              skills: { type: "array", items: { type: "string" } },
+              notes: { type: ["string", "null"] },
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "save_activities" } },
+        },
+      },
+    };
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Lovable-API-Key": key,
+        "X-Lovable-AIG-SDK": "fetch",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-6-astra",
+        stream: true,
+        store: false,
+        reasoning: { effort: "low" },
+        instructions: system,
+        input: [{ role: "user", content: data.text }],
+        text: { format: { type: "json_schema", name: "activities", strict: true, schema } },
       }),
     });
     if (res.status === 429) throw new Error("Muitas requisições, tente em instantes.");
     if (res.status === 402) throw new Error("Créditos de IA esgotados.");
-    if (!res.ok) {
+    if (!res.ok || !res.body) {
       console.error("AI error", res.status, await res.text());
       throw new Error("Falha ao interpretar o texto.");
     }
-    const json = (await res.json()) as {
-      choices?: { message?: { tool_calls?: { function?: { arguments?: string } }[] } }[];
-    };
-    const args = json.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+
+    // Consume the SSE stream, accumulating output text.
+    let out = "";
+    let finalText = "";
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i: number;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i).trim();
+        buf = buf.slice(i + 1);
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const ev = JSON.parse(payload) as { type?: string; delta?: string; text?: string; response?: { error?: unknown } };
+          if (ev.type === "response.output_text.delta" && ev.delta) out += ev.delta;
+          else if (ev.type === "response.output_text.done" && ev.text) finalText = ev.text;
+          else if (ev.type === "response.failed" || ev.type === "error") {
+            console.error("AI stream error", payload);
+            throw new Error("Falha ao interpretar o texto.");
+          }
+        } catch (e) {
+          if (e instanceof Error && e.message.startsWith("Falha")) throw e;
+        }
+      }
+    }
+
     let items: {
       title: string; date: string; type: string; quantity: number; minutes: number;
-      xp?: number; skills?: string[]; notes?: string;
+      xp?: number; skills?: string[]; notes?: string | null;
     }[] = [];
     try {
-      items = JSON.parse(args ?? "{}").activities ?? [];
+      items = JSON.parse(finalText || out).activities ?? [];
     } catch {
       throw new Error("A IA devolveu um formato inválido.");
     }
