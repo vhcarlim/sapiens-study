@@ -36,6 +36,7 @@ import { activityXp, dailyXp, masteryLevel, skillProgress, studyStreak } from "@
 import { AnimatedNumber, DailyQuest, NeonProgress } from "@/components/Gamification";
 import { SkillMissionMap } from "@/components/SkillMissionMap";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — sapiens" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — sapiens" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
