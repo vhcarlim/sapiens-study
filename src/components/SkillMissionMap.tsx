@@ -28,8 +28,8 @@ export function SkillMissionMap({ skills, storageKey }: { skills: SkillProgress[
   return <section className="space-y-5 border-t border-border pt-6">
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-semibold"><Map className="size-5 text-primary" />Mapa de maestria</h2><Button variant={enabled ? "secondary" : "outline"} size="sm" role="switch" aria-checked={enabled} onClick={() => persist(!enabled, ids)}>{enabled ? "Mapa ativado" : "Ativar mapa"}</Button></div>
     {enabled && (!missions.length ? <Button asChild variant="outline"><Link to="/skills">Adicionar competências</Link></Button> : <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
-      <ol className="mission-path grid grid-cols-1 gap-x-6 gap-y-0 sm:grid-cols-2 lg:grid-cols-3">
-        {missions.map((s, i) => <li key={s.id} className="relative flex min-h-36 items-center gap-3 py-4">
+      <ol className="mission-path flex flex-col">
+        {missions.map((s, i) => <li key={s.id} className="relative flex min-h-28 items-center gap-4 py-4">
           <Button variant="outline" aria-label={`Missão ${i + 1}: ${s.name}`} aria-pressed={active?.id === s.id} onClick={() => setSelected(s.id)} className={cn("mission-node relative size-14 shrink-0 rounded-full border-2 p-0", s.completed ? "border-primary bg-primary text-primary-foreground" : s.unlocked ? "border-primary text-primary" : "border-border text-muted-foreground", active?.id === s.id && "ring-2 ring-primary/30 ring-offset-4 ring-offset-background")}>
             {s.completed ? <Check /> : !s.unlocked ? <LockKeyhole /> : <Sparkles />}
           </Button>

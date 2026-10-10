@@ -59,7 +59,7 @@ function SkillsPage() {
   );
 }
 
-function SkillRow({ s, progress }: { s: Skill; progress?: SkillProgress }) {
+function SkillRow({ s, progress }: { s: Skill; progress: SkillProgress | undefined }) {
   const qc = useQueryClient();
   const [name, setName] = useState(s.name);
   async function update(patch: Partial<Skill>) {
