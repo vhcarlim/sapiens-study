@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { activityXp, celebrateReward } from "@/lib/gamification";
 
 const schema = z.object({
   title: z.string().trim().min(1, "Informe um título").max(200),
@@ -108,6 +109,9 @@ export function ActivityDialog({
         ...(approveOnSave || !activity ? { status: "approved" } : {}),
       });
       toast.success(approveOnSave ? "Aprovada e adicionada ao painel" : "Atividade salva");
+      const status = approveOnSave || !activity ? "approved" : activity.status;
+      const gainedXp = activityXp({ ...parsed.data, status }) - (activity ? activityXp(activity) : 0);
+      celebrateReward(trackId, gainedXp, approveOnSave ? "Aprendizado aprovado!" : "Conhecimento conquistado!");
       qc.invalidateQueries({ queryKey: ["activities"] });
       qc.invalidateQueries({ queryKey: ["review-threads", trackId] });
       onOpenChange(false);
@@ -190,7 +194,9 @@ export function ActivityDialog({
               {skills.map((s) => {
                 const on = f.skill_ids.includes(s.id);
                 return (
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     type="button"
                     key={s.id}
                     onClick={() => toggleSkill(s.id)}
@@ -200,7 +206,7 @@ export function ActivityDialog({
                     )}
                   >
                     {s.name}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -208,7 +214,7 @@ export function ActivityDialog({
           <div className="space-y-2">
             <Label htmlFor="knowledge-summary">O que aprendi / Resumo do conhecimento</Label>
             <Textarea id="knowledge-summary" rows={4} maxLength={12000} placeholder="Com minhas palavras, aprendi que…" value={f.knowledge_summary} onChange={(e) => setF({ ...f, knowledge_summary: e.target.value })} />
-            <span className="text-xs text-muted-foreground">Opcional · {f.knowledge_summary.length}/12.000</span>
+            <span className="text-xs text-muted-foreground">+20 XP pelo resumo · {f.knowledge_summary.length}/12.000</span>
           </div>
           <div className="space-y-2">
             <Label>Notas</Label>

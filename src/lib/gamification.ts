@@ -26,7 +26,8 @@ export function skillProgress(skills: Skill[], activities: Activity[], mastery: 
     const ids = new Set(list.map(a => a.id));
     const reviewed = mastery.find(m => m.skill_id === skill.id);
     const xp = list.reduce((sum, a) => sum + activityXp(a), 0) + results.filter(r => ids.has(r.activity_id)).reduce((sum, r) => sum + r.xp, 0);
-    return { id: skill.id, name: skill.name, minutes: list.reduce((sum, a) => sum + a.minutes, 0), quantity: list.reduce((sum, a) => sum + a.quantity, 0), mastery: reviewed?.mastery ?? 0, reviewed: !!reviewed, fragile: reviewed?.last_score != null && reviewed.last_score < 70, ...masteryLevel(xp) };
+    const level = masteryLevel(xp);
+    return { ...level, id: skill.id, name: skill.name, title: level.name, minutes: list.reduce((sum, a) => sum + a.minutes, 0), quantity: list.reduce((sum, a) => sum + a.quantity, 0), mastery: reviewed?.mastery ?? 0, reviewed: !!reviewed, fragile: reviewed?.last_score != null && reviewed.last_score < 70 };
   });
 }
 export type SkillProgress = ReturnType<typeof skillProgress>[number];

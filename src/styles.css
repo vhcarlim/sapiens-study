@@ -50,6 +50,8 @@
 }
 
 :root {
+  --shadow-neon: 0 0 12px color-mix(in oklch, var(--primary) 45%, transparent);
+  --shadow-reward: 0 0 40px color-mix(in oklch, var(--primary) 20%, transparent);
   --track-accent: oklch(0.82 0.19 145);
   --track-contrast: oklch(0.16 0.012 200);
   --radius: 0.5rem;
@@ -86,6 +88,22 @@
   --sidebar-accent-foreground: oklch(0.95 0.01 160);
   --sidebar-border: oklch(0.3 0.016 200);
   --sidebar-ring: oklch(0.88 0.2 128);
+}
+
+.neon-progress { box-shadow: var(--shadow-neon); }
+.reward-burst { animation: reward-enter 500ms ease-out; box-shadow: var(--shadow-reward); }
+.streak-flame { animation: flame-dance 2.4s ease-in-out infinite; transform-origin: bottom center; }
+.xp-counter { animation: counter-roll 450ms ease-out; }
+.mission-node { transition: transform 180ms ease, box-shadow 180ms ease; }
+.mission-node:hover { transform: translateY(-3px); box-shadow: var(--shadow-neon); }
+.mission-path > li::before { content: ""; position: absolute; left: 27px; top: 0; bottom: 0; width: 2px; background: var(--border); z-index: 0; }
+@keyframes reward-enter { 0% { opacity: 0; transform: translateY(30px) scale(.9); } 65% { transform: translateY(-4px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes flame-dance { 0%, 100% { transform: rotate(-4deg) scale(1); } 50% { transform: rotate(4deg) scale(1.08); } }
+@keyframes counter-roll { from { opacity: .3; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .reward-burst, .streak-flame, .xp-counter { animation: none; }
+  .neon-progress, .mission-node { transition: none; }
+  .mission-node:hover { transform: none; }
 }
 
 [data-track-color="green"] { --track-accent: oklch(0.82 0.19 145); }
