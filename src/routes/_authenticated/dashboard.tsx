@@ -1,7 +1,7 @@
 import { useTrack } from "@/lib/tracks";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   addDays,
   eachDayOfInterval,
@@ -28,10 +28,14 @@ import {
   YAxis,
 } from "recharts";
 import { Award, Clock, Flame, Layers } from "lucide-react";
-import { type Activity, activitiesQuery, fmtMinutes, levelInfo, skillsQuery, sourcesQuery } from "@/lib/data";
+import { type Activity, activitiesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
 import { masteryQuery, resultsQuery } from "@/lib/reviews";
+import { activityXp, dailyXp, masteryLevel, skillProgress, studyStreak } from "@/lib/gamification";
+import { AnimatedNumber, DailyQuest, NeonProgress } from "@/components/Gamification";
+import { SkillMissionMap } from "@/components/SkillMissionMap";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — sapiens" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — sapiens" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -48,6 +52,13 @@ function Dashboard() {
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const { data: mastery = [] } = useQuery(masteryQuery(trackId));
   const { data: reviewResults = [] } = useQuery(resultsQuery(trackId));
+  const [now, setNow] = useState(new Date());
+  const [userId, setUserId] = useState("");
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? ""));
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const reviewXp = reviewResults.reduce((total, r) => total + r.xp, 0);
   const [range, setRange] = useState<Range>("week");
   const [metric, setMetric] = useState<Metric>("quantity");
@@ -63,15 +74,9 @@ function Dashboard() {
     const minutes = acts.reduce((s, a) => s + a.minutes, 0);
     const items = acts.reduce((s, a) => s + a.quantity, 0);
     const certs = acts.filter((a) => a.type === "certificate").length;
-    let streak = 0;
-    let d = new Date();
-    if (!byDay.has(format(d, "yyyy-MM-dd"))) d = subDays(d, 1);
-    while (byDay.has(format(d, "yyyy-MM-dd"))) {
-      streak++;
-      d = subDays(d, 1);
-    }
+    const streak = studyStreak(acts, reviewResults, now);
     return { minutes, items, certs, streak };
-  }, [acts, byDay]);
+  }, [acts, reviewResults, now]);
 
   const chartData = useMemo(() => {
     const val = (list: Activity[], sid: string) =>
@@ -101,26 +106,9 @@ function Dashboard() {
     });
   }, [acts, byDay, sources, range, metric]);
 
-  const skillData = useMemo(
-    () =>
-      skills
-        .map((s) => {
-          const list = acts.filter((a) => a.activity_skills.some((x) => x.skill_id === s.id));
-          const reviewed = mastery.find(m => m.skill_id === s.id);
-          return {
-            name: s.name,
-            color: s.color,
-            minutes: list.reduce((t, a) => t + a.minutes, 0),
-            quantity: list.reduce((t, a) => t + a.quantity, 0),
-            mastery: reviewed?.mastery ?? 0,
-            reviewXp: reviewed?.review_xp ?? 0,
-            reviewed: !!reviewed,
-            fragile: reviewed?.last_score != null && reviewed.last_score < 70,
-          };
-        })
-        .sort((a, b) => b.minutes - a.minutes),
-    [acts, skills, mastery],
-  );
+  const skillData = useMemo(() => skillProgress(skills, acts, mastery, reviewResults), [acts, skills, mastery, reviewResults]);
+  const totalXp = acts.reduce((sum, a) => sum + activityXp(a), 0) + reviewXp;
+  const todayXp = dailyXp(acts, reviewResults, format(now, "yyyy-MM-dd"));
   const milestones = acts.filter((a) => a.type === "certificate" || a.type === "level").slice(0, 6);
   const dayList = byDay.get(selected) ?? [];
 
@@ -134,36 +122,35 @@ function Dashboard() {
       </div>
 
       {(() => {
-        const g = levelInfo(stats.minutes + reviewXp, stats.items);
+        const g = masteryLevel(totalXp);
         return (
-          <div className="rounded-xl border border-track-accent/50 bg-card p-4">
+          <div className="border-l-2 border-primary py-2 pl-5">
             <div className="flex items-center justify-between">
               <span className="font-mono text-sm">
                 <span className="text-track-accent font-bold">NÍVEL {g.level}</span> · {g.name}
               </span>
-              <span className="font-mono text-sm text-muted-foreground">{g.xp} XP</span>
+              <span className="font-mono text-sm text-muted-foreground"><AnimatedNumber value={g.xp} /> XP</span>
             </div>
-            <div className="mt-2 h-2.5 rounded-full bg-secondary">
-              <div className="h-full rounded-full bg-track-accent transition-all" style={{ width: `${g.progress * 100}%` }} />
-            </div>
+            <div className="mt-3"><NeonProgress progress={g.progress} label="Nível geral" /></div>
             <p className="mt-1 text-right font-mono text-[10px] text-muted-foreground">
-              {g.maxed ? "nível máximo" : `faltam ${fmtMinutes(g.minutesToNext)} para o nível ${g.level + 1}`}
+              {g.maxed ? "nível máximo" : `faltam ${g.xpToNext} XP para o nível ${g.level + 1}`}
             </p>
           </div>
         );
       })()}
 
+      {userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={Flame} label="Sequência" value={`${stats.streak} dia${stats.streak === 1 ? "" : "s"}`} accent />
+        <Stat icon={Flame} label="XP conquistado" value={`${totalXp.toLocaleString("pt-BR")} XP`} accent />
         <Stat icon={Clock} label="Tempo total" value={fmtMinutes(stats.minutes)} />
         <Stat icon={Layers} label="Itens concluídos" value={String(stats.items)} />
         <Stat icon={Award} label="Certificados" value={String(stats.certs)} />
       </div>
 
-      <section className="rounded-xl border bg-card p-5">
+      <section className="border-t border-border pt-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold">Último ano</h2>
-          <span className="text-xs text-muted-foreground">Clique num dia para ver o que você fez</span>
+
         </div>
         <Heatmap byDay={byDay} selected={selected} onSelect={setSelected} />
         <div className="mt-5 border-t pt-4">
@@ -180,7 +167,7 @@ function Dashboard() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <section className="rounded-xl border bg-card p-5 lg:col-span-3">
+        <section className="border-t border-border pt-5 lg:col-span-3">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Atividade por período</h2>
             <div className="flex gap-2">
@@ -213,7 +200,7 @@ function Dashboard() {
           </div>
         </section>
 
-        <section className="rounded-xl border bg-card p-5 lg:col-span-2">
+        <section className="border-t border-border pt-5 lg:col-span-2">
           <h2 className="mb-2 font-semibold">Domínio das competências</h2>
           <div className="h-56">
             {skillData.length >= 3 ? (
@@ -230,37 +217,17 @@ function Dashboard() {
             )}
           </div>
           <div className="mt-2 space-y-3">
-            {skillData.map((s) => {
-              const li = levelInfo(s.minutes + s.reviewXp, s.quantity);
-              return (
-                <div key={s.name} className="text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="rounded-md px-1.5 py-0.5 font-mono text-[10px] font-bold text-track-accent-foreground"
-                        style={{ background: s.color }}
-                      >
-                        NV {li.level}
-                      </span>
-                      <span>{s.name}</span>
-                      <span className="text-xs text-muted-foreground">{li.name}</span>
-                    </span>
-                    <span className="font-mono text-xs text-muted-foreground">{li.xp} XP</span>
-                  </div>
-                  <div className="mt-1 h-2 rounded-full bg-secondary">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${li.progress * 100}%`, background: s.color }} />
-                  </div>
-                  <div className="mt-0.5 flex justify-between font-mono text-[10px] text-muted-foreground">
-                    <span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span>
-                    <span>{li.maxed ? "nível máximo" : `faltam ${fmtMinutes(li.minutesToNext)} p/ NV ${li.level + 1}`}</span>
-                  </div>
-                  <p className={cn("mt-1 text-xs", s.fragile ? "text-warning" : "text-muted-foreground")}>{s.reviewed ? `${s.mastery}% de domínio${s.fragile ? " · Memória frágil" : ""}` : "Domínio ainda não avaliado"}</p>
-                </div>
-              );
-            })}
+            {skillData.map((s) => <div key={s.id} className="space-y-2 border-b border-border pb-4 text-sm">
+              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="break-words font-semibold">{s.name}</p><p className="mt-1 font-mono text-xs text-primary">NÍVEL {s.level} / 10 · {s.title}</p></div><span className="shrink-0 font-mono text-xs text-muted-foreground"><AnimatedNumber value={s.xp} /> XP</span></div>
+              <NeonProgress progress={s.progress} label={`Nível de ${s.name}`} />
+              <div className="flex flex-wrap justify-between gap-1 font-mono text-[10px] text-muted-foreground"><span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span><span>{s.maxed ? "nível máximo" : `${s.xpToNext} XP p/ NV ${s.level + 1}`}</span></div>
+              <p className={cn("text-xs", s.fragile ? "text-warning" : "text-muted-foreground")}>{s.reviewed ? `${s.mastery}% de domínio${s.fragile ? " · Memória frágil" : ""}` : "Domínio ainda não avaliado"}</p>
+            </div>)}
           </div>
         </section>
       </div>
+
+      {userId && <SkillMissionMap key={`map-${trackId}`} skills={skillData} storageKey={`sapiens:map:${userId}:${trackId}`} />}
 
       {milestones.length > 0 && (
         <section>
@@ -291,7 +258,7 @@ function Seg<T extends string>({ value, onChange, opts }: { value: T; onChange: 
   return (
     <div className="flex rounded-md border p-0.5">
       {opts.map(([v, l]) => (
-        <button
+        <Button variant="ghost" size="sm"
           key={v}
           onClick={() => onChange(v)}
           className={cn(
@@ -300,7 +267,7 @@ function Seg<T extends string>({ value, onChange, opts }: { value: T; onChange: 
           )}
         >
           {l}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -321,7 +288,7 @@ function Heatmap({
   const weeks: Date[][] = [];
   days.forEach((d, i) => {
     if (i % 7 === 0) weeks.push([]);
-    weeks[weeks.length - 1]!.push(d);
+    weeks.at(-1)?.push(d);
   });
   const level = (k: string) => {
     const list = byDay.get(k);
@@ -336,8 +303,8 @@ function Heatmap({
       <div className="flex gap-[3px]">
         {weeks.map((w, wi) => (
           <div key={wi} className="flex flex-col gap-[3px]">
-            {w[0]!.getDate() <= 7 ? (
-              <span className="h-3 text-[9px] leading-3 text-muted-foreground">{format(w[0]!, "MMM", { locale: ptBR })}</span>
+            {(w[0]?.getDate() ?? 32) <= 7 ? (
+              <span className="h-3 text-[9px] leading-3 text-muted-foreground">{w[0] ? format(w[0], "MMM", { locale: ptBR }) : ""}</span>
             ) : (
               <span className="h-3" />
             )}
@@ -345,12 +312,12 @@ function Heatmap({
               const k = format(d, "yyyy-MM-dd");
               const lv = level(k);
               return (
-                <button
+                <Button variant="ghost"
                   key={k}
                   title={`${format(d, "dd/MM/yyyy")} · ${byDay.get(k)?.length ?? 0} registro(s)`}
                   onClick={() => onSelect(k)}
                   className={cn(
-                    "size-3 rounded-[3px]",
+                    "size-3 min-w-3 p-0 rounded-[3px]",
                     lv === 0 ? "bg-foreground" : "bg-track-accent",
                     selected === k && "ring-2 ring-accent ring-offset-1 ring-offset-card",
                   )}
@@ -364,7 +331,7 @@ function Heatmap({
       <div className="mt-2 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
         menos
         {[0, 1, 2, 3, 4].map((l) => (
-          <span key={l} className={cn("size-3 rounded-[3px]", l ? "bg-track-accent" : "bg-foreground")} style={{ opacity: l ? opacity[l] : 0.07 }} />
+          <span key={l} className={cn("size-3 min-w-3 p-0 rounded-[3px]", l ? "bg-track-accent" : "bg-foreground")} style={{ opacity: l ? opacity[l] : 0.07 }} />
         ))}
         mais
       </div>
