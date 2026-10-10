@@ -11,6 +11,7 @@ import { ActivityDialog } from "@/components/ActivityDialog";
 import { Button } from "@/components/ui/button";
 import { threadsQuery, resultsQuery } from "@/lib/reviews";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { activityXp, celebrateReward } from "@/lib/gamification";
 
 export const Route = createFileRoute("/_authenticated/review")({
   head: () => ({ meta: [{ title: "Revisão — sapiens" }, { name: "description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:title", content: "Revisão — sapiens" }, { property: "og:description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -37,6 +38,7 @@ function ReviewPage() {
     const { error } = await supabase.from("activities").update({ status }).in("id", ids).eq("track_id", trackId);
     if (error) return void toast.error("Falha ao atualizar");
     toast.success(status === "approved" ? "Adicionado ao painel" : "Descartado");
+    if (status === "approved") celebrateReward(trackId, items.filter(a => ids.includes(a.id)).reduce((sum, a) => sum + activityXp({ ...a, status: "approved" }), 0), "Aprendizado aprovado!");
     qc.invalidateQueries({ queryKey: ["activities"] });
     qc.invalidateQueries({ queryKey: ["review-threads", trackId] });
   }
