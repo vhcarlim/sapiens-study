@@ -14,6 +14,7 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Tool, ToolHeader, ToolContent } from "@/components/ai-elements/tool";
+import { celebrateReward } from "@/lib/gamification";
 
 export const Route = createFileRoute("/_authenticated/arguicao/$threadId")({
   head: () => ({ meta: [{ title: "Arguição ativa — sapiens" }, { name: "description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:title", content: "Arguição ativa — sapiens" }, { property: "og:description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -39,6 +40,17 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
   const textarea = useRef<HTMLTextAreaElement>(null);
   const { data: results = [] } = useQuery(resultsQuery(thread.track_id));
   const latestResult = results.find(r => r.thread_id === thread.id);
+  const rewardReady = useRef(false);
+  const seenResult = useRef<string | undefined>(undefined);
+  const { isSuccess: resultsReady } = useQuery(resultsQuery(thread.track_id));
+  useEffect(() => {
+    if (!resultsReady) return;
+    if (rewardReady.current && latestResult && latestResult.id !== seenResult.current && latestResult.score >= 70) {
+      celebrateReward(thread.track_id, latestResult.xp, "Domínio demonstrado!");
+    }
+    seenResult.current = latestResult?.id;
+    rewardReady.current = true;
+  }, [latestResult, resultsReady, thread.track_id]);
   const transport = useMemo(() => new DefaultChatTransport({
     api: "/api/review-chat",
     headers: async () => {

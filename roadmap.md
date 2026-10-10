@@ -6,3 +6,7 @@
 - [x] Implementar arguições por atividade com histórico na conta e avaliação segura.
 - [x] Integrar domínio dinâmico e recompensas ao painel.
 - [x] Verificar a arguição completa, persistência e isolamento entre trilhas.
+- [x] Unificar XP de estudo, resumos e arguições em dez níveis por competência.
+- [x] Adicionar recompensas animadas, ofensiva e meta diária de XP.
+- [x] Oferecer mapa opcional de competências por trilha.
+- [x] Verificar registros, recompensas, mapa e métricas na interface.

@@ -8,6 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { type Skill, skillsQuery } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { activitiesQuery } from "@/lib/data";
+import { masteryQuery, resultsQuery } from "@/lib/reviews";
+import { skillProgress, type SkillProgress } from "@/lib/gamification";
+import { AnimatedNumber, NeonProgress } from "@/components/Gamification";
 
 export const Route = createFileRoute("/_authenticated/skills")({
   head: () => ({ meta: [{ title: "Competências — sapiens" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — sapiens" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -17,6 +21,10 @@ export const Route = createFileRoute("/_authenticated/skills")({
 function SkillsPage() {
   const { trackId, track } = useTrack();
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
+  const { data: activities = [] } = useQuery(activitiesQuery("approved", trackId));
+  const { data: mastery = [] } = useQuery(masteryQuery(trackId));
+  const { data: results = [] } = useQuery(resultsQuery(trackId));
+  const progress = skillProgress(skills, activities, mastery, results);
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#a3e635");
@@ -39,7 +47,7 @@ function SkillsPage() {
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {skills.map((s) => (
-          <SkillRow key={s.id} s={s} />
+          <SkillRow key={s.id} s={s} progress={progress.find(p => p.id === s.id)} />
         ))}
       </div>
       <form onSubmit={add} className="flex flex-wrap gap-2 rounded-lg border border-dashed p-4">
@@ -51,7 +59,7 @@ function SkillsPage() {
   );
 }
 
-function SkillRow({ s }: { s: Skill }) {
+function SkillRow({ s, progress }: { s: Skill; progress: SkillProgress | undefined }) {
   const qc = useQueryClient();
   const [name, setName] = useState(s.name);
   async function update(patch: Partial<Skill>) {
@@ -65,7 +73,7 @@ function SkillRow({ s }: { s: Skill }) {
     qc.invalidateQueries();
   }
   return (
-    <div className="flex items-center gap-2 rounded-lg border bg-card p-2">
+    <div className="space-y-3 rounded-lg border border-border bg-card p-4"><div className="flex items-center gap-2">
       <input
         type="color"
         defaultValue={s.color}
@@ -77,6 +85,8 @@ function SkillRow({ s }: { s: Skill }) {
       <Button size="icon" variant="ghost" onClick={remove} aria-label="Excluir">
         <Trash2 className="size-4" />
       </Button>
+      </div>
+      {progress && <><div className="flex flex-wrap justify-between gap-2 font-mono text-xs"><span className="text-primary">NV {progress.level} / 10 · {progress.title}</span><span className="text-muted-foreground"><AnimatedNumber value={progress.xp} /> XP</span></div><NeonProgress progress={progress.progress} label={`Nível de ${s.name}`} /><p className="text-xs text-muted-foreground">{progress.maxed ? "Maestria máxima" : `${progress.xpToNext} XP para o próximo nível`}</p></>}
     </div>
   );
 }

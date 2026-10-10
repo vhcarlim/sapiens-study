@@ -9,6 +9,7 @@ import { activitiesQuery } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
 import { PasteImportDialog } from "@/components/PasteImportDialog";
+import { RewardOverlay } from "@/components/Gamification";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -116,6 +117,7 @@ function TrackLayout() {
       </main>
       <ActivityDialog key={`activity-${trackId}`} open={open && !!trackId} onOpenChange={setOpen} />
       <PasteImportDialog key={`paste-${trackId}`} open={pasteOpen && !!trackId} onOpenChange={setPasteOpen} />
+      <RewardOverlay key={`reward-${trackId}`} trackId={trackId} />
     </div>
   );
 }

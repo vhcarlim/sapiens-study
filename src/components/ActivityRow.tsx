@@ -3,6 +3,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { type Activity, type Skill, type Source, fmtMinutes, typeLabel } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { activityXp } from "@/lib/gamification";
 
 export function ActivityRow({
   a,
@@ -38,7 +39,7 @@ export function ActivityRow({
           <span>{src?.name ?? "Sem fonte"}</span>
           <span>{typeLabel(a.type)} ×{a.quantity}</span>
           <span className="font-mono">{fmtMinutes(a.minutes)}</span>
-          {a.xp > 0 && <span className="font-mono">{a.xp} XP</span>}
+          {activityXp(a) > 0 && <span className="font-mono text-primary">{activityXp(a)} XP</span>}
           {a.activity_skills.map((as) => {
             const sk = skills.find((s) => s.id === as.skill_id);
             return sk ? (
