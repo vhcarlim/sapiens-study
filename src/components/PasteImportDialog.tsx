@@ -68,7 +68,7 @@ export function PasteImportDialog({ open, onOpenChange }: { open: boolean; onOpe
           <Textarea
             rows={12}
             className="font-mono text-xs"
-            placeholder={"Ex.:\nAula 3 - Introdução ao Burp Suite · 12min · concluída em 03/10\nSala 'Nmap' concluída há 2 dias\n..."}
+            placeholder="Cole aqui o texto ou JSON com suas atividades"
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
