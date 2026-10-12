@@ -1,4 +1,4 @@
-import { format, subDays } from "date-fns";
+import { shiftStudyDay, studyDay } from "@/lib/study-day";
 import type { Activity, Skill } from "@/lib/data";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -32,13 +32,14 @@ export function skillProgress(skills: Skill[], activities: Activity[], mastery: 
 }
 export type SkillProgress = ReturnType<typeof skillProgress>[number];
 export function dailyXp(activities: Activity[], results: Tables<"review_results">[], date: string) {
-  return activities.filter(a => a.date === date).reduce((sum, a) => sum + activityXp(a), 0) + results.filter(r => format(new Date(r.created_at), "yyyy-MM-dd") === date).reduce((sum, r) => sum + r.xp, 0);
+  return activities.filter(a => a.date === date).reduce((sum, a) => sum + activityXp(a), 0) + results.filter(r => studyDay(r.created_at) === date).reduce((sum, r) => sum + r.xp, 0);
 }
-export function studyStreak(activities: Activity[], results: Tables<"review_results">[], now = new Date()) {
-  const dates = new Set([...activities.filter(a => activityXp(a) > 0).map(a => a.date), ...results.map(r => format(new Date(r.created_at), "yyyy-MM-dd"))]);
-  let day = dates.has(format(now, "yyyy-MM-dd")) ? now : subDays(now, 1);
+export function studyStreak(activities: Activity[], results: Tables<"review_results">[], now = new Date(), frozenDays: string[] = []) {
+  const studied = new Set([...activities.filter(a => activityXp(a) > 0).map(a => a.date), ...results.map(r => studyDay(r.created_at))]);
+  const dates = new Set([...studied, ...frozenDays]);
+  let day = dates.has(studyDay(now)) ? studyDay(now) : shiftStudyDay(studyDay(now), -1);
   let streak = 0;
-  while (dates.has(format(day, "yyyy-MM-dd"))) { streak++; day = subDays(day, 1); }
+  while (dates.has(day)) { if (studied.has(day)) streak++; day = shiftStudyDay(day, -1); }
   return streak;
 }
 export function missionStates(skills: SkillProgress[]) {

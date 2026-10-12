@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { DEFAULT_DAILY_GOAL } from "@/lib/gamification";
+import { minutesUntilStudyMidnight } from "@/lib/study-day";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(value);
@@ -31,15 +33,30 @@ export function RewardOverlay({ trackId }: { trackId: string }) {
   const [reward, setReward] = useState<{ xp: number; title: string; id: number } | null>(null);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
+    let audio: AudioContext | undefined;
+    let soundEnabled = false;
+    void supabase.auth.getUser().then(({ data }) => { if (data.user) { try { soundEnabled = localStorage.getItem(`sapiens:sound:${data.user.id}:${trackId}`)==="true"; } catch { /* optional */ } } });
+    const soundChange = (event: Event) => { const detail = (event as CustomEvent<{ trackId: string; enabled: boolean }>).detail; if (detail.trackId === trackId) soundEnabled = detail.enabled; };
     const onReward = (event: Event) => {
       const detail = (event as CustomEvent<{ trackId: string; xp: number; title: string }>).detail;
       if (detail.trackId !== trackId) return;
       clearTimeout(timer);
+      if (soundEnabled) {
+        try {
+          audio ??= new AudioContext();
+          void audio.resume().then(() => {
+            if (!audio) return;
+            const start = audio.currentTime;
+            [880,1320].forEach((frequency,i) => { if (!audio) return; const tone=audio.createOscillator(); const gain=audio.createGain(); tone.frequency.value=frequency; gain.gain.setValueAtTime(0.035,start+i*0.08); gain.gain.exponentialRampToValueAtTime(0.001,start+0.35+i*0.08); tone.connect(gain); gain.connect(audio.destination); tone.start(start+i*0.08); tone.stop(start+0.4+i*0.08); });
+          }).catch(() => {});
+        } catch { /* Audio is optional and cannot block a reward. */ }
+      }
       setReward({ ...detail, id: Date.now() });
       timer = setTimeout(() => setReward(null), 4500);
     };
     window.addEventListener("sapiens:reward", onReward);
-    return () => { clearTimeout(timer); window.removeEventListener("sapiens:reward", onReward); };
+    window.addEventListener("sapiens:sound", soundChange);
+    return () => { clearTimeout(timer); window.removeEventListener("sapiens:reward", onReward); window.removeEventListener("sapiens:sound",soundChange); void audio?.close(); };
   }, [trackId]);
   if (!reward) return null;
   return <div key={reward.id} role="status" className="reward-burst fixed bottom-6 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 items-center gap-4 rounded-lg border border-primary bg-popover p-5 shadow-lg">
@@ -56,7 +73,7 @@ export function DailyQuest({ xp, streak, storageKey, now }: { xp: number; streak
     try { const saved = Number(localStorage.getItem(storageKey)); if (saved >= 10 && saved <= 10000) { setGoal(saved); setDraft(String(saved)); } } catch { /* Preferences are optional. */ }
   }, [storageKey]);
   const done = xp >= goal;
-  const minutesLeft = Math.max(0, (23 - now.getHours()) * 60 + 60 - now.getMinutes());
+  const minutesLeft = minutesUntilStudyMidnight(now);
   function save() {
     const value = Number(draft);
     if (!Number.isInteger(value) || value < 10 || value > 10000) return;

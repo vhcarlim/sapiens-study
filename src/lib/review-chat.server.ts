@@ -4,6 +4,7 @@ import { APICallError, convertToModelMessages, isStepCount, streamText, tool, ty
 import { z } from "zod";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId, withLovableAiGatewayRunIdHeader } from "./ai/run-id.ts";
+import { reviewEligible } from "@/lib/study-day";
 
 const bodySchema = z.object({ threadId: z.string().uuid(), trackId: z.string().uuid(), action: z.enum(["question", "answer"]), messages: z.array(z.object({ id: z.string(), role: z.string(), parts: z.array(z.unknown()) })).max(1000) });
 const evaluationSchema = z.object({ score: z.number(), correct: z.string(), missing: z.string(), feedback: z.string() });
@@ -30,7 +31,7 @@ export async function handleReviewChat(request: Request) {
       client.from("study_tracks").select("name").eq("id", thread.track_id).eq("archived", false).single(),
       client.from("review_ai_access").select("*").eq("user_id", userId).maybeSingle(),
     ]);
-    if (!activity?.knowledge_summary?.trim() || !track) return Response.json({ message: "Salve o resumo do conhecimento em uma atividade aprovada." }, { status: 400 });
+    if (!reviewEligible(activity?.knowledge_summary) || !track || !activity) return Response.json({ message: "Salve um resumo de ao menos 30 caracteres em uma atividade aprovada." }, { status: 400 });
     if (access?.denied) return Response.json({ message: access.reason ?? "O acesso à IA está bloqueado." }, { status: 403 });
     const question = input.action === "question";
     if (question && (thread.question_open || new Date(thread.next_review_at).getTime() > Date.now())) return Response.json({ message: "A próxima revisão ainda não está disponível." }, { status: 409 });
@@ -46,6 +47,12 @@ export async function handleReviewChat(request: Request) {
     const { data: claimed, error: claimError } = await admin.rpc("claim_active_review", { p_thread: thread.id, p_user: userId });
     if (claimError || !claimed) return Response.json({ message: "Uma arguição já está em andamento. Aguarde." }, { status: 409 });
     release = async () => { const { error: e } = await admin.from("review_threads").update({ busy_until: null }).eq("id", thread.id).eq("user_id", userId); if (e) console.error("review unlock failed", e.code); };
+    // A concurrent request may have completed between the initial read and claim.
+    const { data: lockedThread } = await admin.from("review_threads").select("question_open,round_id,messages,next_review_at").eq("id",thread.id).eq("user_id",userId).single();
+    if (!lockedThread || lockedThread.question_open !== thread.question_open || lockedThread.round_id !== thread.round_id || JSON.stringify(lockedThread.messages) !== JSON.stringify(thread.messages)) {
+      await release();
+      return Response.json({ message: "Esta arguição já foi atualizada. Seu histórico será recuperado." }, { status: 409 });
+    }
     const persistError = async (e: unknown) => {
       if (APICallError.isInstance(e) && (e.statusCode === 403 || e.statusCode === 402)) {
         const { error: saveError } = await admin.from("review_ai_access").upsert({ user_id: userId, denied: true, reason: safeError(e) });

@@ -19,6 +19,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { activityXp, celebrateReward } from "@/lib/gamification";
+import { List, Wand2, Undo2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { organizeSummary } from "@/lib/summary.functions";
+import { reviewEligible } from "@/lib/study-day";
 
 const schema = z.object({
   title: z.string().trim().min(1, "Informe um título").max(200),
@@ -59,9 +63,23 @@ export function ActivityDialog({
     skill_ids: [] as string[],
   });
   const [busy, setBusy] = useState(false);
+  const [organizing, setOrganizing] = useState(false);
+  const [originalSummary, setOriginalSummary] = useState<string | null>(null);
+  const organize = useServerFn(organizeSummary);
+  async function organizeNotes() {
+    const original = f.knowledge_summary;
+    setOrganizing(true);
+    try {
+      const result = await organize({ data: { trackId, text: original } });
+      setOriginalSummary(original);
+      setF(p => p.knowledge_summary === original ? { ...p, knowledge_summary: result.text } : p);
+    } catch(e) { toast.error(e instanceof Error ? e.message : "Suas notas foram preservadas."); }
+    finally { setOrganizing(false); }
+  }
 
   useEffect(() => {
     if (!open) return;
+    setOriginalSummary(null);
     if (activity) {
       setF({
         source_id: activity.source_id ?? "",
@@ -213,15 +231,21 @@ export function ActivityDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="knowledge-summary">O que aprendi / Resumo do conhecimento</Label>
-            <Textarea id="knowledge-summary" rows={4} maxLength={12000} placeholder="Com minhas palavras, aprendi que…" value={f.knowledge_summary} onChange={(e) => setF({ ...f, knowledge_summary: e.target.value })} />
-            <span className="text-xs text-muted-foreground">+20 XP pelo resumo · {f.knowledge_summary.length}/12.000</span>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" disabled={organizing} onClick={() => setF(p => ({ ...p, knowledge_summary: p.knowledge_summary ? p.knowledge_summary.split("\n").map(line => line.trim() && !line.trim().startsWith("•") ? `• ${line.trim()}` : line).join("\n").slice(0,12000) : "• " }))}><List className="size-4" />Tópicos-chave</Button>
+              <Button type="button" variant="outline" size="sm" disabled={organizing || !reviewEligible(f.knowledge_summary)} onClick={organizeNotes}><Wand2 className="size-4" />{organizing ? "Organizando…" : "Organizar com IA"}</Button>
+              {originalSummary !== null && <Button type="button" variant="ghost" size="icon-sm" title="Restaurar notas originais" aria-label="Restaurar notas originais" onClick={() => { setF(p => ({ ...p, knowledge_summary: originalSummary })); setOriginalSummary(null); }}><Undo2 /></Button>}
+            </div>
+            <Textarea id="knowledge-summary" rows={4} maxLength={12000} disabled={organizing} placeholder="Com minhas palavras, aprendi que…" value={f.knowledge_summary} onChange={(e) => setF({ ...f, knowledge_summary: e.target.value })} />
+            <p className="text-xs text-muted-foreground">Opcional · {f.knowledge_summary.trim().length}/12.000 · +20 XP pelo resumo</p>
+            <p className={cn("text-xs", reviewEligible(f.knowledge_summary) ? "text-primary" : "text-warning")}>{reviewEligible(f.knowledge_summary) ? "Conhecimento pronto para arguição ativa." : "Sem ao menos 30 caracteres, a atividade será salva sem arguição ativa."}</p>
           </div>
           <div className="space-y-2">
             <Label>Notas</Label>
             <Textarea rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" disabled={busy || organizing}>
               {approveOnSave ? "Aprovar" : "Salvar"}
             </Button>
           </DialogFooter>

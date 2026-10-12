@@ -423,6 +423,41 @@ export type Database = {
           },
         ]
       }
+      streak_freezes: {
+        Row: {
+          cost: number
+          id: string
+          protected_day: string
+          purchased_at: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          cost?: number
+          id?: string
+          protected_day: string
+          purchased_at?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          cost?: number
+          id?: string
+          protected_day?: string
+          purchased_at?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streak_freezes_track_id_user_id_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       study_tracks: {
         Row: {
           archived: boolean
@@ -470,6 +505,9 @@ export type Database = {
         }
         Returns: undefined
       }
+      purchase_streak_freeze: { Args: { p_track: string }; Returns: undefined }
+      streak_protection_state: { Args: { p_track: string }; Returns: Json }
+      study_xp_balance: { Args: { p_track: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
