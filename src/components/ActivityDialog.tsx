@@ -23,6 +23,7 @@ import { List, Wand2, Undo2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { organizeSummary } from "@/lib/summary.functions";
 import { reviewEligible } from "@/lib/study-day";
+import { topicOptions } from "@/lib/syllabus";
 
 const schema = z.object({
   title: z.string().trim().min(1, "Informe um título").max(200),
@@ -60,8 +61,10 @@ export function ActivityDialog({
     xp: "0",
     notes: "",
     knowledge_summary: "",
+    syllabus_topic: "",
     skill_ids: [] as string[],
   });
+  const topics = topicOptions(skills, f.skill_ids);
   const [busy, setBusy] = useState(false);
   const [organizing, setOrganizing] = useState(false);
   const [originalSummary, setOriginalSummary] = useState<string | null>(null);
@@ -92,10 +95,11 @@ export function ActivityDialog({
         xp: String(activity.xp),
         notes: activity.notes ?? "",
         knowledge_summary: activity.knowledge_summary ?? "",
+        syllabus_topic: activity.syllabus_topic ?? "",
         skill_ids: activity.activity_skills.map((s) => s.skill_id),
       });
     } else {
-      setF((p) => ({ ...p, source_id: "", title: "", notes: "", knowledge_summary: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
+      setF((p) => ({ ...p, source_id: "", title: "", notes: "", knowledge_summary: "", syllabus_topic: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
     }
   }, [open, activity, trackId]);
 
@@ -124,6 +128,7 @@ export function ActivityDialog({
         ...parsed.data,
         notes: parsed.data.notes || null,
         knowledge_summary: parsed.data.knowledge_summary || null,
+        syllabus_topic: f.syllabus_topic.trim().slice(0, 300) || null,
         ...(approveOnSave || !activity ? { status: "approved" } : {}),
       });
       toast.success(approveOnSave ? "Aprovada e adicionada ao painel" : "Atividade salva");
@@ -229,6 +234,16 @@ export function ActivityDialog({
               })}
             </div>
           </div>
+          {(topics.length > 0 || f.syllabus_topic) && (
+            <div className="space-y-2">
+              <Label htmlFor="syllabus-topic">Tópico do edital</Label>
+              <Input id="syllabus-topic" list="syllabus-topic-options" maxLength={300} placeholder="Escolha ou digite um tópico" value={f.syllabus_topic} onChange={(e) => setF({ ...f, syllabus_topic: e.target.value })} />
+              <datalist id="syllabus-topic-options">
+                {topics.map((t) => <option key={t} value={t} />)}
+              </datalist>
+              <p className="text-xs text-muted-foreground">Opcional · {topics.length} tópicos das competências selecionadas</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="knowledge-summary">O que aprendi / Resumo do conhecimento</Label>
             <div className="flex flex-wrap gap-2">
