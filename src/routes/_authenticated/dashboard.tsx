@@ -37,6 +37,9 @@ import { AnimatedNumber, DailyQuest, NeonProgress } from "@/components/Gamificat
 import { SkillMissionMap } from "@/components/SkillMissionMap";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { studyDay, studyCalendarDate } from "@/lib/study-day";
+import { protectionQuery } from "@/lib/engagement";
+import { PriorityMission, StreakProtection, TrophyShelf, SoundToggle } from "@/components/StudyEngagement";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — sapiens" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — sapiens" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -53,6 +56,7 @@ function Dashboard() {
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const { data: mastery = [] } = useQuery(masteryQuery(trackId));
   const { data: reviewResults = [] } = useQuery(resultsQuery(trackId));
+  const { data: protection } = useQuery(protectionQuery(trackId));
   const [now, setNow] = useState(new Date());
   const [userId, setUserId] = useState("");
   useEffect(() => {
@@ -63,7 +67,7 @@ function Dashboard() {
   const reviewXp = reviewResults.reduce((total, r) => total + r.xp, 0);
   const [range, setRange] = useState<Range>("week");
   const [metric, setMetric] = useState<Metric>("quantity");
-  const [selected, setSelected] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [selected, setSelected] = useState<string>(studyDay());
 
   const byDay = useMemo(() => {
     const m = new Map<string, Activity[]>();
@@ -75,15 +79,15 @@ function Dashboard() {
     const minutes = acts.reduce((s, a) => s + a.minutes, 0);
     const items = acts.reduce((s, a) => s + a.quantity, 0);
     const certs = acts.filter((a) => a.type === "certificate").length;
-    const streak = studyStreak(acts, reviewResults, now);
+    const streak = studyStreak(acts, reviewResults, now, protection?.days);
     return { minutes, items, certs, streak };
-  }, [acts, reviewResults, now]);
+  }, [acts, reviewResults, now, protection?.days]);
 
   const chartData = useMemo(() => {
     const val = (list: Activity[], sid: string) =>
       list.filter((a) => (a.source_id ?? "none") === sid).reduce((s, a) => s + a[metric], 0);
     const keys = [...sources.map((s) => s.id), "none"];
-    const today = new Date();
+    const today = studyCalendarDate(now);
     if (range === "year") {
       return Array.from({ length: 12 }, (_, i) => {
         const m = startOfMonth(subMonths(today, 11 - i));
@@ -105,11 +109,11 @@ function Dashboard() {
       keys.forEach((k) => (row[k] = val(list, k)));
       return row;
     });
-  }, [acts, byDay, sources, range, metric]);
+  }, [acts, byDay, sources, range, metric, now]);
 
   const skillData = useMemo(() => skillProgress(skills, acts, mastery, reviewResults), [acts, skills, mastery, reviewResults]);
   const totalXp = acts.reduce((sum, a) => sum + activityXp(a), 0) + reviewXp;
-  const todayXp = dailyXp(acts, reviewResults, format(now, "yyyy-MM-dd"));
+  const todayXp = dailyXp(acts, reviewResults, studyDay(now));
   const milestones = acts.filter((a) => a.type === "certificate" || a.type === "level").slice(0, 6);
   const dayList = byDay.get(selected) ?? [];
 
@@ -117,9 +121,10 @@ function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="font-mono text-sm text-track-accent">// {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
-        <h1 className="mt-1 text-3xl font-bold">{track?.name}</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div><p className="font-mono text-sm text-track-accent">// {format(studyCalendarDate(now), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+        <h1 className="mt-1 text-3xl font-bold">{track?.name}</h1></div>
+        {userId && <SoundToggle userId={userId} trackId={trackId} />}
       </div>
 
       {(() => {
@@ -141,6 +146,8 @@ function Dashboard() {
       })()}
 
       {userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
+      <PriorityMission trackId={trackId} activities={acts} now={now} />
+      <StreakProtection trackId={trackId} activities={acts} results={reviewResults} now={now} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={Flame} label="XP conquistado" value={`${totalXp.toLocaleString("pt-BR")} XP`} accent />
         <Stat icon={Clock} label="Tempo total" value={fmtMinutes(stats.minutes)} />
@@ -229,6 +236,7 @@ function Dashboard() {
       </div>
 
       {userId && <SkillMissionMap key={`map-${trackId}`} skills={skillData} storageKey={`sapiens:map:${userId}:${trackId}`} />}
+      <TrophyShelf activities={acts} skills={skillData} />
 
       {milestones.length > 0 && (
         <section>
@@ -246,7 +254,7 @@ function Dashboard() {
 
 function Stat({ icon: Icon, label, value, accent }: { icon: typeof Flame; label: string; value: string; accent?: boolean }) {
   return (
-    <div className={cn("rounded-xl border bg-card p-4", accent && "border-track-accent/50")}>
+    <div className={cn("rounded-lg border bg-card p-4", accent && "border-track-accent/50")}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className={cn("size-4", accent && "text-track-accent")} /> {label}
       </div>
@@ -283,7 +291,7 @@ function Heatmap({
   selected: string;
   onSelect: (d: string) => void;
 }) {
-  const today = new Date();
+  const today = studyCalendarDate();
   const start = startOfWeek(subDays(today, 364), { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end: today });
   const weeks: Date[][] = [];
