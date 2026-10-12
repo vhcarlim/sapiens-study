@@ -43,6 +43,13 @@
       "when": 1791389496845,
       "tag": "0005_schedule_knowledge_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791811510965,
+      "tag": "0006_study_reliability_and_streak_protection",
+      "breakpoints": true
     }
   ]
 }
