@@ -68,6 +68,7 @@ export type ActivityInput = {
   xp: number;
   notes: string | null;
   knowledge_summary?: string | null;
+  syllabus_topic?: string | null;
   skill_ids: string[];
   status?: string;
 };

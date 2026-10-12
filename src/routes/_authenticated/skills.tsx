@@ -12,6 +12,7 @@ import { activitiesQuery } from "@/lib/data";
 import { masteryQuery, resultsQuery } from "@/lib/reviews";
 import { skillProgress, type SkillProgress } from "@/lib/gamification";
 import { AnimatedNumber, NeonProgress } from "@/components/Gamification";
+import { SyllabusImportDialog } from "@/components/SyllabusImportDialog";
 
 export const Route = createFileRoute("/_authenticated/skills")({
   head: () => ({ meta: [{ title: "Competências — sapiens" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — sapiens" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -41,13 +42,16 @@ function SkillsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Competências</h1>
-        <p className="text-muted-foreground">As áreas que somam no seu gráfico de habilidades.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold">Competências</h1>
+          <p className="text-muted-foreground">As áreas que somam no seu gráfico de habilidades.</p>
+        </div>
+        {trackId && <SyllabusImportDialog trackId={trackId} skills={skills} />}
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {skills.map((s) => (
-          <SkillRow key={s.id} s={s} progress={progress.find(p => p.id === s.id)} />
+          <SkillRow key={s.id} s={s} progress={progress.find(p => p.id === s.id)} studied={new Set(activities.filter(a => a.syllabus_topic && a.activity_skills.some(x => x.skill_id === s.id)).map(a => a.syllabus_topic as string))} />
         ))}
       </div>
       <form onSubmit={add} className="flex flex-wrap gap-2 rounded-lg border border-dashed p-4">
@@ -59,7 +63,7 @@ function SkillsPage() {
   );
 }
 
-function SkillRow({ s, progress }: { s: Skill; progress: SkillProgress | undefined }) {
+function SkillRow({ s, progress, studied }: { s: Skill; progress: SkillProgress | undefined; studied: Set<string> }) {
   const qc = useQueryClient();
   const [name, setName] = useState(s.name);
   async function update(patch: Partial<Skill>) {
@@ -87,6 +91,14 @@ function SkillRow({ s, progress }: { s: Skill; progress: SkillProgress | undefin
       </Button>
       </div>
       {progress && <><div className="flex flex-wrap justify-between gap-2 font-mono text-xs"><span className="text-primary">NV {progress.level} / 10 · {progress.title}</span><span className="text-muted-foreground"><AnimatedNumber value={progress.xp} /> XP</span></div><NeonProgress progress={progress.progress} label={`Nível de ${s.name}`} /><p className="text-xs text-muted-foreground">{progress.maxed ? "Maestria máxima" : `${progress.xpToNext} XP para o próximo nível`}</p></>}
+      {s.topics.length > 0 && (
+        <details className="text-xs">
+          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">{s.topics.length} tópicos do edital · {studied.size} estudados</summary>
+          <ol className="mt-2 list-decimal space-y-0.5 pl-5">
+            {s.topics.map((t) => <li key={t} className={studied.has(t) ? "text-primary" : "text-muted-foreground"}>{t}</li>)}
+          </ol>
+        </details>
+      )}
     </div>
   );
 }
