@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { studyDay } from "@/lib/study-day";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -17,7 +17,7 @@ export const ACTIVITY_TYPES: { value: string; label: string }[] = [
 ];
 export const typeLabel = (t: string) => ACTIVITY_TYPES.find((x) => x.value === t)?.label ?? t;
 
-export const todayStr = () => format(new Date(), "yyyy-MM-dd");
+export const todayStr = () => studyDay();
 
 export const sourcesQuery = (trackId: string) => queryOptions({
   queryKey: ["sources", trackId],
