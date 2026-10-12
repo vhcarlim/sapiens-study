@@ -26,6 +26,7 @@ export type Database = {
           quantity: number
           source_id: string | null
           status: string
+          syllabus_topic: string | null
           title: string
           track_id: string | null
           type: string
@@ -43,6 +44,7 @@ export type Database = {
           quantity?: number
           source_id?: string | null
           status?: string
+          syllabus_topic?: string | null
           title: string
           track_id?: string | null
           type?: string
@@ -60,6 +62,7 @@ export type Database = {
           quantity?: number
           source_id?: string | null
           status?: string
+          syllabus_topic?: string | null
           title?: string
           track_id?: string | null
           type?: string
@@ -344,6 +347,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          topics: string[]
           track_id: string | null
           user_id: string
         }
@@ -352,6 +356,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          topics?: string[]
           track_id?: string | null
           user_id?: string
         }
@@ -360,6 +365,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          topics?: string[]
           track_id?: string | null
           user_id?: string
         }

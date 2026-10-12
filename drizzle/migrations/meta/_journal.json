@@ -50,6 +50,13 @@
       "when": 1791811510965,
       "tag": "0006_study_reliability_and_streak_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791818112437,
+      "tag": "0007_syllabus_topics",
+      "breakpoints": true
     }
   ]
 }
