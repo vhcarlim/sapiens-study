@@ -10,8 +10,8 @@
 - [x] Adicionar recompensas animadas, ofensiva e meta diária de XP.
 - [x] Oferecer mapa opcional de competências por trilha.
 - [x] Verificar registros, recompensas, mapa e métricas na interface.
-- [ ] Normalizar datas e validar contexto mínimo das arguições.
-- [ ] Preservar rascunhos e recuperar falhas sem duplicar avaliações.
-- [ ] Adicionar missão prioritária, protetores, conquistas e som opcional.
-- [ ] Facilitar resumos com tópicos e organização por IA.
-- [ ] Verificar regras e fluxos reais de estudo.
+- [x] Normalizar datas e validar contexto mínimo das arguições.
+- [x] Preservar rascunhos e recuperar falhas sem duplicar avaliações.
+- [x] Adicionar missão prioritária, protetores, conquistas e som opcional.
+- [x] Facilitar resumos com tópicos e organização por IA.
+- [x] Verificar regras e fluxos reais de estudo.
