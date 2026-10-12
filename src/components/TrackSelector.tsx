@@ -93,7 +93,7 @@ export function TrackSelector() {
         </div>
         <form onSubmit={save} className="space-y-4 border-t pt-4">
           <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">{editing ? "Editar trilha" : "Nova trilha"}</h3>{editing && <Button type="button" size="sm" variant="ghost" onClick={() => edit(null)}><Plus className="size-4" /> Nova</Button>}</div>
-          <div className="space-y-2"><Label htmlFor="track-name">Nome da trilha</Label><Input id="track-name" required maxLength={60} placeholder="Ex.: Cybersecurity ou Concursos" value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="space-y-2"><Label htmlFor="track-name">Nome da trilha</Label><Input id="track-name" required maxLength={60} placeholder="Nome da trilha" value={name} onChange={(e) => setName(e.target.value)} /></div>
           <fieldset className="space-y-2"><legend className="text-sm font-medium">Cor de destaque</legend><div className="flex flex-wrap gap-2">{TRACK_COLORS.map((c) => <Button key={c.value} type="button" variant="outline" size="icon" data-track-color={c.value} aria-label={c.label} title={c.label} aria-pressed={color === c.value} className={color === c.value ? "border-track-accent ring-1 ring-track-accent" : ""} onClick={() => setColor(c.value)}><span className="flex size-5 items-center justify-center rounded-full bg-track-accent text-track-contrast">{color === c.value && <Check className="size-3" />}</span></Button>)}</div></fieldset>
           <div className="flex justify-end"><Button type="submit" disabled={busy || !name.trim()}>{editing ? <Check className="size-4" /> : <Plus className="size-4" />}{editing ? "Salvar trilha" : "Criar trilha"}</Button></div>
         </form>

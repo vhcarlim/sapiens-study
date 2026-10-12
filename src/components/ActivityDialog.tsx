@@ -164,7 +164,7 @@ export function ActivityDialog({
             <Label>O que você fez?</Label>
             <Input
               value={f.title}
-              placeholder="Ex.: 5 lições de APIs no PortSwigger"
+              placeholder="Título da atividade"
               onChange={(e) => setF({ ...f, title: e.target.value })}
             />
           </div>

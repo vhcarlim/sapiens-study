@@ -63,7 +63,7 @@ function SourcesPage() {
           className="h-9 w-12 cursor-pointer rounded border bg-transparent"
           aria-label="Cor"
         />
-        <Input className="max-w-xs" placeholder="Nova fonte (ex.: Hack The Box)" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input className="max-w-xs" placeholder="Nome da fonte" value={name} onChange={(e) => setName(e.target.value)} />
         <Button type="submit">Adicionar</Button>
       </form>
     </div>

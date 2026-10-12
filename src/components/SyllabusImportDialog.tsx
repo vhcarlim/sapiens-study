@@ -93,7 +93,7 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">Envie apenas as páginas do edital com o conteúdo programático (PDF até 5 MB) ou cole o texto. Cada matéria vira uma competência e seus itens viram tópicos do edital.</p>
               <Input type="file" accept="application/pdf" aria-label="PDF do conteúdo programático" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-              <Textarea rows={8} maxLength={60000} placeholder={"NOÇÕES DE INFORMÁTICA: 1 Conceitos de informática, hardware e software. 2 ..."} value={text} onChange={(e) => setText(e.target.value)} />
+              <Textarea rows={8} maxLength={60000} placeholder="Cole aqui o conteúdo programático" value={text} onChange={(e) => setText(e.target.value)} />
               <DialogFooter>
                 <Button onClick={read} disabled={busy || (!file && text.trim().length < 20)}><Wand2 className="size-4" />{busy ? "Lendo edital…" : "Ler com IA"}</Button>
               </DialogFooter>
