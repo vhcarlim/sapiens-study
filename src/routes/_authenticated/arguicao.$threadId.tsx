@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CheckCircle2, TriangleAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle2, TriangleAlert, RotateCcw } from "lucide-react";
 import { useTrack } from "@/lib/tracks";
 import { activitiesQuery } from "@/lib/data";
 import { resultsQuery, threadsQuery, threadMessages, type ReviewThread } from "@/lib/reviews";
@@ -15,6 +15,7 @@ import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit 
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Tool, ToolHeader, ToolContent } from "@/components/ai-elements/tool";
 import { celebrateReward } from "@/lib/gamification";
+import { reviewDraftKey, STUDY_TIME_ZONE } from "@/lib/study-day";
 
 export const Route = createFileRoute("/_authenticated/arguicao/$threadId")({
   head: () => ({ meta: [{ title: "Arguição ativa — sapiens" }, { name: "description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:title", content: "Arguição ativa — sapiens" }, { property: "og:description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -37,6 +38,20 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
   const qc = useQueryClient();
   const [input, setInput] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
+  const [draftKey, setDraftKey] = useState("");
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [retryable, setRetryable] = useState(false);
+  const lastAction = useRef<"question" | "answer">("question");
+  const submittedText = useRef("");
+  useEffect(() => {
+    const key = reviewDraftKey(thread.user_id, thread.track_id, thread.id);
+    try { setInput(localStorage.getItem(key) ?? ""); } catch { /* Keep usable without storage. */ }
+    setDraftKey(key);
+  }, [thread.user_id, thread.track_id, thread.id]);
+  useEffect(() => {
+    if (!draftKey) return;
+    try { if (input) localStorage.setItem(draftKey,input); else localStorage.removeItem(draftKey); setDraftSaved(!!input); } catch { setDraftSaved(false); }
+  }, [input,draftKey]);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const { data: results = [] } = useQuery(resultsQuery(thread.track_id));
   const latestResult = results.find(r => r.thread_id === thread.id);
@@ -61,6 +76,7 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
       const response = await fetch(url, options);
       if (!response.ok) {
         const data = await response.json().catch(() => ({ message: "Não foi possível concluir a arguição." }));
+        setRetryable(response.status === 401 || response.status === 409 || response.status === 429 || response.status >= 500);
         throw new Error(data.message ?? "Não foi possível concluir a arguição.");
       }
       return response;
@@ -71,7 +87,13 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
     await Promise.all(["review-threads", "review-results", "skill-mastery"].map(key => qc.invalidateQueries({ queryKey: [key, thread.track_id] })));
   };
   const { messages, status, sendMessage, stop, setMessages } = useChat({ id: thread.id, messages: threadMessages(thread), transport,
-    onError: e => setFailure(e.message), onFinish: async () => { await refresh(); textarea.current?.focus(); },
+    onError: e => { setFailure(e.message); if (lastAction.current === "answer") setInput(submittedText.current); }, onFinish: async ({ isError, isAbort }) => {
+      await refresh();
+      const updated = await qc.fetchQuery(threadsQuery(thread.track_id));
+      const current = updated.find(t => t.id === thread.id);
+      if (!isError && !isAbort && current && lastAction.current === "answer" && !current.question_open) { setInput(""); setFailure(null); }
+      textarea.current?.focus();
+    },
   });
   const busy = status === "submitted" || status === "streaming";
   const due = new Date(thread.next_review_at).getTime() <= Date.now();
@@ -79,16 +101,33 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
   useEffect(() => { if (!busy) textarea.current?.focus(); }, [busy]);
   async function start() {
     setFailure(null);
+    setRetryable(true);
+    lastAction.current = "question";
     setMessages(threadMessages(thread));
     await sendMessage({ text: "Iniciar uma nova arguição." }, { body: { action: "question" } });
   }
   async function answer() {
     if (!input.trim() || busy || !thread.question_open) return;
     setFailure(null);
+    setRetryable(true);
+    lastAction.current = "answer";
     const text = input.trim();
-    setInput("");
+    submittedText.current = text;
+    setMessages(threadMessages(thread));
     await sendMessage({ text }, { body: { action: "answer" } });
     textarea.current?.focus();
+  }
+  async function retry() {
+    await refresh();
+    const updated = await qc.fetchQuery(threadsQuery(thread.track_id));
+    const current = updated.find(t => t.id === thread.id);
+    if (!current) return;
+    setMessages(threadMessages(current));
+    setFailure(null);
+    if (lastAction.current === "question" && current.question_open) return;
+    if (lastAction.current === "answer" && !current.question_open) { setInput(""); return; }
+    if (current.busy_until && new Date(current.busy_until).getTime()>Date.now()) { setFailure("A revisão anterior ainda está em andamento. Aguarde antes de reenviar."); return; }
+    await sendMessage({ text: lastAction.current === "question" ? "Iniciar uma nova arguição." : submittedText.current }, { body: { action: lastAction.current } });
   }
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
@@ -108,15 +147,15 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
-      {failure && <p role="alert" className="break-words text-sm text-destructive">{failure}</p>}
+      {failure && <div className="space-y-2"><p role="alert" className="break-words text-sm text-destructive">{failure}</p>{retryable && !busy && <Button variant="outline" onClick={retry}><RotateCcw className="size-4" />{lastAction.current === "answer" ? "Tentar reenviar" : "Regenerar pergunta"}</Button>}</div>}
       {latestResult && !thread.question_open && !busy && <div className="border-l-2 border-track-accent pl-4">
         <p className="flex items-center gap-2 font-semibold">{latestResult.score >= 70 ? <CheckCircle2 className="size-4 text-track-accent" /> : <TriangleAlert className="size-4 text-warning" />}{latestResult.score >= 70 ? "Domínio demonstrado" : "Fragilidade na memória"} · {latestResult.score}/100</p>
-        <p className="mt-1 text-sm text-muted-foreground">{latestResult.mastery_delta > 0 ? "+" : ""}{latestResult.mastery_delta} de domínio · +{latestResult.xp} XP · próxima revisão em {new Date(thread.next_review_at).toLocaleDateString("pt-BR")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{latestResult.mastery_delta > 0 ? "+" : ""}{latestResult.mastery_delta} de domínio · +{latestResult.xp} XP · próxima revisão em {new Date(thread.next_review_at).toLocaleDateString("pt-BR", { timeZone: STUDY_TIME_ZONE })}</p>
       </div>}
       {thread.question_open || busy ? <PromptInput onSubmit={answer}>
         <PromptInputTextarea ref={textarea} aria-label="Sua argumentação" placeholder="Minha argumentação…" value={input} onChange={e => setInput(e.target.value)} maxLength={12000} disabled={busy} className="min-h-28" />
-        <PromptInputFooter className="justify-end"><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => { void stop(); setFailure("Arguição interrompida. Nenhuma avaliação incompleta conta no progresso."); }} aria-label={busy ? "Parar arguição" : "Enviar argumentação"} title={busy ? "Parar arguição" : "Enviar argumentação"} /></PromptInputFooter>
-      </PromptInput> : <div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{due ? "Revisão disponível" : `Próxima revisão: ${new Date(thread.next_review_at).toLocaleDateString("pt-BR")}`}</p><Button onClick={start} disabled={!due || busy}>Iniciar arguição</Button></div>}
+        <PromptInputFooter className="justify-between"><span className="text-xs text-muted-foreground">{draftSaved ? "Rascunho salvo neste dispositivo" : ""}</span><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => { void stop(); setRetryable(true); setFailure("Arguição interrompida. Sua resposta foi preservada; nenhuma avaliação incompleta conta no progresso."); }} aria-label={busy ? "Parar arguição" : "Enviar argumentação"} title={busy ? "Parar arguição" : "Enviar argumentação"} /></PromptInputFooter>
+      </PromptInput> : <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{due ? "Revisão disponível" : `Próxima revisão: ${new Date(thread.next_review_at).toLocaleDateString("pt-BR", { timeZone: STUDY_TIME_ZONE })}`}</p><Button onClick={start} disabled={!due || busy}>Iniciar arguição</Button></div>}
     </div>
   );
 }
