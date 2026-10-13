@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-type Range = "week" | "month" | "year";
+type Range = "week" | "month" | "year" | "years";
 type Metric = "quantity" | "minutes";
 
 function Dashboard() {
@@ -125,7 +125,7 @@ function Dashboard() {
       keys.forEach((k) => (row[k] = val(list, k)));
       return row;
     });
-  }, [acts, byDay, sources, range, metric, now]);
+  }, [acts, byDay, sources, range, metric, now, chartYear, years]);
 
   const skillData = useMemo(() => skillProgress(skills, acts, mastery, reviewResults), [acts, skills, mastery, reviewResults]);
   const totalXp = acts.reduce((sum, a) => sum + activityXp(a), 0) + reviewXp;
@@ -173,10 +173,14 @@ function Dashboard() {
 
       <section className="border-t border-border pt-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold">Último ano</h2>
+          <h2 className="font-semibold">{heatYear ? `Ano de ${heatYear}` : "Último ano"}</h2>
+          <select aria-label="Ano do mapa" className="rounded-md border bg-background px-2 py-1 text-xs" value={heatYear ?? "recent"} onChange={(e) => setHeatYear(e.target.value === "recent" ? null : Number(e.target.value))}>
+            <option value="recent">Últimos 12 meses</option>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
 
         </div>
-        <Heatmap byDay={byDay} selected={selected} onSelect={setSelected} />
+        <Heatmap year={heatYear} byDay={byDay} selected={selected} onSelect={setSelected} />
         <div className="mt-5 border-t pt-4">
           <h3 className="mb-3 font-mono text-sm text-muted-foreground">
             {format(parseISO(selected), "dd 'de' MMMM yyyy", { locale: ptBR })} · {dayList.length} registro(s)
@@ -194,9 +198,15 @@ function Dashboard() {
         <section className="border-t border-border pt-5 lg:col-span-3">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Atividade por período</h2>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Seg value={metric} onChange={setMetric} opts={[["quantity", "Itens"], ["minutes", "Minutos"]]} />
-              <Seg value={range} onChange={setRange} opts={[["week", "Semana"], ["month", "Mês"], ["year", "Ano"]]} />
+              <Seg value={range} onChange={setRange} opts={[["week", "Semana"], ["month", "Mês"], ["year", "Ano"], ["years", "Todos os anos"]]} />
+              {range === "year" && (
+                <select aria-label="Ano do gráfico" className="rounded-md border bg-background px-2 py-1 text-xs" value={chartYear} onChange={(e) => setChartYear(e.target.value)}>
+                  <option value="recent">Últimos 12 meses</option>
+                  {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
+                </select>
+              )}
             </div>
           </div>
           <div className="h-72">
@@ -299,16 +309,18 @@ function Seg<T extends string>({ value, onChange, opts }: { value: T; onChange: 
 }
 
 function Heatmap({
+  year,
   byDay,
   selected,
   onSelect,
 }: {
+  year: number | null;
   byDay: Map<string, Activity[]>;
   selected: string;
   onSelect: (d: string) => void;
 }) {
-  const today = studyCalendarDate();
-  const start = startOfWeek(subDays(today, 364), { weekStartsOn: 0 });
+  const today = year ? new Date(year, 11, 31) : studyCalendarDate();
+  const start = startOfWeek(year ? new Date(year, 0, 1) : subDays(today, 364), { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end: today });
   const weeks: Date[][] = [];
   days.forEach((d, i) => {
