@@ -13,9 +13,41 @@ export const ACTIVITY_TYPES: { value: string; label: string }[] = [
   { value: "course", label: "Curso / Módulo" },
   { value: "certificate", label: "Certificado" },
   { value: "level", label: "Nível" },
+  { value: "exam", label: "Prova / Concurso" },
+  { value: "mock", label: "Simulado" },
+  { value: "reading", label: "Leitura / Livro" },
+  { value: "method", label: "Técnicas & Metodologia" },
   { value: "other", label: "Outro" },
 ];
 export const typeLabel = (t: string) => ACTIVITY_TYPES.find((x) => x.value === t)?.label ?? t;
+
+/** Infers a specialized activity type from free text (e.g. a spreadsheet subject such as "Leitura/Simulado/Técnicas"). */
+export function inferActivityType(...texts: (string | null | undefined)[]): string {
+  const t = texts.filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (/\bsimulad/.test(t)) return "mock";
+  if (/\b(prova|concurso)\b/.test(t)) return "exam";
+  if (/\b(leitura|livro)\b/.test(t)) return "reading";
+  if (/\b(tecnica|metodologia|metodo)/.test(t)) return "method";
+  return "lesson";
+}
+
+/** Global ("all tracks") read-only queries for the unified dashboard. */
+export const allActivitiesQuery = () => queryOptions({
+  queryKey: ["activities", "approved", "all"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("activities").select("*, activity_skills(skill_id)").eq("status", "approved").order("date", { ascending: false });
+    if (error) throw error;
+    return data as Activity[];
+  },
+});
+export const allSkillsQuery = () => queryOptions({
+  queryKey: ["skills", "all"],
+  queryFn: async () => { const { data, error } = await supabase.from("skills").select("*").order("name"); if (error) throw error; return data; },
+});
+export const allSourcesQuery = () => queryOptions({
+  queryKey: ["sources", "all"],
+  queryFn: async () => { const { data, error } = await supabase.from("sources").select("*").order("created_at"); if (error) throw error; return data; },
+});
 
 export const todayStr = () => studyDay();
 

@@ -71,7 +71,7 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
       for (let i = 0; i < all.length; i += 200) {
         const chunk = all.slice(i, i + 200);
         const { data, error } = await supabase.from("activities").insert(chunk.map((s) => ({
-          track_id: trackId, source_id: src, date: s.date, type: "lesson", title: sessionTitle(s),
+          track_id: trackId, source_id: src, date: s.date, type: inferActivityType(s.subject, s.content), title: sessionTitle(s),
           quantity: 1, minutes: s.minutes, notes: s.notes, syllabus_topic: s.content, status: "pending",
         }))).select("id");
         if (error) throw error;

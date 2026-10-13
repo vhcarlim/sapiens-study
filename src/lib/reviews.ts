@@ -28,6 +28,14 @@ export const resultsQuery = (trackId: string) => queryOptions({
     return data;
   },
 });
+export const allMasteryQuery = () => queryOptions({
+  queryKey: ["skill-mastery", "all"],
+  queryFn: async () => { const { data, error } = await supabase.from("skill_mastery").select("*"); if (error) throw error; return data; },
+});
+export const allResultsQuery = () => queryOptions({
+  queryKey: ["review-results", "all"],
+  queryFn: async () => { const { data, error } = await supabase.from("review_results").select("*").order("created_at", { ascending: false }); if (error) throw error; return data; },
+});
 export function threadMessages(thread: ReviewThread): UIMessage[] {
   return Array.isArray(thread.messages) ? thread.messages as unknown as UIMessage[] : [];
 }

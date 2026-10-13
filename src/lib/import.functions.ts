@@ -9,7 +9,7 @@ const Input = z.object({
   default_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
-const TYPES = ["lesson", "room", "course", "certificate", "level", "other"];
+const TYPES = ["lesson", "room", "course", "certificate", "level", "exam", "mock", "reading", "method", "other"];
 
 /** Sends pasted raw history to the AI, creates pending activities for review. */
 export const importPastedText = createServerFn({ method: "POST" })
