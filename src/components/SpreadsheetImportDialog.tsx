@@ -40,7 +40,18 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
 
   async function readFile(f: File | undefined) {
     if (!f) return;
-    if (!/\.(csv|tsv|txt)$/i.test(f.name)) return void toast.error("Baixe a planilha como CSV (Arquivo → Fazer download → .csv)");
+    if (/\.(xlsx|xls)$/i.test(f.name)) {
+      try {
+        const XLSX = await import("xlsx");
+        const wb = XLSX.read(await f.arrayBuffer(), { cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]!]!;
+        setText(XLSX.utils.sheet_to_csv(ws, { FS: "\t", dateNF: "dd/mm/yyyy hh:mm", blankrows: false }));
+      } catch {
+        toast.error("Não foi possível ler o arquivo Excel");
+      }
+      return;
+    }
+    if (!/\.(csv|tsv|txt)$/i.test(f.name)) return void toast.error("Envie um arquivo .xlsx, .xls ou .csv");
     setText(await f.text());
   }
 
@@ -91,8 +102,8 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Arquivo CSV</Label>
-              <Input type="file" accept=".csv,.tsv,.txt" onChange={(e) => readFile(e.target.files?.[0])} />
+              <Label>Arquivo (Excel ou CSV)</Label>
+              <Input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" onChange={(e) => readFile(e.target.files?.[0])} />
             </div>
             <div className="space-y-2">
               <Label>Fonte</Label>
