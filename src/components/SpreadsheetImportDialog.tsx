@@ -6,7 +6,7 @@ import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTrack } from "@/lib/tracks";
 import { skillsQuery, sourcesQuery } from "@/lib/data";
-import { parseSheet, sessionTitle } from "@/lib/spreadsheet-import";
+import { parseSheet, sessionTitle, sheetRowsToText } from "@/lib/spreadsheet-import";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,18 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
 
   async function readFile(f: File | undefined) {
     if (!f) return;
-    if (!/\.(csv|tsv|txt)$/i.test(f.name)) return void toast.error("Baixe a planilha como CSV (Arquivo → Fazer download → .csv)");
+    if (/\.(xlsx|xls)$/i.test(f.name)) {
+      try {
+        const XLSX = await import("xlsx");
+        const wb = XLSX.read(await f.arrayBuffer(), { cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]!]!;
+        setText(sheetRowsToText(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: true, blankrows: false })));
+      } catch {
+        toast.error("Não foi possível ler o arquivo Excel");
+      }
+      return;
+    }
+    if (!/\.(csv|tsv|txt)$/i.test(f.name)) return void toast.error("Envie um arquivo .xlsx, .xls ou .csv");
     setText(await f.text());
   }
 
@@ -91,8 +102,8 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Arquivo CSV</Label>
-              <Input type="file" accept=".csv,.tsv,.txt" onChange={(e) => readFile(e.target.files?.[0])} />
+              <Label>Arquivo (Excel ou CSV)</Label>
+              <Input type="file" accept=".xlsx,.xls,.csv,.tsv,.txt" onChange={(e) => readFile(e.target.files?.[0])} />
             </div>
             <div className="space-y-2">
               <Label>Fonte</Label>
