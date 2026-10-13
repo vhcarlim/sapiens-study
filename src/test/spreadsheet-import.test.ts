@@ -11,7 +11,7 @@ describe("importação de planilha do Aprovado", () => {
     const { sessions } = parseSheet(tsv);
     expect(sessions).toHaveLength(2);
     expect(sessions[0]).toMatchObject({ date: "2024-08-13", subject: "(AFT) Direito do Trabalho", minutes: 240 });
-    expect(sessions[1].notes).toContain("Organização sindical");
+    expect(sessions[1]?.notes).toContain("Organização sindical");
   });
   it("lê durações no formato 5h 30m", () => {
     expect(parseDuration("5h 30m")).toBe(330);

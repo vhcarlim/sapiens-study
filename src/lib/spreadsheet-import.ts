@@ -31,7 +31,7 @@ export function parseDate(v: string): string | null {
   const s = v.trim();
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (m) {
-    const y = m[3].length === 2 ? `20${m[3]}` : m[3];
+    const y = m[3]!.length === 2 ? `20${m[3]}` : m[3];
     const d = Number(m[1]), mo = Number(m[2]);
     if (d < 1 || d > 31 || mo < 1 || mo > 12) return null;
     return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -56,7 +56,7 @@ export function parseSheet(text: string): { sessions: SheetSession[]; skipped: n
   const rows = splitRows(text);
   const hi = rows.findIndex((r) => r.some((c) => norm(c) === "materia"));
   if (hi < 0) throw new Error("Cabeçalho não encontrado: inclua a linha com Início, Matéria e Duração.");
-  const h = rows[hi].map(norm);
+  const h = rows[hi]!.map(norm);
   const col = (...names: string[]) => h.findIndex((c) => names.includes(c));
   const iDate = col("inicio", "data"), iSub = col("materia"), iCont = col("conteudo");
   const iMin = col("duracao (minutos)", "minutos"), iDur = col("duracao"), iNotes = col("anotacoes", "observacoes");

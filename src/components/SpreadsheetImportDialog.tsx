@@ -64,7 +64,7 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
           quantity: 1, minutes: s.minutes, notes: s.notes, syllabus_topic: s.content, status: "pending",
         }))).select("id");
         if (error) throw error;
-        const links = data.map((a, k) => ({ activity_id: a.id, skill_id: ids.get(chunk[k].subject.toLowerCase())! })).filter((l) => l.skill_id);
+        const links = data.map((a, k) => ({ activity_id: a.id, skill_id: ids.get(chunk[k]!.subject.toLowerCase())! })).filter((l) => l.skill_id);
         if (links.length) { const { error: e2 } = await supabase.from("activity_skills").insert(links); if (e2) throw e2; }
       }
       toast.success(`${all.length} sessões enviadas para revisão`);
