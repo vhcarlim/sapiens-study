@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTrack } from "@/lib/tracks";
-import { skillsQuery, sourcesQuery } from "@/lib/data";
+import { inferActivityType, skillsQuery, sourcesQuery } from "@/lib/data";
 import { parseSheet, sessionTitle, sheetRowsToText } from "@/lib/spreadsheet-import";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

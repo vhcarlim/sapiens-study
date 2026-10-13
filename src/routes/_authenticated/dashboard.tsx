@@ -28,10 +28,10 @@ import {
   YAxis,
 } from "recharts";
 import { Award, Clock, Flame, Layers } from "lucide-react";
-import { type Activity, activitiesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
+import { type Activity, activitiesQuery, allActivitiesQuery, allSkillsQuery, allSourcesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
-import { masteryQuery, resultsQuery } from "@/lib/reviews";
+import { allMasteryQuery, allResultsQuery, masteryQuery, resultsQuery } from "@/lib/reviews";
 import { activityXp, dailyXp, masteryLevel, skillProgress, studyStreak } from "@/lib/gamification";
 import { AnimatedNumber, DailyQuest, NeonProgress } from "@/components/Gamification";
 import { SkillMissionMap } from "@/components/SkillMissionMap";
@@ -51,12 +51,44 @@ type Metric = "quantity" | "minutes";
 
 function Dashboard() {
   const { trackId, track } = useTrack();
-  const { data: acts = [], isLoading } = useQuery(activitiesQuery("approved", trackId));
-  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
-  const { data: skills = [] } = useQuery(skillsQuery(trackId));
-  const { data: mastery = [] } = useQuery(masteryQuery(trackId));
-  const { data: reviewResults = [] } = useQuery(resultsQuery(trackId));
-  const { data: protection } = useQuery(protectionQuery(trackId));
+  const [scope, setScope] = useState<"track" | "all">("track");
+  const global = scope === "all";
+  const trackActs = useQuery(activitiesQuery("approved", trackId));
+  const trackSources = useQuery(sourcesQuery(trackId));
+  const trackSkills = useQuery(skillsQuery(trackId));
+  const trackMastery = useQuery(masteryQuery(trackId));
+  const trackResults = useQuery(resultsQuery(trackId));
+  const gActs = useQuery({ ...allActivitiesQuery(), enabled: global });
+  const gSources = useQuery({ ...allSourcesQuery(), enabled: global });
+  const gSkills = useQuery({ ...allSkillsQuery(), enabled: global });
+  const gMastery = useQuery({ ...allMasteryQuery(), enabled: global });
+  const gResults = useQuery({ ...allResultsQuery(), enabled: global });
+  const isLoading = global ? gActs.isLoading : trackActs.isLoading;
+  const sources = (global ? gSources.data : trackSources.data) ?? [];
+  const reviewResults = (global ? gResults.data : trackResults.data) ?? [];
+  // In the global view, skills with the same name across tracks merge into one lifetime skill.
+  const { acts, skills, mastery } = useMemo(() => {
+    if (!global) return { acts: trackActs.data ?? [], skills: trackSkills.data ?? [], mastery: trackMastery.data ?? [] };
+    const canon = new Map<string, string>();
+    const idMap = new Map<string, string>();
+    const merged: NonNullable<typeof gSkills.data> = [];
+    for (const s of gSkills.data ?? []) {
+      const k = s.name.trim().toLowerCase();
+      if (!canon.has(k)) { canon.set(k, s.id); merged.push(s); }
+      idMap.set(s.id, canon.get(k)!);
+    }
+    const acts = (gActs.data ?? []).map((a) => ({ ...a, activity_skills: [...new Set(a.activity_skills.map((l) => idMap.get(l.skill_id) ?? l.skill_id))].map((skill_id) => ({ skill_id })) }));
+    const byCanon = new Map<string, NonNullable<typeof gMastery.data>[number]>();
+    for (const m of gMastery.data ?? []) {
+      const id = idMap.get(m.skill_id) ?? m.skill_id;
+      const prev = byCanon.get(id);
+      if (!prev) byCanon.set(id, { ...m, skill_id: id });
+      else byCanon.set(id, { ...prev, mastery: Math.round((prev.mastery * prev.reviews + m.mastery * m.reviews) / Math.max(1, prev.reviews + m.reviews)), review_xp: prev.review_xp + m.review_xp, reviews: prev.reviews + m.reviews });
+    }
+    return { acts, skills: merged, mastery: [...byCanon.values()] };
+  }, [global, trackActs.data, trackSkills.data, trackMastery.data, gActs.data, gSkills.data, gMastery.data]);
+  const { data: trackProtection } = useQuery(protectionQuery(trackId));
+  const protection = global ? undefined : trackProtection;
   const [now, setNow] = useState(new Date());
   const [userId, setUserId] = useState("");
   useEffect(() => {
@@ -139,8 +171,12 @@ function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-3">
         <div><p className="font-mono text-sm text-track-accent">// {format(studyCalendarDate(now), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
-        <h1 className="mt-1 text-3xl font-bold">{track?.name}</h1></div>
-        {userId && <SoundToggle userId={userId} trackId={trackId} />}
+        <h1 className="mt-1 text-3xl font-bold">{global ? "Visão global" : track?.name}</h1>
+        {global && <p className="mt-1 text-sm text-muted-foreground">Todas as trilhas somadas · competências com o mesmo nome são unificadas</p>}</div>
+        <div className="flex items-center gap-2">
+          <Seg value={scope} onChange={setScope} opts={[["track", "Esta trilha"], ["all", "Todas as trilhas"]]} />
+          {userId && <SoundToggle userId={userId} trackId={trackId} />}
+        </div>
       </div>
 
       {(() => {
@@ -161,9 +197,9 @@ function Dashboard() {
         );
       })()}
 
-      {userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
-      <PriorityMission trackId={trackId} activities={acts} now={now} />
-      <StreakProtection trackId={trackId} activities={acts} results={reviewResults} now={now} />
+      {!global && userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
+      {!global && <PriorityMission trackId={trackId} activities={acts} now={now} />}
+      {!global && <StreakProtection trackId={trackId} activities={acts} results={reviewResults} now={now} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={Flame} label="XP conquistado" value={`${totalXp.toLocaleString("pt-BR")} XP`} accent />
         <Stat icon={Clock} label="Tempo total" value={fmtMinutes(stats.minutes)} />
@@ -261,7 +297,7 @@ function Dashboard() {
         </section>
       </div>
 
-      {userId && <SkillMissionMap key={`map-${trackId}`} skills={skillData} storageKey={`sapiens:map:${userId}:${trackId}`} />}
+      {!global && userId && <SkillMissionMap key={`map-${trackId}`} skills={skillData} storageKey={`sapiens:map:${userId}:${trackId}`} />}
       <TrophyShelf activities={acts} skills={skillData} />
 
       {milestones.length > 0 && (
