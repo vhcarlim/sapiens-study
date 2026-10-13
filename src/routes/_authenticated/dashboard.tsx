@@ -68,6 +68,13 @@ function Dashboard() {
   const [range, setRange] = useState<Range>("week");
   const [metric, setMetric] = useState<Metric>("quantity");
   const [selected, setSelected] = useState<string>(studyDay());
+  const [chartYear, setChartYear] = useState<string>("recent");
+  const [heatYear, setHeatYear] = useState<number | null>(null);
+  const years = useMemo(() => {
+    const set = new Set(acts.map((a) => Number(a.date.slice(0, 4))).filter(Boolean));
+    set.add(studyCalendarDate(now).getFullYear());
+    return [...set].sort((a, b) => b - a);
+  }, [acts, now]);
 
   const byDay = useMemo(() => {
     const m = new Map<string, Activity[]>();
@@ -88,9 +95,18 @@ function Dashboard() {
       list.filter((a) => (a.source_id ?? "none") === sid).reduce((s, a) => s + a[metric], 0);
     const keys = [...sources.map((s) => s.id), "none"];
     const today = studyCalendarDate(now);
+    if (range === "years") {
+      const ys = years.length ? [...years].reverse() : [today.getFullYear()];
+      return ys.map((y) => {
+        const list = acts.filter((a) => a.date.startsWith(`${y}-`));
+        const row: Record<string, number | string> = { label: String(y) };
+        keys.forEach((k) => (row[k] = val(list, k)));
+        return row;
+      });
+    }
     if (range === "year") {
       return Array.from({ length: 12 }, (_, i) => {
-        const m = startOfMonth(subMonths(today, 11 - i));
+        const m = chartYear === "recent" ? startOfMonth(subMonths(today, 11 - i)) : new Date(Number(chartYear), i, 1);
         const key = format(m, "yyyy-MM");
         const list = acts.filter((a) => a.date.startsWith(key));
         const row: Record<string, number | string> = { label: format(m, "MMM", { locale: ptBR }) };
