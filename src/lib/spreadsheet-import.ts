@@ -80,3 +80,13 @@ export function sessionTitle(s: SheetSession): string {
   const base = s.content ?? s.notes?.split(/[.\n;]/)[0]?.trim() ?? "";
   return (base || `Estudo — ${s.subject}`).slice(0, 200);
 }
+
+/** Excel rows (Date/number/string cells) → tab-separated text that parseSheet understands. */
+export function sheetRowsToText(rows: unknown[][]): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const cell = (v: unknown) => {
+    if (v instanceof Date) return `${pad(v.getDate())}/${pad(v.getMonth() + 1)}/${v.getFullYear()} ${pad(v.getHours())}:${pad(v.getMinutes())}`;
+    return v == null ? "" : String(v).replace(/[\t\r\n]+/g, " ");
+  };
+  return rows.map((r) => Array.from(r, cell).join("\t")).join("\n");
+}

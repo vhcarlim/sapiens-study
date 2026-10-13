@@ -6,7 +6,7 @@ import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTrack } from "@/lib/tracks";
 import { skillsQuery, sourcesQuery } from "@/lib/data";
-import { parseSheet, sessionTitle } from "@/lib/spreadsheet-import";
+import { parseSheet, sessionTitle, sheetRowsToText } from "@/lib/spreadsheet-import";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,7 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
         const XLSX = await import("xlsx");
         const wb = XLSX.read(await f.arrayBuffer(), { cellDates: true });
         const ws = wb.Sheets[wb.SheetNames[0]!]!;
-        setText(XLSX.utils.sheet_to_csv(ws, { FS: "\t", dateNF: "dd/mm/yyyy hh:mm", blankrows: false }));
+        setText(sheetRowsToText(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: true, blankrows: false })));
       } catch {
         toast.error("Não foi possível ler o arquivo Excel");
       }
