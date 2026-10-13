@@ -23,11 +23,14 @@ export const typeLabel = (t: string) => ACTIVITY_TYPES.find((x) => x.value === t
 
 /** Infers a specialized activity type from free text (e.g. a spreadsheet subject such as "Leitura/Simulado/Técnicas"). */
 export function inferActivityType(...texts: (string | null | undefined)[]): string {
-  const t = texts.filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  if (/\bsimulad/.test(t)) return "mock";
-  if (/\b(prova|concurso)\b/.test(t)) return "exam";
-  if (/\b(leitura|livro)\b/.test(t)) return "reading";
-  if (/\b(tecnica|metodologia|metodo)/.test(t)) return "method";
+  // Texts are checked in priority order (most specific first, e.g. content before subject).
+  for (const raw of texts) {
+    const t = (raw ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (/\bsimulad/.test(t)) return "mock";
+    if (/\b(prova|concurso)\b/.test(t)) return "exam";
+    if (/\b(leitura|livro)\b/.test(t)) return "reading";
+    if (/\b(tecnica|metodologia|metodo)/.test(t)) return "method";
+  }
   return "lesson";
 }
 
