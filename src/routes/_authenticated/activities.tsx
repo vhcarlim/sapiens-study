@@ -3,7 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { FileSpreadsheet, Pencil, Trash2 } from "lucide-react";
+import { SpreadsheetImportDialog } from "@/components/SpreadsheetImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { type Activity, activitiesQuery, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
@@ -23,6 +24,7 @@ function ActivitiesPage() {
   const { data: sources = [] } = useQuery(sourcesQuery(trackId));
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const [editing, setEditing] = useState<Activity | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [q, setQ] = useState("");
   const filtered = useMemo(
     () => items.filter((a) => a.title.toLowerCase().includes(q.toLowerCase())),
@@ -43,7 +45,11 @@ function ActivitiesPage() {
           <h1 className="text-3xl font-bold">Atividades</h1>
           <p className="text-muted-foreground">Tudo que já conta no seu painel. Edite quando quiser.</p>
         </div>
-        <Input className="max-w-xs" placeholder="Buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setSheetOpen(true)}><FileSpreadsheet className="size-4" /> Importar planilha</Button>
+          <Input className="max-w-xs" placeholder="Buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <SpreadsheetImportDialog open={sheetOpen} onOpenChange={setSheetOpen} />
       </div>
       <div className="space-y-2">
         {filtered.map((a) => (
