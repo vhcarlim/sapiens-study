@@ -19,7 +19,7 @@ describe("gamification", () => {
     expect(masteryLevel(-1).level).toBe(1);
   });
   it("keeps skill names and uses authoritative result XP without adding study time", () => {
-    const skills: Skill[] = [{ id: "s", user_id: "u", track_id: "t", name: "SQL", color: "green", topics: [], created_at: "2026-10-10" }];
+    const skills: Skill[] = [{ id: "s", user_id: "u", track_id: "t", name: "SQL", color: "green", topics: [], shared: false, created_at: "2026-10-10" }];
     expect(skillProgress(skills, [activity()], [], [result()])[0]).toMatchObject({ name: "SQL", title: "Iniciante", xp: 115, minutes: 60 });
     expect(skillProgress(skills, [], [], [result()])[0]?.xp).toBe(0);
   });
@@ -30,7 +30,7 @@ describe("gamification", () => {
     expect(dailyXp([activity()], [], "2026-10-11")).toBe(0);
   });
   it("unlocks the next mission only at demonstrated 70% mastery", () => {
-    const skills = skillProgress([{ id: "s", user_id: "u", track_id: "t", name: "SQL", color: "green", topics: [], created_at: "2026-10-10" }], [], [], []);
+    const skills = skillProgress([{ id: "s", user_id: "u", track_id: "t", name: "SQL", color: "green", topics: [], shared: false, created_at: "2026-10-10" }], [], [], []);
     const first = skills[0];
     if (!first) throw new Error("Missing test skill");
     expect(missionStates([first, { ...first, id: "second" }])[1]?.unlocked).toBe(false);
