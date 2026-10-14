@@ -68,7 +68,7 @@ export const skillsQuery = (trackId: string) => queryOptions({
   queryKey: ["skills", trackId],
   enabled: !!trackId,
   queryFn: async () => {
-    const { data, error } = await supabase.from("skills").select("*").eq("track_id", trackId).order("name");
+    const { data, error } = await supabase.from("skills").select("*").or(`track_id.eq.${trackId},shared.eq.true`).order("name");
     if (error) throw error;
     return data;
   },

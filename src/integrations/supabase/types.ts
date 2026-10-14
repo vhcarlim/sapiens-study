@@ -347,6 +347,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          shared: boolean
           topics: string[]
           track_id: string | null
           user_id: string
@@ -356,6 +357,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          shared?: boolean
           topics?: string[]
           track_id?: string | null
           user_id?: string
@@ -365,6 +367,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          shared?: boolean
           topics?: string[]
           track_id?: string | null
           user_id?: string
