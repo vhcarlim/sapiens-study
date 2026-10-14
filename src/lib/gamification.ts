@@ -30,6 +30,12 @@ export function skillProgress(skills: Skill[], activities: Activity[], mastery: 
     return { ...level, id: skill.id, name: skill.name, title: level.name, minutes: list.reduce((sum, a) => sum + a.minutes, 0), quantity: list.reduce((sum, a) => sum + a.quantity, 0), mastery: reviewed?.mastery ?? 0, reviewed: !!reviewed, fragile: reviewed?.last_score != null && reviewed.last_score < 70 };
   });
 }
+/** Shared skills accumulate progress from every track; the rest stay scoped to the current track. */
+export function skillProgressWithShared(skills: Skill[], activities: Activity[], mastery: Tables<"skill_mastery">[], results: Tables<"review_results">[], all: { activities: Activity[]; mastery: Tables<"skill_mastery">[]; results: Tables<"review_results">[] }) {
+  const local = skillProgress(skills.filter(s => !s.shared), activities, mastery, results);
+  const shared = skillProgress(skills.filter(s => s.shared), all.activities, all.mastery, all.results);
+  return skills.map(s => (s.shared ? shared : local).find(p => p.id === s.id)!);
+}
 export type SkillProgress = ReturnType<typeof skillProgress>[number];
 export function dailyXp(activities: Activity[], results: Tables<"review_results">[], date: string) {
   return activities.filter(a => a.date === date).reduce((sum, a) => sum + activityXp(a), 0) + results.filter(r => studyDay(r.created_at) === date).reduce((sum, r) => sum + r.xp, 0);
