@@ -32,7 +32,7 @@ import { type Activity, activitiesQuery, allActivitiesQuery, allSkillsQuery, all
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
 import { allMasteryQuery, allResultsQuery, masteryQuery, resultsQuery } from "@/lib/reviews";
-import { activityXp, dailyXp, masteryLevel, skillProgress, studyStreak } from "@/lib/gamification";
+import { activityXp, dailyXp, masteryLevel, skillProgress, skillProgressWithShared, studyStreak } from "@/lib/gamification";
 import { AnimatedNumber, DailyQuest, NeonProgress } from "@/components/Gamification";
 import { SkillMissionMap } from "@/components/SkillMissionMap";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,11 +58,12 @@ function Dashboard() {
   const trackSkills = useQuery(skillsQuery(trackId));
   const trackMastery = useQuery(masteryQuery(trackId));
   const trackResults = useQuery(resultsQuery(trackId));
-  const gActs = useQuery({ ...allActivitiesQuery(), enabled: global });
+  const hasShared = (trackSkills.data ?? []).some((s) => s.shared);
+  const gActs = useQuery({ ...allActivitiesQuery(), enabled: global || hasShared });
   const gSources = useQuery({ ...allSourcesQuery(), enabled: global });
   const gSkills = useQuery({ ...allSkillsQuery(), enabled: global });
-  const gMastery = useQuery({ ...allMasteryQuery(), enabled: global });
-  const gResults = useQuery({ ...allResultsQuery(), enabled: global });
+  const gMastery = useQuery({ ...allMasteryQuery(), enabled: global || hasShared });
+  const gResults = useQuery({ ...allResultsQuery(), enabled: global || hasShared });
   const isLoading = global ? gActs.isLoading : trackActs.isLoading;
   const sources = (global ? gSources.data : trackSources.data) ?? [];
   const reviewResults = (global ? gResults.data : trackResults.data) ?? [];
@@ -159,7 +160,7 @@ function Dashboard() {
     });
   }, [acts, byDay, sources, range, metric, now, chartYear, years]);
 
-  const skillData = useMemo(() => skillProgress(skills, acts, mastery, reviewResults), [acts, skills, mastery, reviewResults]);
+  const skillData = useMemo(() => global ? skillProgress(skills, acts, mastery, reviewResults) : skillProgressWithShared(skills, acts, mastery, reviewResults, { activities: gActs.data ?? [], mastery: gMastery.data ?? [], results: gResults.data ?? [] }), [global, acts, skills, mastery, reviewResults, gActs.data, gMastery.data, gResults.data]);
   const totalXp = acts.reduce((sum, a) => sum + activityXp(a), 0) + reviewXp;
   const todayXp = dailyXp(acts, reviewResults, studyDay(now));
   const milestones = acts.filter((a) => a.type === "certificate" || a.type === "level").slice(0, 6);
