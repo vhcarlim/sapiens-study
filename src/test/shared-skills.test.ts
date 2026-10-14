@@ -8,10 +8,10 @@ const act = (id: string, track: string, skillId: string, minutes: number): Activ
 describe("competências compartilhadas", () => {
   it("somam minutos de todas as trilhas", () => {
     const [p] = skillProgressWithShared([skill("pt", true)], [act("1", "B", "pt", 60)], [], [], { activities: [act("1", "B", "pt", 60), act("2", "A", "pt", 120)], mastery: [], results: [] });
-    expect(p.minutes).toBe(180);
+    expect(p?.minutes).toBe(180);
   });
   it("competências comuns ficam só na trilha atual", () => {
     const [p] = skillProgressWithShared([skill("rd", false)], [act("1", "B", "rd", 60)], [], [], { activities: [act("1", "B", "rd", 60), act("2", "A", "rd", 120)], mastery: [], results: [] });
-    expect(p.minutes).toBe(60);
+    expect(p?.minutes).toBe(60);
   });
 });

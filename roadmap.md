@@ -14,4 +14,4 @@
 - [x] Preservar rascunhos e recuperar falhas sem duplicar avaliações.
 - [x] Adicionar missão prioritária, protetores, conquistas e som opcional.
 - [x] Facilitar resumos com tópicos e organização por IA.
-- [x] Verificar regras e fluxos reais de estudo.
+- [x] Verificar regras e fluxos reais de estudo.- [x] Arena de estudo ativo por tópico do edital, com banca na trilha e recomendação diária.

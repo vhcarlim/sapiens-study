@@ -2,7 +2,7 @@ import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus, Wand2 } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus, Wand2, Swords } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery } from "@/lib/data";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const nav = [
   { to: "/dashboard", label: "Painel", icon: LayoutDashboard },
+  { to: "/arena", label: "Arena", icon: Swords },
   { to: "/review", label: "Revisão", icon: Inbox },
   { to: "/activities", label: "Atividades", icon: ListChecks },
   { to: "/sources", label: "Fontes", icon: Plug },
