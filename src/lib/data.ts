@@ -17,6 +17,7 @@ export const ACTIVITY_TYPES: { value: string; label: string }[] = [
   { value: "mock", label: "Simulado" },
   { value: "reading", label: "Leitura / Livro" },
   { value: "method", label: "Técnicas & Metodologia" },
+  { value: "practice", label: "Estudo ativo (Arena)" },
   { value: "other", label: "Outro" },
 ];
 export const typeLabel = (t: string) => ACTIVITY_TYPES.find((x) => x.value === t)?.label ?? t;

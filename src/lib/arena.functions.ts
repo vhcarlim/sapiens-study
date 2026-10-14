@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import type { ArenaObjective, ArenaOpen, ArenaVerdict } from "@/lib/arena";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
@@ -54,15 +56,15 @@ async function respond(instructions: string, input: unknown, schema?: { name: st
 
 const Ctx = z.object({ trackId: z.string().uuid(), skillId: z.string().uuid(), topic: z.string().trim().min(2).max(400) });
 
-async function loadContext(supabase: Parameters<Parameters<ReturnType<typeof createServerFn>["handler"]>[0]>[0] extends never ? never : any, d: z.infer<typeof Ctx>) {
+async function loadContext(supabase: SupabaseClient<Database>, d: z.infer<typeof Ctx>) {
   const [{ data: track }, { data: skill }] = await Promise.all([
     supabase.from("study_tracks").select("name,exam_board").eq("id", d.trackId).eq("archived", false).single(),
     supabase.from("skills").select("name,topics,track_id,shared").eq("id", d.skillId).single(),
   ]);
   if (!track || !skill || (skill.track_id !== d.trackId && !skill.shared)) throw new Error("Competência indisponível nesta trilha");
   const board: string = track.exam_board || "banca não definida (use o padrão médio das grandes bancas)";
-  const siblings = ((skill.topics ?? []) as string[]).slice(0, 60).join("; ");
-  return { board, contest: track.name as string, subject: skill.name as string, siblings };
+  const siblings = (skill.topics ?? []).slice(0, 60).join("; ");
+  return { board, contest: track.name, subject: skill.name, siblings };
 }
 
 const BOARD_STYLE = `Perfis de banca:
