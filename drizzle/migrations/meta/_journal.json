@@ -57,6 +57,13 @@
       "when": 1791818112437,
       "tag": "0007_syllabus_topics",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791940711627,
+      "tag": "0008_shared_skills",
+      "breakpoints": true
     }
   ]
 }
