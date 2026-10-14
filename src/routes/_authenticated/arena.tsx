@@ -63,7 +63,7 @@ function Arena() {
 
   async function setBoard(board: string) {
     const { error } = await supabase.from("study_tracks").update({ exam_board: board }).eq("id", trackId);
-    if (error) return toast.error("Não foi possível salvar a banca.");
+    if (error) { toast.error("Não foi possível salvar a banca."); return; }
     await qc.invalidateQueries({ queryKey: ["tracks"] });
   }
 
