@@ -1,0 +1,1 @@
+ALTER TABLE public.study_tracks ADD COLUMN IF NOT EXISTS exam_board text;

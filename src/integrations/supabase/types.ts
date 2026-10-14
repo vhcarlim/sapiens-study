@@ -472,6 +472,7 @@ export type Database = {
           archived: boolean
           color: string
           created_at: string
+          exam_board: string | null
           id: string
           name: string
           user_id: string
@@ -480,6 +481,7 @@ export type Database = {
           archived?: boolean
           color?: string
           created_at?: string
+          exam_board?: string | null
           id?: string
           name: string
           user_id?: string
@@ -488,6 +490,7 @@ export type Database = {
           archived?: boolean
           color?: string
           created_at?: string
+          exam_board?: string | null
           id?: string
           name?: string
           user_id?: string
