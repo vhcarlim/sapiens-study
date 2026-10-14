@@ -58,7 +58,7 @@ export function groupTopics(topics: string[]): TopicGroup[] {
     const prev = groups.at(-1);
     if (/^[a-zà-ú]/.test(t) && prev) { prev.items.push({ topic, label: cap(t) }); continue; }
     const m = t.match(/^([^:]{2,60}):\s*(.+)$/);
-    groups.push(m ? { heading: m[1].trim(), items: [{ topic, label: cap(m[2].trim()) }] } : { heading: null, items: [{ topic, label: cap(t) }] });
+    groups.push(m ? { heading: (m[1] ?? "").trim(), items: [{ topic, label: cap((m[2] ?? "").trim()) }] } : { heading: null, items: [{ topic, label: cap(t) }] });
   }
   return groups;
 }
