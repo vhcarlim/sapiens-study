@@ -121,7 +121,7 @@ function Arena() {
           <label className="space-y-1.5 text-sm"><span className="text-muted-foreground">Banca da trilha</span>
             <Select value={track?.exam_board ?? ""} onValueChange={setBoard}><SelectTrigger><SelectValue placeholder="Selecione a banca" /></SelectTrigger><SelectContent>{EXAM_BOARDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></label>
         </div>
-        {skill && <div className="max-h-72 space-y-1 overflow-y-auto border-y py-2">{(skill.topics ?? []).map((t) => <button key={t} type="button" onClick={() => setTopic(t)} className={cn("block w-full rounded px-3 py-2 text-left text-sm hover:bg-secondary", t === topic && "bg-secondary text-foreground ring-1 ring-track-accent")}>{t}</button>)}</div>}
+        {skill && <TopicPicker topics={skill.topics ?? []} value={topic} onPick={setTopic} />}
         {failure && <p className="text-sm text-destructive">{failure}</p>}
         <Button size="lg" disabled={!skill || !topic || !!loading} onClick={nextObjective}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
       </>}
