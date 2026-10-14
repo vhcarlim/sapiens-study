@@ -177,15 +177,15 @@ function ObjectiveCard({ index, round, ctx, onChange }: { index: number; round: 
       {q.options.map((o) => {
         const isAns = o.letter === q.answer, isPick = o.letter === picked;
         return <div key={o.letter} className="space-y-1">
-          <button type="button" disabled={!!picked} onClick={() => onChange({ ...round, picked: o.letter })} className={cn("flex w-full items-start gap-3 rounded-md border px-4 py-3 text-left text-sm transition-colors enabled:hover:border-track-accent", picked && isAns && "border-success bg-success/10", picked && isPick && !isAns && "border-destructive bg-destructive/10")}>
-            <span className="font-mono font-bold">{o.letter}</span><span className="flex-1">{o.text}</span>{picked && isAns && <Check className="size-4 text-success" />}{picked && isPick && !isAns && <X className="size-4 text-destructive" />}
+          <button type="button" disabled={!!picked} onClick={() => onChange({ ...round, picked: o.letter })} className={cn("flex w-full items-start gap-3 rounded-md border px-4 py-3 text-left text-sm transition-colors enabled:hover:border-track-accent", picked && isAns && "border-primary bg-primary/10", picked && isPick && !isAns && "border-destructive bg-destructive/10")}>
+            <span className="font-mono font-bold">{o.letter}</span><span className="flex-1">{o.text}</span>{picked && isAns && <Check className="size-4 text-primary" />}{picked && isPick && !isAns && <X className="size-4 text-destructive" />}
           </button>
           {picked && why(o.letter) && <p className="px-4 text-xs text-muted-foreground">{why(o.letter)}</p>}
         </div>;
       })}
     </div>
     {picked && <div className="space-y-2 rounded-md bg-secondary/40 p-4 text-sm">
-      <p className={picked === q.answer ? "font-semibold text-success" : "font-semibold text-destructive"}>{picked === q.answer ? "Você acertou." : `Gabarito: ${q.answer}.`}</p>
+      <p className={picked === q.answer ? "font-semibold text-primary" : "font-semibold text-destructive"}>{picked === q.answer ? "Você acertou." : `Gabarito: ${q.answer}.`}</p>
       <p><span className="text-muted-foreground">Pegadinha: </span>{q.trap}</p>
       <p><span className="text-muted-foreground">Fundamento: </span>{q.basis}</p>
     </div>}
@@ -208,7 +208,7 @@ function ObjectiveCard({ index, round, ctx, onChange }: { index: number; round: 
 }
 
 function Verdict({ v }: { v: ArenaVerdict }) {
-  const tone = v.verdict === "correto" ? "text-success" : v.verdict === "parcial" ? "text-warning" : "text-destructive";
+  const tone = v.verdict === "correto" ? "text-primary" : v.verdict === "parcial" ? "text-warning" : "text-destructive";
   const label = v.verdict === "correto" ? "Raciocínio correto" : v.verdict === "parcial" ? "Parcialmente correto" : "Raciocínio incorreto";
   return <div className="space-y-3 rounded-md bg-secondary/40 p-5 text-sm">
     <p className={cn("font-semibold", tone)}>{label} · {v.score}/100</p>

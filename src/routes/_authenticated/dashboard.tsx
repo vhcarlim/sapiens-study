@@ -1,5 +1,7 @@
 import { useTrack } from "@/lib/tracks";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { recommendTopic } from "@/lib/arena";
+import { Swords } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -199,6 +201,7 @@ function Dashboard() {
       })()}
 
       {!global && userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
+      {!global && <ArenaSuggestion skills={trackSkills.data ?? []} activities={acts} />}
       {!global && <PriorityMission trackId={trackId} activities={acts} now={now} />}
       {!global && <StreakProtection trackId={trackId} activities={acts} results={reviewResults} now={now} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -412,4 +415,13 @@ function Heatmap({
       <span className="hidden">{addDays(today, 0).toString()}</span>
     </div>
   );
+}
+
+function ArenaSuggestion({ skills, activities }: { skills: { id: string; name: string; topics: string[] }[]; activities: Activity[] }) {
+  const rec = recommendTopic(skills, activities);
+  if (!rec) return null;
+  return <section aria-label="Estudo recomendado" className="flex flex-wrap items-center justify-between gap-5 border-l-2 border-track-accent bg-secondary/40 px-5 py-5">
+    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="font-mono text-xs text-track-accent">HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p></div></div>
+    <div className="flex gap-2"><Button variant="outline" asChild><Link to="/arena">Escolher outro</Link></Button><Button asChild><Link to="/arena" search={{ skill: rec.skillId, topic: rec.topic }}>Estudar na Arena</Link></Button></div>
+  </section>;
 }
