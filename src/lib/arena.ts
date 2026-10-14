@@ -1,6 +1,6 @@
 import type { Activity, Skill } from "@/lib/data";
 
-export const EXAM_BOARDS = ["Cebraspe", "FGV", "FCC", "Vunesp", "Cesgranrio", "Quadrix", "IBFC", "Instituto AOCP", "Outra"] as const;
+export const EXAM_BOARDS = ["Cebraspe", "FGV", "FCC", "Vunesp", "Cesgranrio", "Quadrix", "IBFC", "Instituto AOCP", "FAFIPA", "Outra"] as const;
 
 export type ArenaObjective = {
   format: "multipla" | "certo_errado";
@@ -43,4 +43,22 @@ export function recommendTopic(skills: Pick<Skill, "id" | "name" | "topics">[], 
 /** Session minutes credited as study time (at least 1 minute, at most 6 hours). */
 export function sessionMinutes(startedAt: number, endedAt: number) {
   return Math.min(360, Math.max(1, Math.round((endedAt - startedAt) / 60000)));
+}
+
+export type TopicGroup = { heading: string | null; items: { topic: string; label: string }[] };
+const cap = (t: string) => t.charAt(0).toLocaleUpperCase("pt-BR") + t.slice(1);
+/**
+ * Groups flat syllabus topics: a topic starting uppercase opens a group and following
+ * lowercase topics are its subtopics. "Seção: primeiro item" splits into heading + item.
+ */
+export function groupTopics(topics: string[]): TopicGroup[] {
+  const groups: TopicGroup[] = [];
+  for (const topic of topics) {
+    const t = topic.trim();
+    const prev = groups.at(-1);
+    if (/^[a-zà-ú]/.test(t) && prev) { prev.items.push({ topic, label: cap(t) }); continue; }
+    const m = t.match(/^([^:]{2,60}):\s*(.+)$/);
+    groups.push(m ? { heading: (m[1] ?? "").trim(), items: [{ topic, label: cap((m[2] ?? "").trim()) }] } : { heading: null, items: [{ topic, label: cap(t) }] });
+  }
+  return groups;
 }

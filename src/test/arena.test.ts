@@ -18,3 +18,14 @@ describe("arena", () => {
     expect(sessionMinutes(0, 9 * 3600000)).toBe(360);
   });
 });
+
+import { groupTopics, EXAM_BOARDS } from "@/lib/arena";
+describe("groupTopics", () => {
+  it("nests lowercase subtopics under the section heading", () => {
+    const g = groupTopics(["Direito Civil: pessoas naturais", "domicílio", "Direito Empresarial: empresário", "estabelecimento"]);
+    expect(g.map((x) => x.heading)).toEqual(["Direito Civil", "Direito Empresarial"]);
+    expect(g[0]!.items.map((i) => i.label)).toEqual(["Pessoas naturais", "Domicílio"]);
+    expect(g[1]!.items[1]!.topic).toBe("estabelecimento");
+  });
+  it("offers FAFIPA as a board", () => expect(EXAM_BOARDS).toContain("FAFIPA"));
+});

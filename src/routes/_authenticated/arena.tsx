@@ -7,10 +7,11 @@ import { ArrowRight, Check, Loader2, Swords, Timer, X } from "lucide-react";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data";
-import { EXAM_BOARDS, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
+import { EXAM_BOARDS, groupTopics, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
 import { arenaDiscuss, arenaEvaluate, arenaObjective, arenaOpen } from "@/lib/arena.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -121,7 +122,7 @@ function Arena() {
           <label className="space-y-1.5 text-sm"><span className="text-muted-foreground">Banca da trilha</span>
             <Select value={track?.exam_board ?? ""} onValueChange={setBoard}><SelectTrigger><SelectValue placeholder="Selecione a banca" /></SelectTrigger><SelectContent>{EXAM_BOARDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></label>
         </div>
-        {skill && <div className="max-h-72 space-y-1 overflow-y-auto border-y py-2">{(skill.topics ?? []).map((t) => <button key={t} type="button" onClick={() => setTopic(t)} className={cn("block w-full rounded px-3 py-2 text-left text-sm hover:bg-secondary", t === topic && "bg-secondary text-foreground ring-1 ring-track-accent")}>{t}</button>)}</div>}
+        {skill && <TopicPicker topics={skill.topics ?? []} value={topic} onPick={setTopic} />}
         {failure && <p className="text-sm text-destructive">{failure}</p>}
         <Button size="lg" disabled={!skill || !topic || !!loading} onClick={nextObjective}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
       </>}
@@ -216,5 +217,30 @@ function Verdict({ v }: { v: ArenaVerdict }) {
     <div><p className="text-muted-foreground">O que faltou</p><MessageResponse>{v.missing}</MessageResponse></div>
     <div><p className="text-muted-foreground">Como a banca te pegaria</p><MessageResponse>{v.risk}</MessageResponse></div>
     <details><summary className="cursor-pointer text-muted-foreground">Resposta-modelo</summary><div className="mt-2"><MessageResponse>{v.model_answer}</MessageResponse></div></details>
+  </div>;
+}
+
+function TopicPicker({ topics, value, onPick }: { topics: string[]; value: string; onPick: (t: string) => void }) {
+  const [q, setQ] = useState("");
+  const groups = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    return groupTopics(topics)
+      .map((g) => (!term || g.heading?.toLowerCase().includes(term) ? g : { ...g, items: g.items.filter((i) => i.topic.toLowerCase().includes(term)) }))
+      .filter((g) => g.items.length);
+  }, [topics, q]);
+  const item = (i: { topic: string; label: string }, child: boolean, strong = false) => (
+    <button key={i.topic} type="button" onClick={() => onPick(i.topic)} className={cn("block w-full rounded px-3 py-2 text-left text-sm hover:bg-secondary", child && "border-l border-border pl-4", strong && "font-medium", i.topic === value && "bg-secondary text-foreground ring-1 ring-track-accent")}>{i.label}</button>
+  );
+  return <div className="space-y-2">
+    <Input aria-label="Filtrar tópicos" placeholder="Filtrar tópicos" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="max-h-80 space-y-3 overflow-y-auto border-y py-2">
+      {groups.map((g, gi) => {
+        if (g.heading) return <div key={gi}><p className="px-3 pb-1 pt-2 font-mono text-xs uppercase tracking-wide text-track-accent">{g.heading}</p><div className="ml-3 space-y-0.5">{g.items.map((i) => item(i, true))}</div></div>;
+        const [head, ...rest] = g.items;
+        if (!head) return null;
+        return <div key={gi}>{item(head, false, rest.length > 0)}{rest.length > 0 && <div className="ml-3 space-y-0.5">{rest.map((i) => item(i, true))}</div>}</div>;
+      })}
+      {!groups.length && <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum tópico encontrado.</p>}
+    </div>
   </div>;
 }
