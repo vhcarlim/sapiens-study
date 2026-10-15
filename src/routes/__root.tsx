@@ -89,8 +89,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("sapiens-theme")==="light")document.documentElement.classList.remove("dark")}catch(e){}` }} />
         <HeadContent />
       </head>
       <body>
@@ -117,7 +118,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <Toaster richColors theme="dark" />
+      <Toaster richColors theme="system" />
     </QueryClientProvider>
   );
 }

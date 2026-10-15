@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
 import { PasteImportDialog } from "@/components/PasteImportDialog";
 import { RewardOverlay } from "@/components/Gamification";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -108,6 +109,7 @@ function TrackLayout() {
             <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
             <kbd className="ml-1 hidden rounded border border-primary-foreground/30 px-1 font-mono text-[10px] lg:inline">⌘K</kbd>
           </Button>
+          <ThemeToggle />
           <Button size="icon" variant="ghost" onClick={signOut} aria-label="Sair">
             <LogOut className="size-4" />
           </Button>
