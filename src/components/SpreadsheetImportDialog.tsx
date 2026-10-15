@@ -6,7 +6,7 @@ import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTrack } from "@/lib/tracks";
 import { inferActivityType, skillsQuery, sourcesQuery } from "@/lib/data";
-import { parseSheet, sessionTitle, sheetRowsToText } from "@/lib/spreadsheet-import";
+import { matchSubject, parseSheet, sessionTitle, sheetRowsToText } from "@/lib/spreadsheet-import";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,9 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [parsed]);
   const total = subjects.reduce((n, [, m]) => n + m, 0);
-  const known = new Map(skills.map((s) => [s.name.trim().toLowerCase(), s.id]));
+  const [mapping, setMapping] = useState<Record<string, string>>({});
+  const suggestions = useMemo(() => new Map(subjects.map(([n]) => [n, matchSubject(n, skills)] as const)), [subjects, skills]);
+  const choice = (n: string) => mapping[n] ?? suggestions.get(n)?.skill.id ?? "new";
 
   async function readFile(f: File | undefined) {
     if (!f) return;
@@ -59,8 +61,9 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
     if (!trackId || !parsed?.sessions.length) return;
     setBusy(true);
     try {
-      const ids = new Map(known);
-      const missing = subjects.map(([n]) => n).filter((n) => !ids.has(n.toLowerCase()));
+      const ids = new Map<string, string>();
+      const missing: string[] = [];
+      subjects.forEach(([n]) => { const c = choice(n); if (c === "new") missing.push(n); else ids.set(n.toLowerCase(), c); });
       if (missing.length) {
         const { data, error } = await supabase.from("skills").insert(missing.map((name) => ({ name, track_id: trackId }))).select("id,name");
         if (error) throw error;
@@ -121,13 +124,31 @@ export function SpreadsheetImportDialog({ open, onOpenChange }: { open: boolean;
           {parsed && !parsed.error && (
             <div className="rounded-md border border-border p-3 text-sm">
               <p className="font-medium">{parsed.sessions.length} sessões · {fmt(total)}{parsed.skipped ? ` · ${parsed.skipped} linha(s) ignorada(s)` : ""}</p>
-              <ul className="mt-2 max-h-40 space-y-1 overflow-auto text-muted-foreground">
-                {subjects.map(([n, m]) => (
-                  <li key={n} className="flex justify-between gap-2">
-                    <span>{n} {!known.has(n.toLowerCase()) && <span className="text-primary">(nova competência)</span>}</span>
-                    <span className="font-mono">{fmt(m)}</span>
-                  </li>
-                ))}
+              <p className="mt-1 text-xs text-muted-foreground">Mapeamento de matérias: confira para qual competência cada matéria da planilha vai.</p>
+              <ul className="mt-2 max-h-72 space-y-2 overflow-auto">
+                {subjects.map(([n, m]) => {
+                  const match = suggestions.get(n);
+                  const value = choice(n);
+                  return (
+                    <li key={n} className="rounded-md border border-border p-2">
+                      <div className="flex justify-between gap-2">
+                        <span className="font-medium">{n}</span>
+                        <span className="font-mono text-muted-foreground">{fmt(m)}</span>
+                      </div>
+                      {match?.kind === "likely" && value === match.skill.id && (
+                        <p className="mt-1 text-xs text-primary">Identificamos "{match.skill.name}". Vinculamos a ela — altere se preferir.</p>
+                      )}
+                      <Select value={value} onValueChange={(v) => setMapping((p) => ({ ...p, [n]: v }))}>
+                        <SelectTrigger className="mt-2 h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {match && <SelectItem value={match.skill.id}>⚡ {match.skill.name} ({match.kind === "exact" ? "mesmo nome" : "sugerido"})</SelectItem>}
+                          <SelectItem value="new">+ Criar nova: {n}</SelectItem>
+                          {skills.filter((s) => s.id !== match?.skill.id).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
