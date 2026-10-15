@@ -78,6 +78,13 @@
       "when": 1792037020776,
       "tag": "0010_profiles_avatars",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792037036689,
+      "tag": "0011_avatars_select_own",
+      "breakpoints": true
     }
   ]
 }
