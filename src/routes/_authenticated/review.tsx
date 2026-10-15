@@ -69,7 +69,7 @@ function ReviewPage() {
         {items.length > 1 && <Button variant="outline" onClick={() => setStatus(items.map(i => i.id), "approved")}>Aprovar todas ({items.length})</Button>}
       {items.length === 0 ? (
         <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          Nada pendente. Sincronize uma fonte em <span className="text-foreground">Fontes</span>.
+          Nada pendente. Importe uma planilha em <span className="text-foreground">Atividades</span>.
         </div>
       ) : (
         <div className="space-y-2">

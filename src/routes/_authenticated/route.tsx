@@ -2,15 +2,14 @@ import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus, Wand2, Swords } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
-import { PasteImportDialog } from "@/components/PasteImportDialog";
 import { RewardOverlay } from "@/components/Gamification";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserNav } from "@/components/UserNav";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -27,7 +26,6 @@ const nav = [
   { to: "/arena", label: "Arena", icon: Swords },
   { to: "/review", label: "Revisão", icon: Inbox },
   { to: "/activities", label: "Atividades", icon: ListChecks },
-  { to: "/sources", label: "Fontes", icon: Plug },
   { to: "/skills", label: "Competências", icon: Sparkles },
 ] as const;
 
@@ -37,43 +35,26 @@ function Layout() {
 }
 
 function TrackLayout() {
+  const { user } = Route.useRouteContext();
   const { trackId, track, loading, error } = useTrack();
-  const navigate = useNavigate();
-  const qc = useQueryClient();
   const { data: pending } = useQuery(activitiesQuery("pending", trackId));
   const [open, setOpen] = useState(false);
-  const [pasteOpen, setPasteOpen] = useState(false);
 
   useEffect(() => {
     setOpen(false);
-    setPasteOpen(false);
   }, [trackId]);
 
-  // Ctrl/Cmd+K = quick log, Ctrl/Cmd+I = paste import
+  // Ctrl/Cmd+K = quick log
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return;
-      const k = e.key.toLowerCase();
-      if (k === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setPasteOpen(false);
         setOpen((o) => !o);
-      } else if (k === "i") {
-        e.preventDefault();
-        setOpen(false);
-        setPasteOpen((o) => !o);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  async function signOut() {
-    await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
-  }
 
   return (
     <div className="min-h-screen" data-track-color={track?.color ?? "green"}>
@@ -102,24 +83,16 @@ function TrackLayout() {
               </Link>
             ))}
           </nav>
-          <Button size="sm" variant="outline" disabled={!trackId} onClick={() => setPasteOpen(true)} title="Importar colando texto (Ctrl/⌘ + I)">
-            <Wand2 className="size-4" /> <span className="hidden md:inline">Colar</span>
-          </Button>
-          <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)} title="Registro rápido (Ctrl/⌘ + K)">
+          <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)} title="Registro rápido (Ctrl + K)">
             <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
-            <kbd className="ml-1 hidden rounded border border-primary-foreground/30 px-1 font-mono text-[10px] lg:inline">⌘K</kbd>
           </Button>
-          <ThemeToggle />
-          <Button size="icon" variant="ghost" onClick={signOut} aria-label="Sair">
-            <LogOut className="size-4" />
-          </Button>
+          <UserNav userId={user.id} email={user.email ?? ""} />
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8">
         {loading ? <p className="text-muted-foreground">Carregando trilhas…</p> : error ? <p className="text-destructive">Não foi possível carregar suas trilhas. Tente recarregar a página.</p> : trackId ? <div key={trackId} className="border-t-2 border-track-accent pt-6"><Outlet /></div> : <div className="py-16 text-center"><LayersEmpty /></div>}
       </main>
       <ActivityDialog key={`activity-${trackId}`} open={open && !!trackId} onOpenChange={setOpen} />
-      <PasteImportDialog key={`paste-${trackId}`} open={pasteOpen && !!trackId} onOpenChange={setPasteOpen} />
       <RewardOverlay key={`reward-${trackId}`} trackId={trackId} />
     </div>
   );
