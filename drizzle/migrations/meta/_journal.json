@@ -71,6 +71,13 @@
       "when": 1791947355801,
       "tag": "0009_track_exam_board",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792037020776,
+      "tag": "0010_profiles_avatars",
+      "breakpoints": true
     }
   ]
 }
