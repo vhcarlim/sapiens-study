@@ -29,3 +29,13 @@ describe("groupTopics", () => {
   });
   it("offers FAFIPA as a board", () => expect(EXAM_BOARDS).toContain("FAFIPA"));
 });
+
+import { matchSubject } from "@/lib/spreadsheet-import";
+describe("matchSubject", () => {
+  const skills = [{ id: "1", name: "Política Internacional" }, { id: "2", name: "Direito do Trabalho" }];
+  it("suggests similar skill for prefixed name", () => {
+    expect(matchSubject("(Diplomata - Política Internacional)", skills)).toEqual({ skill: skills[0], kind: "likely" });
+  });
+  it("exact match", () => { expect(matchSubject("direito do trabalho", skills)?.kind).toBe("exact"); });
+  it("no match", () => { expect(matchSubject("Contabilidade", skills)).toBeNull(); });
+});

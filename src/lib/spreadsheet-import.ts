@@ -90,3 +90,31 @@ export function sheetRowsToText(rows: unknown[][]): string {
   };
   return rows.map((r) => Array.from(r, cell).join("\t")).join("\n");
 }
+
+const STOP = new Set(["de", "da", "do", "das", "dos", "e", "a", "o", "em", "para", "na", "no"]);
+/** Strips parentheses, "Prefix - " labels, accents and punctuation. */
+export function cleanSubject(s: string): string {
+  let t = norm(s).replace(/[()[\]{}]/g, " ").trim();
+  if (/\s[-–—:]\s/.test(t)) t = t.split(/\s[-–—:]\s/).pop()!;
+  return t.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+const words = (s: string) => new Set(cleanSubject(s).split(" ").filter((w) => w.length > 1 && !STOP.has(w)));
+
+/** Best similar skill for a sheet subject: exact match, or likely (cleaned/word overlap). */
+export function matchSubject<T extends { id: string; name: string }>(subject: string, skills: T[]): { skill: T; kind: "exact" | "likely" } | null {
+  const exact = skills.find((s) => s.name.trim().toLowerCase() === subject.trim().toLowerCase());
+  if (exact) return { skill: exact, kind: "exact" };
+  const c = cleanSubject(subject), a = words(subject);
+  let best: T | null = null, score = 0;
+  for (const s of skills) {
+    const cs = cleanSubject(s.name);
+    if (cs && cs === c) return { skill: s, kind: "likely" };
+    const b = words(s.name);
+    const inter = [...a].filter((w) => b.has(w)).length;
+    const sc = inter / Math.max(1, Math.min(a.size, b.size));
+    const contained = cs.length > 3 && (c.includes(cs) || cs.includes(c));
+    const v = contained ? Math.max(sc, 0.9) : sc;
+    if (v > score) { score = v; best = s; }
+  }
+  return best && score >= 0.6 ? { skill: best, kind: "likely" } : null;
+}
