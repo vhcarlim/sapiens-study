@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
 import { RewardOverlay } from "@/components/Gamification";
 import { UserNav } from "@/components/UserNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -83,6 +84,7 @@ function TrackLayout() {
               </Link>
             ))}
           </nav>
+          <ThemeToggle />
           <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)} title="Registro rápido (Ctrl + K)">
             <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
           </Button>
