@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Camera, LogOut, Moon, Sun, UserRound } from "lucide-react";
+import { Camera, LogOut, Settings, UserRound } from "lucide-react";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,14 +41,7 @@ export function UserNav({ userId, email }: { userId: string; email: string }) {
   const navigate = useNavigate();
   const { data } = useQuery(profileQuery(userId));
   const [editing, setEditing] = useState(false);
-  const [dark, setDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
-
-  function toggleTheme() {
-    const next = !document.documentElement.classList.contains("dark");
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("sapiens-theme", next ? "dark" : "light");
-    setDark(next);
-  }
+  const [settings, setSettings] = useState(false);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -75,13 +69,12 @@ export function UserNav({ userId, email }: { userId: string; email: string }) {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setEditing(true)}><UserRound className="size-4" /> Editar perfil</DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); toggleTheme(); }}>
-            {dark ? <Sun className="size-4" /> : <Moon className="size-4" />} {dark ? "Tema claro" : "Tema escuro"}
-          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setSettings(true)}><Settings className="size-4" /> Configurações</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={signOut} className="text-destructive focus:text-destructive"><LogOut className="size-4" /> Sair da conta</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {settings && <SettingsDialog userId={userId} onClose={() => setSettings(false)} />}
       {editing && <ProfileDialog userId={userId} email={email} initial={data ?? { name: "", path: null, url: null }} onClose={() => setEditing(false)} />}
     </>
   );

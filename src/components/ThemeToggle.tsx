@@ -6,7 +6,12 @@ export const THEME_KEY = "sapiens-theme";
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(true);
-  useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
+  useEffect(() => {
+    const sync = () => setDark(document.documentElement.classList.contains("dark"));
+    sync();
+    window.addEventListener("sapiens:theme", sync);
+    return () => window.removeEventListener("sapiens:theme", sync);
+  }, []);
   function toggle() {
     const next = !dark;
     setDark(next);
