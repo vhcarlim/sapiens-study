@@ -2,15 +2,14 @@ import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Plug, Sparkles, LogOut, Plus, Wand2, Swords } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
-import { PasteImportDialog } from "@/components/PasteImportDialog";
 import { RewardOverlay } from "@/components/Gamification";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserNav } from "@/components/UserNav";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
