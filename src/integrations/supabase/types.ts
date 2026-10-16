@@ -496,6 +496,7 @@ export type Database = {
           exam_board: string | null
           id: string
           name: string
+          position: number
           user_id: string
         }
         Insert: {
@@ -505,6 +506,7 @@ export type Database = {
           exam_board?: string | null
           id?: string
           name: string
+          position?: number
           user_id?: string
         }
         Update: {
@@ -514,6 +516,7 @@ export type Database = {
           exam_board?: string | null
           id?: string
           name?: string
+          position?: number
           user_id?: string
         }
         Relationships: []
