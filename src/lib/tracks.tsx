@@ -29,7 +29,9 @@ type TrackContextValue = {
   loading: boolean;
   error: boolean;
 };
-const TrackContext = createContext<TrackContextValue | null>(null);
+// Keep one context instance across hot reloads so providers and consumers never diverge.
+const globalScope = globalThis as typeof globalThis & { __sapiensTrackContext?: React.Context<TrackContextValue | null> };
+const TrackContext = (globalScope.__sapiensTrackContext ??= createContext<TrackContextValue | null>(null));
 
 export function TrackProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const { data: tracks = [], isPending, isError } = useQuery({
