@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Archive, ArchiveRestore, Check, Layers, Pencil, Plus, Settings2, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronUp, Layers, Pencil, Plus, Settings2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { TRACK_COLORS, useTrack, type StudyTrack } from "@/lib/tracks";
@@ -35,7 +35,7 @@ export function TrackSelector() {
       const row = { name: name.trim().slice(0, 60), color };
       const result = editing
         ? await supabase.from("study_tracks").update(row).eq("id", editing.id).select().single()
-        : await supabase.from("study_tracks").insert(row).select().single();
+        : await supabase.from("study_tracks").insert({ ...row, position: Math.max(0, ...tracks.map((t) => t.position)) + 1 }).select().single();
       if (result.error) throw result.error;
       await qc.invalidateQueries({ queryKey: ["tracks"] });
       if (!editing) selectTrack(result.data.id);
@@ -52,6 +52,21 @@ export function TrackSelector() {
       await qc.invalidateQueries({ queryKey: ["tracks"] });
       toast.success(t.archived ? "Trilha restaurada" : "Trilha arquivada");
     }
+    setBusy(false);
+  }
+  async function move(index: number, dir: -1 | 1) {
+    const target = index + dir;
+    if (target < 0 || target >= tracks.length || busy) return;
+    const next = [...tracks];
+    const [moved] = next.splice(index, 1);
+    if (moved) next.splice(target, 0, moved);
+    const ordered = next.map((t, i) => ({ ...t, position: i + 1 }));
+    const key = ["tracks", tracks[0]?.user_id];
+    qc.setQueryData(key, ordered);
+    setBusy(true);
+    const results = await Promise.all(ordered.filter((t, i) => tracks[i]?.id !== t.id || tracks[i]?.position !== t.position).map((t) => supabase.from("study_tracks").update({ position: t.position }).eq("id", t.id)));
+    if (results.some((r) => r.error)) toast.error("Não foi possível reordenar as trilhas");
+    await qc.invalidateQueries({ queryKey: ["tracks"] });
     setBusy(false);
   }
   async function remove() {
@@ -82,7 +97,11 @@ export function TrackSelector() {
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle className="flex items-center gap-2"><Layers className="size-5 text-primary" />Trilhas de estudo</DialogTitle><DialogDescription>{tracks.length} trilha(s) · {tracks.filter((t) => t.archived).length} arquivada(s)</DialogDescription></DialogHeader>
         <div className="divide-y rounded-md border">
-          {tracks.map((t) => <div key={t.id} data-track-color={t.color} className="flex items-center gap-2 px-3 py-2">
+          {tracks.map((t, i) => <div key={t.id} data-track-color={t.color} className="flex items-center gap-2 px-3 py-2">
+            <div className="flex shrink-0 flex-col">
+              <Button size="icon-xs" variant="ghost" disabled={busy || i === 0} aria-label={`Mover ${t.name} para cima`} title="Mover para cima" onClick={() => move(i, -1)}><ChevronUp className="size-3.5" /></Button>
+              <Button size="icon-xs" variant="ghost" disabled={busy || i === tracks.length - 1} aria-label={`Mover ${t.name} para baixo`} title="Mover para baixo" onClick={() => move(i, 1)}><ChevronDown className="size-3.5" /></Button>
+            </div>
             <span className="size-2.5 shrink-0 rounded-full bg-track-accent" />
             <span className="min-w-0 flex-1 break-words text-sm">{t.name}{t.archived && <span className="ml-2 text-xs text-muted-foreground">Arquivada</span>}</span>
             {t.id === track?.id && <Check className="size-4 shrink-0 text-track-accent" />}

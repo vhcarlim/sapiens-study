@@ -5,12 +5,20 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type StudyTrack = Tables<"study_tracks">;
 export const TRACK_COLORS = [
-  { value: "green", label: "Verde" },
-  { value: "blue", label: "Azul" },
-  { value: "cyan", label: "Ciano" },
-  { value: "amber", label: "Âmbar" },
-  { value: "rose", label: "Rosa" },
+  { value: "green", label: "Verde esmeralda" },
+  { value: "forest", label: "Verde floresta" },
+  { value: "teal", label: "Azul petróleo" },
+  { value: "cyan", label: "Turquesa" },
+  { value: "blue", label: "Azul cobalto" },
+  { value: "indigo", label: "Índigo" },
   { value: "violet", label: "Violeta" },
+  { value: "plum", label: "Ameixa" },
+  { value: "magenta", label: "Magenta" },
+  { value: "rose", label: "Framboesa" },
+  { value: "coral", label: "Coral" },
+  { value: "terracotta", label: "Terracota" },
+  { value: "amber", label: "Âmbar" },
+  { value: "bronze", label: "Bronze" },
 ] as const;
 
 type TrackContextValue = {
@@ -27,7 +35,7 @@ export function TrackProvider({ userId, children }: { userId: string; children: 
   const { data: tracks = [], isPending, isError } = useQuery({
     queryKey: ["tracks", userId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("study_tracks").select("*").eq("user_id", userId).order("created_at");
+      const { data, error } = await supabase.from("study_tracks").select("*").eq("user_id", userId).order("position").order("created_at");
       if (error) throw error;
       return data;
     },

@@ -85,6 +85,13 @@
       "when": 1792037036689,
       "tag": "0011_avatars_select_own",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792179302668,
+      "tag": "0012_track_position",
+      "breakpoints": true
     }
   ]
 }

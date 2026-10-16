@@ -1,0 +1,2 @@
+ALTER TABLE public.study_tracks ADD COLUMN position integer NOT NULL DEFAULT 0;
+UPDATE public.study_tracks t SET position = s.rn FROM (SELECT id, row_number() OVER (PARTITION BY user_id ORDER BY created_at) AS rn FROM public.study_tracks) s WHERE s.id = t.id;
