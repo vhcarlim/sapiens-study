@@ -1,3 +1,4 @@
+import { Logo } from "@/components/Logo";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +30,7 @@ function Index() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
-      <p className="font-mono text-sm text-primary">// Sapiens Study</p>
+      <Logo />
       <h1 className="mt-4 max-w-3xl text-5xl font-bold leading-tight tracking-tight md:text-6xl">
         Centralize os seus estudos e <span className="text-primary">domine</span> qualquer conhecimento.
       </h1>

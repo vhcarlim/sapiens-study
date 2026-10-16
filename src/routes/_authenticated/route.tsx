@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ActivityDialog } from "@/components/ActivityDialog";
 import { RewardOverlay } from "@/components/Gamification";
 import { UserNav } from "@/components/UserNav";
+import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -61,8 +62,8 @@ function TrackLayout() {
     <div className="min-h-screen" data-track-color={track?.color ?? "green"}>
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
-          <Link to="/dashboard" className="font-mono text-sm font-bold text-primary">
-            sapiens
+          <Link to="/dashboard" aria-label="Sapiens Study — Painel">
+            <Logo />
           </Link>
           <TrackSelector />
           <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1">

@@ -1,3 +1,4 @@
+import { Logo } from "@/components/Logo";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -71,7 +72,7 @@ function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-xl border bg-card p-8">
-        <p className="font-mono text-sm text-primary">// Sapiens Study</p>
+        <Logo />
         <h1 className="mt-2 text-2xl font-bold">{mode === "in" ? "Entrar" : "Criar conta"}</h1>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div className="space-y-2">
