@@ -35,7 +35,7 @@ export function TrackSelector() {
       const row = { name: name.trim().slice(0, 60), color };
       const result = editing
         ? await supabase.from("study_tracks").update(row).eq("id", editing.id).select().single()
-        : await supabase.from("study_tracks").insert(row).select().single();
+        : await supabase.from("study_tracks").insert({ ...row, position: Math.max(0, ...tracks.map((t) => t.position)) + 1 }).select().single();
       if (result.error) throw result.error;
       await qc.invalidateQueries({ queryKey: ["tracks"] });
       if (!editing) selectTrack(result.data.id);
