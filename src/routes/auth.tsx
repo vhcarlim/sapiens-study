@@ -1,3 +1,4 @@
+import { Logo } from "@/components/Logo";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,9 +14,9 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Entrar — sapiens" },
+      { title: "Entrar — Sapiens Study" },
       { name: "description", content: "Acesse seu painel pessoal de evolução nos estudos." },
-      { property: "og:title", content: "Entrar — sapiens" },
+      { property: "og:title", content: "Entrar — Sapiens Study" },
       { property: "og:description", content: "Acesse seu painel pessoal de evolução nos estudos." },
     ],
   }),
@@ -71,7 +72,7 @@ function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-xl border bg-card p-8">
-        <p className="font-mono text-sm text-primary">// sapiens</p>
+        <Logo />
         <h1 className="mt-2 text-2xl font-bold">{mode === "in" ? "Entrar" : "Criar conta"}</h1>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div className="space-y-2">

@@ -22,9 +22,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/arena")({
   validateSearch: z.object({ skill: z.string().optional(), topic: z.string().optional() }),
   head: () => ({ meta: [
-    { title: "Arena de estudo ativo · sapiens" },
+    { title: "Arena de estudo ativo · Sapiens Study" },
     { name: "description", content: "Estude um tópico do edital com questões no padrão da banca, debate de alternativas e correção da sua explicação." },
-    { property: "og:title", content: "Arena de estudo ativo · sapiens" },
+    { property: "og:title", content: "Arena de estudo ativo · Sapiens Study" },
     { property: "og:description", content: "Questões no padrão da banca, debate de alternativas e correção da sua explicação." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

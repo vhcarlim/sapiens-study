@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { activityXp, celebrateReward } from "@/lib/gamification";
 
 export const Route = createFileRoute("/_authenticated/review")({
-  head: () => ({ meta: [{ title: "Revisão — sapiens" }, { name: "description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:title", content: "Revisão — sapiens" }, { property: "og:description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Revisão — Sapiens Study" }, { name: "description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:title", content: "Revisão — Sapiens Study" }, { property: "og:description", content: "Revise e aprove as atividades importadas na trilha de estudos selecionada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: ReviewPage,
 });
 

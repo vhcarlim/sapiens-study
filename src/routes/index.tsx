@@ -1,3 +1,4 @@
+import { Logo } from "@/components/Logo";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,9 +9,9 @@ export const Route = createFileRoute("/")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "sapiens — Centralize os seus estudos" },
+      { title: "Sapiens Study — Centralize os seus estudos" },
       { name: "description", content: "Reúna suas fontes de aprendizado, sua evolução diária e sua árvore de competências em um só lugar" },
-      { property: "og:title", content: "sapiens — Centralize os seus estudos" },
+      { property: "og:title", content: "Sapiens Study — Centralize os seus estudos" },
       { property: "og:description", content: "Reúna suas fontes de aprendizado, sua evolução diária e sua árvore de competências em um só lugar" },
     ],
   }),
@@ -29,7 +30,7 @@ function Index() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
-      <p className="font-mono text-sm text-primary">// sapiens</p>
+      <Logo />
       <h1 className="mt-4 max-w-3xl text-5xl font-bold leading-tight tracking-tight md:text-6xl">
         Centralize os seus estudos e <span className="text-primary">domine</span> qualquer conhecimento.
       </h1>

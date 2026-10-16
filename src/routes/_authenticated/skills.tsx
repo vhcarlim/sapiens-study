@@ -16,7 +16,7 @@ import { AnimatedNumber, NeonProgress } from "@/components/Gamification";
 import { SyllabusImportDialog } from "@/components/SyllabusImportDialog";
 
 export const Route = createFileRoute("/_authenticated/skills")({
-  head: () => ({ meta: [{ title: "Competências — sapiens" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — sapiens" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Competências — Sapiens Study" }, { name: "description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:title", content: "Competências — Sapiens Study" }, { property: "og:description", content: "Organize as competências específicas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SkillsPage,
 });
 
