@@ -58,7 +58,7 @@ export function TrackSelector() {
     const target = index + dir;
     if (target < 0 || target >= tracks.length || busy) return;
     const next = [...tracks];
-    [next[index], next[target]] = [next[target], next[index]];
+    [next[index], next[target]] = [next[target]!, next[index]!];
     const ordered = next.map((t, i) => ({ ...t, position: i + 1 }));
     const key = ["tracks", tracks[0]?.user_id];
     qc.setQueryData(key, ordered);
