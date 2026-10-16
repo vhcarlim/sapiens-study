@@ -18,7 +18,7 @@ import { celebrateReward } from "@/lib/gamification";
 import { reviewDraftKey, STUDY_TIME_ZONE } from "@/lib/study-day";
 
 export const Route = createFileRoute("/_authenticated/arguicao/$threadId")({
-  head: () => ({ meta: [{ title: "Arguição ativa — sapiens" }, { name: "description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:title", content: "Arguição ativa — sapiens" }, { property: "og:description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Arguição ativa — Sapiens Study" }, { name: "description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:title", content: "Arguição ativa — Sapiens Study" }, { property: "og:description", content: "Pratique seu conhecimento com desafios situacionais e acompanhe seu domínio." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: ReviewConversation,
 });
 
@@ -133,11 +133,11 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       <div className="flex items-start gap-3">
         <Button asChild variant="ghost" size="icon" title="Voltar"><Link to="/review"><ArrowLeft /></Link></Button>
-        <div className="min-w-0"><p className="font-mono text-xs text-track-accent">sapiens / Arguição ativa</p><h1 className="mt-1 break-words text-2xl font-bold">{title}</h1></div>
+        <div className="min-w-0"><p className="font-mono text-xs text-track-accent">Sapiens Study / Arguição ativa</p><h1 className="mt-1 break-words text-2xl font-bold">{title}</h1></div>
       </div>
       <Conversation className="relative h-[min(60vh,640px)] min-h-64 border-y">
         <ConversationContent className="gap-6 px-1 py-6">
-          {!messages.length && <div className="py-10"><p className="font-mono text-sm text-track-accent">sapiens</p><h2 className="mt-2 text-xl font-semibold">Seu conhecimento, em ação.</h2></div>}
+          {!messages.length && <div className="py-10"><p className="font-mono text-sm text-track-accent">Sapiens Study</p><h2 className="mt-2 text-xl font-semibold">Seu conhecimento, em ação.</h2></div>}
           {messages.map(message => <Message key={message.id} from={message.role}>
             <MessageContent className="group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground">
               {message.parts.map((part, i) => <MessagePart key={i} part={part} />)}
