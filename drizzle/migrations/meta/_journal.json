@@ -92,6 +92,13 @@
       "when": 1792179302668,
       "tag": "0012_track_position",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792180613967,
+      "tag": "0013_expand_track_colors",
+      "breakpoints": true
     }
   ]
 }

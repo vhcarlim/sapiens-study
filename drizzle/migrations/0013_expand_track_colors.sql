@@ -1,0 +1,2 @@
+ALTER TABLE public.study_tracks DROP CONSTRAINT IF EXISTS track_color_valid;
+ALTER TABLE public.study_tracks ADD CONSTRAINT track_color_valid CHECK (color IN ('green','forest','teal','cyan','blue','indigo','violet','plum','magenta','rose','coral','terracotta','amber','bronze'));
