@@ -110,11 +110,19 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
           <DialogHeader><DialogTitle>Importar conteúdo programático</DialogTitle></DialogHeader>
           {!rows ? (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Envie apenas as páginas do edital com o conteúdo programático (PDF até 5 MB) ou cole o texto. Cada matéria vira uma competência e seus itens viram tópicos do edital.</p>
-              <Input type="file" accept="application/pdf" aria-label="PDF do conteúdo programático" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-              <Textarea rows={8} maxLength={60000} placeholder="Cole aqui o conteúdo programático" value={text} onChange={(e) => setText(e.target.value)} />
+              <p className="text-sm text-muted-foreground">Envie o edital completo em PDF e informe seu cargo. A IA pega só os conhecimentos gerais e os específicos do seu cargo, ignorando os demais. Você revisa tudo antes de salvar.</p>
+              <div className="space-y-1.5">
+                <label htmlFor="syllabus-role" className="text-sm font-medium">Cargo pretendido</label>
+                <Input id="syllabus-role" maxLength={200} placeholder="Ex.: Analista Judiciário – Área Administrativa" value={role} onChange={(e) => setRole(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="syllabus-file" className="text-sm font-medium">Edital (PDF completo)</label>
+                <Input id="syllabus-file" type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              </div>
+              <Textarea rows={5} maxLength={60000} placeholder="Ou cole aqui o conteúdo programático" value={text} onChange={(e) => setText(e.target.value)} />
+              {status && <p className="text-sm text-muted-foreground" role="status">{status}</p>}
               <DialogFooter>
-                <Button onClick={read} disabled={busy || (!file && text.trim().length < 20)}><Wand2 className="size-4" />{busy ? "Lendo edital…" : "Ler com IA"}</Button>
+                <Button onClick={read} disabled={busy || (!file && text.trim().length < 20)}><Wand2 className="size-4" />{busy ? "Analisando…" : "Ler com IA"}</Button>
               </DialogFooter>
             </div>
           ) : (
