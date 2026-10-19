@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { extractSyllabus, type SyllabusSubject } from "@/lib/syllabus.functions";
 import { mergeTopics } from "@/lib/syllabus";
+import { selectSyllabusPages } from "@/lib/syllabus-pages";
 import type { Skill } from "@/lib/data";
 
 const MAX_PDF = 5 * 1024 * 1024;
@@ -31,29 +32,47 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
   const extract = useServerFn(extractSyllabus);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [role, setRole] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
 
   function reset(o: boolean) {
     setOpen(o);
-    if (!o) { setText(""); setFile(null); setRows(null); }
+    if (!o) { setText(""); setFile(null); setRows(null); setStatus(""); }
   }
 
   async function read() {
     setBusy(true);
     try {
-      let payload: { trackId: string; text?: string; file?: { name: string; mediaType: "application/pdf"; base64: string } } = { trackId };
-      if (text.trim()) payload.text = text.trim();
+      const payload: { trackId: string; role?: string; text?: string; file?: { name: string; mediaType: "application/pdf"; base64: string } } = { trackId };
+      if (role.trim()) payload.role = role.trim();
+      const parts: string[] = [];
       if (file) {
-        if (file.size > MAX_PDF) throw new Error("O PDF deve ter até 5 MB. Envie só as páginas do conteúdo programático.");
-        payload = { ...payload, file: { name: file.name, mediaType: "application/pdf", base64: await toBase64(file) } };
+        setStatus("Lendo as páginas do edital…");
+        const { readPdfPages } = await import("@/lib/pdf-text");
+        const pages = await readPdfPages(file, (d, t) => setStatus(`Lendo página ${d} de ${t}…`));
+        const chars = pages.join("").replace(/\s/g, "").length;
+        if (chars < pages.length * 40) {
+          // Scanned PDF without a text layer: send the file itself.
+          if (file.size > MAX_PDF) throw new Error("Este PDF é digitalizado (imagem) e grande demais. Envie só as páginas do conteúdo ou cole o texto.");
+          payload.file = { name: file.name, mediaType: "application/pdf", base64: await toBase64(file) };
+        } else {
+          const sel = selectSyllabusPages(pages, role);
+          parts.push(sel.text);
+          setStatus(`Analisando ${sel.pages.length} páginas do conteúdo programático${role.trim() ? ` para ${role.trim()}` : ""}…`);
+        }
       }
+      if (text.trim()) parts.push(text.trim());
+      if (parts.length) payload.text = parts.join("\n\n");
+      if (!payload.file) setStatus((s) => s || "Analisando o conteúdo…");
       const { subjects } = await extract({ data: payload });
       setRows(subjects.map((s) => ({ ...s, on: true })));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao ler o edital");
     }
+    setStatus("");
     setBusy(false);
   }
 
@@ -91,11 +110,19 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
           <DialogHeader><DialogTitle>Importar conteúdo programático</DialogTitle></DialogHeader>
           {!rows ? (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Envie apenas as páginas do edital com o conteúdo programático (PDF até 5 MB) ou cole o texto. Cada matéria vira uma competência e seus itens viram tópicos do edital.</p>
-              <Input type="file" accept="application/pdf" aria-label="PDF do conteúdo programático" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-              <Textarea rows={8} maxLength={60000} placeholder="Cole aqui o conteúdo programático" value={text} onChange={(e) => setText(e.target.value)} />
+              <p className="text-sm text-muted-foreground">Envie o edital completo em PDF e informe seu cargo. A IA pega só os conhecimentos gerais e os específicos do seu cargo, ignorando os demais. Você revisa tudo antes de salvar.</p>
+              <div className="space-y-1.5">
+                <label htmlFor="syllabus-role" className="text-sm font-medium">Cargo pretendido</label>
+                <Input id="syllabus-role" maxLength={200} placeholder="Ex.: Analista Judiciário – Área Administrativa" value={role} onChange={(e) => setRole(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="syllabus-file" className="text-sm font-medium">Edital (PDF completo)</label>
+                <Input id="syllabus-file" type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              </div>
+              <Textarea rows={5} maxLength={60000} placeholder="Ou cole aqui o conteúdo programático" value={text} onChange={(e) => setText(e.target.value)} />
+              {status && <p className="text-sm text-muted-foreground" role="status">{status}</p>}
               <DialogFooter>
-                <Button onClick={read} disabled={busy || (!file && text.trim().length < 20)}><Wand2 className="size-4" />{busy ? "Lendo edital…" : "Ler com IA"}</Button>
+                <Button onClick={read} disabled={busy || (!file && text.trim().length < 20)}><Wand2 className="size-4" />{busy ? "Analisando…" : "Ler com IA"}</Button>
               </DialogFooter>
             </div>
           ) : (
