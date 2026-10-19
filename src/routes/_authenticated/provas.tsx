@@ -195,9 +195,9 @@ function Practice({ exam, onExit }: { exam: PastExam; onExit: () => void }) {
     <div className="space-y-2">{q.options.map((o) => {
       const isAnswer = o.letter === q.answer, isPick = o.letter === picked;
       return <button key={o.letter} type="button" disabled={!!picked} onClick={() => setPicks({ ...picks, [index]: o.letter })}
-        className={cn("flex w-full gap-3 rounded-md border p-3 text-left text-sm transition-colors", !picked && "hover:bg-secondary", picked && isAnswer && "border-success bg-success/10", picked && isPick && !isAnswer && "border-destructive bg-destructive/10")}>
+        className={cn("flex w-full gap-3 rounded-md border p-3 text-left text-sm transition-colors", !picked && "hover:bg-secondary", picked && isAnswer && "border-track-accent bg-track-accent/10", picked && isPick && !isAnswer && "border-destructive bg-destructive/10")}>
         <span className="font-mono font-semibold">{o.letter}</span><span className="flex-1">{o.text}</span>
-        {picked && isAnswer && <Check className="size-4 text-success" />}{picked && isPick && !isAnswer && <X className="size-4 text-destructive" />}
+        {picked && isAnswer && <Check className="size-4 text-track-accent" />}{picked && isPick && !isAnswer && <X className="size-4 text-destructive" />}
       </button>;
     })}</div>
     {picked && <p className="text-sm text-muted-foreground">Gabarito oficial: <strong>{q.answer}</strong></p>}

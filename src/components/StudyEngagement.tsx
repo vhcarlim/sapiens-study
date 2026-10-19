@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Award, ArrowRight, ShieldCheck, Swords, Trophy, Volume2, VolumeX } from "lucide-react";
+import { Award, ArrowRight, CalendarClock, ShieldCheck, Swords, Trophy, Volume2, VolumeX } from "lucide-react";
+import { daysUntil, examBadge, examPercent, type PastExam } from "@/lib/past-exams";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -47,8 +49,9 @@ export function StreakProtection({ trackId, activities, results, now }: { trackI
   </div>;
 }
 
-export function TrophyShelf({ activities, skills }: { activities: Activity[]; skills: SkillProgress[] }) {
+export function TrophyShelf({ activities, skills, exams = [] }: { activities: Activity[]; skills: SkillProgress[]; exams?: PastExam[] }) {
   const trophies = [
+    ...exams.flatMap(e => { const b = examBadge(e.score_correct, e.score_total); return b ? [{ id: e.id, name: `${b.name} · ${e.title}`, detail: `Prova · ${e.score_correct}/${e.score_total} (${examPercent(e.score_correct ?? 0, e.score_total ?? 1)}%)`, mastery: b.min >= 90 }] : []; }),
     ...activities.filter(a => a.type === "certificate").map(a => ({ id: a.id, name: a.title, detail: `Diploma · ${new Date(`${a.date}T12:00:00`).toLocaleDateString("pt-BR")}`, mastery: false })),
     ...skills.filter(s => s.level === 10).map(s => ({ id: s.id, name: s.name, detail: "Maestria · Nível 10", mastery: true })),
   ];
@@ -62,4 +65,15 @@ export function SoundToggle({ userId, trackId }: { userId: string; trackId: stri
   const [enabled,setEnabled] = useState(false);
   useEffect(() => { try { setEnabled(localStorage.getItem(key)==="true"); } catch { /* optional */ } }, [key]);
   return <Button variant="ghost" size="icon-sm" role="switch" aria-checked={enabled} aria-label="Som de recompensas" title={enabled ? "Desativar som de recompensas" : "Ativar som de recompensas"} onClick={() => { const value = !enabled; setEnabled(value); try { localStorage.setItem(key,String(value)); } catch { /* optional */ } window.dispatchEvent(new CustomEvent("sapiens:sound",{ detail: { trackId,enabled:value } })); }}>{enabled ? <Volume2 /> : <VolumeX />}</Button>;
+}
+export function ExamCountdown({ examDate, name, now }: { examDate: string; name: string; now: Date }) {
+  const days = daysUntil(examDate, studyDay(now));
+  const date = new Date(`${examDate}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  const urgent = days >= 0 && days <= 7, near = days > 7 && days <= 30;
+  const title = days > 1 ? `Faltam ${days} dias para a prova` : days === 1 ? "A prova é amanhã!" : days === 0 ? "É hoje! Boa prova!" : "Prova realizada";
+  return <section aria-label="Contagem regressiva" className={cn("flex flex-wrap items-center gap-4 rounded-lg border bg-card px-5 py-4", urgent && "border-track-accent ring-1 ring-track-accent", near && "border-warning")}>
+    <CalendarClock className={cn("size-8 shrink-0", near ? "text-warning" : "text-track-accent", urgent && "animate-pulse")} />
+    <div className="min-w-0 flex-1"><p className="font-mono text-xs text-muted-foreground">DATA DA PROVA · {name.toUpperCase()}</p><h2 className="mt-1 text-lg font-semibold">{title}</h2><p className="text-sm text-muted-foreground">{date}{days > 7 ? ` · ${Math.floor(days / 7)} semana${days >= 14 ? "s" : ""}` : ""}</p></div>
+    {days < 0 && <Button variant="outline" size="sm" asChild><Link to="/provas">Registrar acertos</Link></Button>}
+  </section>;
 }
