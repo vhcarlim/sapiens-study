@@ -12,4 +12,6 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Pre-bundle the PDF reader so the first edital import doesn't trigger a full page reload in dev.
+  vite: { optimizeDeps: { include: ["pdfjs-dist"] } },
 });
