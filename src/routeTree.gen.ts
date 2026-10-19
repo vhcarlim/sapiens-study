@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedActivitiesRouteImport } from './routes/_authenticated/activities'
 import { Route as AuthenticatedArenaRouteImport } from './routes/_authenticated/arena'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedProvasRouteImport } from './routes/_authenticated/provas'
 import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedSkillsRouteImport } from './routes/_authenticated/skills'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
@@ -50,6 +51,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProvasRoute = AuthenticatedProvasRouteImport.update({
+  id: '/provas',
+  path: '/provas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
   id: '/review',
   path: '/review',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/activities': typeof AuthenticatedActivitiesRoute
   '/arena': typeof AuthenticatedArenaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/provas': typeof AuthenticatedProvasRoute
   '/review': typeof AuthenticatedReviewRoute
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/activities': typeof AuthenticatedActivitiesRoute
   '/arena': typeof AuthenticatedArenaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/provas': typeof AuthenticatedProvasRoute
   '/review': typeof AuthenticatedReviewRoute
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/_authenticated/activities': typeof AuthenticatedActivitiesRoute
   '/_authenticated/arena': typeof AuthenticatedArenaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/provas': typeof AuthenticatedProvasRoute
   '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/skills': typeof AuthenticatedSkillsRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/activities'
     | '/arena'
     | '/dashboard'
+    | '/provas'
     | '/review'
     | '/skills'
     | '/sources'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/activities'
     | '/arena'
     | '/dashboard'
+    | '/provas'
     | '/review'
     | '/skills'
     | '/sources'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/_authenticated/activities'
     | '/_authenticated/arena'
     | '/_authenticated/dashboard'
+    | '/_authenticated/provas'
     | '/_authenticated/review'
     | '/_authenticated/skills'
     | '/_authenticated/sources'
@@ -206,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/provas': {
+      id: '/_authenticated/provas'
+      path: '/provas'
+      fullPath: '/provas'
+      preLoaderRoute: typeof AuthenticatedProvasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/review': {
       id: '/_authenticated/review'
       path: '/review'
@@ -248,6 +267,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivitiesRoute: typeof AuthenticatedActivitiesRoute
   AuthenticatedArenaRoute: typeof AuthenticatedArenaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedProvasRoute: typeof AuthenticatedProvasRoute
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedSkillsRoute: typeof AuthenticatedSkillsRoute
   AuthenticatedSourcesRoute: typeof AuthenticatedSourcesRoute
@@ -258,6 +278,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivitiesRoute: AuthenticatedActivitiesRoute,
   AuthenticatedArenaRoute: AuthenticatedArenaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedProvasRoute: AuthenticatedProvasRoute,
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedSkillsRoute: AuthenticatedSkillsRoute,
   AuthenticatedSourcesRoute: AuthenticatedSourcesRoute,

@@ -148,6 +148,50 @@ export type Database = {
           },
         ]
       }
+      past_exams: {
+        Row: {
+          created_at: string
+          id: string
+          questions: Json
+          score_correct: number | null
+          score_total: number | null
+          taken_at: string | null
+          title: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          questions?: Json
+          score_correct?: number | null
+          score_total?: number | null
+          taken_at?: string | null
+          title: string
+          track_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          questions?: Json
+          score_correct?: number | null
+          score_total?: number | null
+          taken_at?: string | null
+          title?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "past_exams_track_owner_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -494,6 +538,7 @@ export type Database = {
           color: string
           created_at: string
           exam_board: string | null
+          exam_date: string | null
           id: string
           name: string
           position: number
@@ -504,6 +549,7 @@ export type Database = {
           color?: string
           created_at?: string
           exam_board?: string | null
+          exam_date?: string | null
           id?: string
           name: string
           position?: number
@@ -514,6 +560,7 @@ export type Database = {
           color?: string
           created_at?: string
           exam_board?: string | null
+          exam_date?: string | null
           id?: string
           name?: string
           position?: number

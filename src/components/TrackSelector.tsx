@@ -19,12 +19,14 @@ export function TrackSelector() {
   const [deleting, setDeleting] = useState<StudyTrack | null>(null);
   const [name, setName] = useState("");
   const [color, setColor] = useState("green");
+  const [examDate, setExamDate] = useState("");
   const [busy, setBusy] = useState(false);
 
   function edit(t: StudyTrack | null) {
     setEditing(t);
     setName(t?.name ?? "");
     setColor(t?.color ?? "green");
+    setExamDate(t?.exam_date ?? "");
     setOpen(true);
   }
   async function save(e: React.FormEvent) {
@@ -32,7 +34,7 @@ export function TrackSelector() {
     if (!name.trim() || busy) return;
     setBusy(true);
     try {
-      const row = { name: name.trim().slice(0, 60), color };
+      const row = { name: name.trim().slice(0, 60), color, exam_date: examDate || null };
       const result = editing
         ? await supabase.from("study_tracks").update(row).eq("id", editing.id).select().single()
         : await supabase.from("study_tracks").insert({ ...row, position: Math.max(0, ...tracks.map((t) => t.position)) + 1 }).select().single();
@@ -40,7 +42,7 @@ export function TrackSelector() {
       await qc.invalidateQueries({ queryKey: ["tracks"] });
       if (!editing) selectTrack(result.data.id);
       toast.success(editing ? "Trilha atualizada" : "Trilha criada");
-      setEditing(null); setName("");
+      setEditing(null); setName(""); setExamDate("");
     } catch { toast.error("Não foi possível salvar a trilha"); }
     finally { setBusy(false); }
   }
@@ -113,6 +115,7 @@ export function TrackSelector() {
         <form onSubmit={save} className="space-y-4 border-t pt-4">
           <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">{editing ? "Editar trilha" : "Nova trilha"}</h3>{editing && <Button type="button" size="sm" variant="ghost" onClick={() => edit(null)}><Plus className="size-4" /> Nova</Button>}</div>
           <div className="space-y-2"><Label htmlFor="track-name">Nome da trilha</Label><Input id="track-name" required maxLength={60} placeholder="Nome da trilha" value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="space-y-2"><Label htmlFor="track-exam-date">Data da prova (opcional)</Label><Input id="track-exam-date" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="w-48" /><p className="text-xs text-muted-foreground">Mostra a contagem regressiva no painel.</p></div>
           <fieldset className="space-y-2"><legend className="text-sm font-medium">Cor de destaque</legend><div className="flex flex-wrap gap-2">{TRACK_COLORS.map((c) => <Button key={c.value} type="button" variant="outline" size="icon" data-track-color={c.value} aria-label={c.label} title={c.label} aria-pressed={color === c.value} className={color === c.value ? "border-track-accent ring-1 ring-track-accent" : ""} onClick={() => setColor(c.value)}><span className="flex size-5 items-center justify-center rounded-full bg-track-accent text-track-contrast">{color === c.value && <Check className="size-3" />}</span></Button>)}</div></fieldset>
           <div className="flex justify-end"><Button type="submit" disabled={busy || !name.trim()}>{editing ? <Check className="size-4" /> : <Plus className="size-4" />}{editing ? "Salvar trilha" : "Criar trilha"}</Button></div>
         </form>

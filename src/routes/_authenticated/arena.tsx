@@ -110,7 +110,7 @@ function Arena() {
 
   if (!startedAt) {
     return <div className="mx-auto max-w-2xl space-y-8">
-      <header><p className="font-mono text-xs text-track-accent">ARENA DE ESTUDO ATIVO</p><h1 className="mt-1 text-3xl font-bold">Estude um tópico do edital</h1><p className="mt-2 text-muted-foreground">Questões no padrão da sua banca, debate de cada alternativa e correção da sua explicação. O tempo vira estudo registrado ao encerrar.</p></header>
+      <header><p className="font-mono text-xs text-track-accent">ARENA DE ESTUDO ATIVO</p><h1 className="mt-1 text-3xl font-bold">Estude um tópico do edital</h1><p className="mt-2 text-muted-foreground">Questões no padrão da sua banca, debate de cada alternativa e correção da sua explicação. O tempo vira estudo registrado ao encerrar.</p><Button asChild variant="outline" size="sm" className="mt-4"><Link to="/provas">Provas anteriores e gabaritos<ArrowRight className="size-4" /></Link></Button></header>
       {!withTopics.length ? <div className="border-l-2 border-track-accent bg-secondary/40 p-5"><p>Importe o conteúdo programático do edital para liberar a Arena.</p><Button asChild className="mt-3" variant="outline"><Link to="/skills">Ir para Competências</Link></Button></div> : <>
         {rec && <button type="button" onClick={() => { setSkillId(rec.skillId); setTopic(rec.topic); }} className={cn("w-full border-l-2 border-track-accent bg-secondary/40 p-5 text-left transition-colors hover:bg-secondary", skillId === rec.skillId && topic === rec.topic && "ring-1 ring-track-accent")}>
           <p className="font-mono text-xs text-track-accent">RECOMENDADO HOJE · {rec.reason === "novo" ? "AINDA NÃO ESTUDADO" : `ÚLTIMO ESTUDO EM ${rec.lastStudied?.split("-").reverse().join("/")}`}</p>

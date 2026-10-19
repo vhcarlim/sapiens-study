@@ -41,7 +41,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { studyDay, studyCalendarDate } from "@/lib/study-day";
 import { protectionQuery } from "@/lib/engagement";
-import { PriorityMission, StreakProtection, TrophyShelf, SoundToggle } from "@/components/StudyEngagement";
+import { ExamCountdown, PriorityMission, StreakProtection, TrophyShelf, SoundToggle } from "@/components/StudyEngagement";
+import { pastExamsQuery } from "@/lib/past-exams";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — Sapiens Study" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — Sapiens Study" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -90,6 +91,7 @@ function Dashboard() {
     }
     return { acts, skills: merged, mastery: [...byCanon.values()] };
   }, [global, trackActs.data, trackSkills.data, trackMastery.data, gActs.data, gSkills.data, gMastery.data]);
+  const { data: exams = [] } = useQuery(pastExamsQuery(trackId));
   const { data: trackProtection } = useQuery(protectionQuery(trackId));
   const protection = global ? undefined : trackProtection;
   const [now, setNow] = useState(new Date());
@@ -200,6 +202,7 @@ function Dashboard() {
         );
       })()}
 
+      {!global && track?.exam_date && <ExamCountdown examDate={track.exam_date} name={track.name} now={now} />}
       {!global && userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
       {!global && <ArenaSuggestion skills={trackSkills.data ?? []} activities={acts} />}
       {!global && <PriorityMission trackId={trackId} activities={acts} now={now} />}
@@ -302,7 +305,7 @@ function Dashboard() {
       </div>
 
       {!global && userId && <SkillMissionMap key={`map-${trackId}`} skills={skillData} storageKey={`sapiens:map:${userId}:${trackId}`} />}
-      <TrophyShelf activities={acts} skills={skillData} />
+      <TrophyShelf activities={acts} skills={skillData} exams={global ? [] : exams} />
 
       {milestones.length > 0 && (
         <section>
