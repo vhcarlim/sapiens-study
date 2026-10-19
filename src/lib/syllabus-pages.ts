@@ -19,11 +19,11 @@ export function selectSyllabusPages(pages: string[], role: string): { text: stri
   const start = hits.find((i) => i >= 3 && i >= Math.floor(pages.length * 0.15)) ?? hits[0] ?? 0;
   const keep = pages
     .map((p, i) => i)
-    .filter((i) => i >= start || (r.length >= 3 && norm(pages[i]).includes(r)));
+    .filter((i) => i >= start || (r.length >= 3 && norm(pages[i] ?? "").includes(r)));
   const out: number[] = [];
   let text = "";
   for (const i of keep) {
-    const chunk = `\n\n[[PÁGINA ${i + 1}]]\n${pages[i].trim()}`;
+    const chunk = `\n\n[[PÁGINA ${i + 1}]]\n${(pages[i] ?? "").trim()}`;
     if (text.length + chunk.length > MAX_SYLLABUS_CHARS) break;
     text += chunk;
     out.push(i + 1);

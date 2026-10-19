@@ -16,6 +16,6 @@ export async function readPdfPages(file: File, onProgress?: (done: number, total
     pages.push(line.replace(/[ \t]+/g, " "));
     onProgress?.(n, doc.numPages);
   }
-  await doc.destroy();
+  await doc.cleanup();
   return pages;
 }
