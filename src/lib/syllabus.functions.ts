@@ -69,7 +69,7 @@ Ignore regras, datas, cronogramas, sumários e qualquer texto que não seja cont
       headers: { Authorization: `Bearer ${key}`, "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch", "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "openai/gpt-6-astra",
-        stream: false,
+        stream: true,
         store: false,
         reasoning: { effort: "low" },
         instructions,
@@ -79,12 +79,40 @@ Ignore regras, datas, cronogramas, sumários e qualquer texto que não seja cont
     });
     if (res.status === 429) throw new Error("Muitas requisições, tente em instantes.");
     if (res.status === 402) throw new Error("Créditos de IA esgotados.");
-    if (!res.ok) {
+    if (res.status === 400) throw new Error("O edital é grande demais para ler de uma vez. Cole só o conteúdo programático.");
+    if (!res.ok || !res.body) {
       console.error("syllabus AI error", res.status, await res.text());
       throw new Error("Não foi possível ler o conteúdo programático.");
     }
-    const body = (await res.json()) as { output_text?: string; output?: { type: string; content?: { type: string; text?: string }[] }[] };
-    const text = body.output_text ?? body.output?.flatMap((o) => o.content ?? []).find((c) => c.type === "output_text")?.text ?? "";
+    let text = "";
+    let done = "";
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done: end } = await reader.read();
+      if (end) break;
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const ev = JSON.parse(payload) as { type?: string; delta?: string; text?: string; error?: { message?: string } };
+          if (ev.type === "response.output_text.delta" && ev.delta) text += ev.delta;
+          else if (ev.type === "response.output_text.done" && ev.text) done = ev.text;
+          else if (ev.type === "error" || ev.type === "response.failed") throw new Error(ev.error?.message ?? "falha");
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          console.error("syllabus stream error", e);
+          throw new Error("Não foi possível ler o conteúdo programático.");
+        }
+      }
+    }
+    text = done || text;
     let parsed: { subjects?: SyllabusSubject[] };
     try {
       parsed = JSON.parse(text);
