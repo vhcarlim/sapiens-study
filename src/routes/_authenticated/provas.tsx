@@ -1,13 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Award, Check, FileUp, Loader2, Play, Trash2, X } from "lucide-react";
+import { ArrowLeft, Award, Check, FileUp, Loader2, MessageSquare, Pencil, Play, Trash2, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
 import { examBadge, examPercent, pastExamsQuery, type ExamQuestion, type PastExam } from "@/lib/past-exams";
-import { extractPastExam } from "@/lib/past-exams.functions";
+import { discussPastExamQuestion, extractPastExam } from "@/lib/past-exams.functions";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { readPdfPages } from "@/lib/pdf-text";
 import { todayStr } from "@/lib/data";
 import { Button } from "@/components/ui/button";
@@ -37,6 +41,7 @@ function Provas() {
   const [importing, setImporting] = useState(false);
   const [scoring, setScoring] = useState<PastExam | "new" | null>(null);
   const [practice, setPractice] = useState<PastExam | null>(null);
+  const [renaming, setRenaming] = useState<PastExam | null>(null);
   const qc = useQueryClient();
 
   async function remove(e: PastExam) {
@@ -70,11 +75,13 @@ function Provas() {
           </div>
           {e.questions.length > 0 && <Button size="sm" onClick={() => setPractice(e)}><Play className="size-4" />Praticar</Button>}
           <Button size="sm" variant="outline" onClick={() => setScoring(e)}>Registrar acertos</Button>
+          <Button size="icon" variant="ghost" aria-label={`Editar nome de ${e.title}`} onClick={() => setRenaming(e)}><Pencil className="size-4" /></Button>
           <Button size="icon" variant="ghost" aria-label={`Excluir ${e.title}`} onClick={() => remove(e)}><Trash2 className="size-4 text-destructive" /></Button>
         </div>;
       })}</div>}
     <ImportDialog open={importing} onOpenChange={setImporting} trackId={trackId} />
     {scoring && <ScoreDialog exam={scoring === "new" ? null : scoring} trackId={trackId} onClose={() => setScoring(null)} />}
+    {renaming && <RenameDialog exam={renaming} onClose={() => setRenaming(null)} />}
   </div>;
 }
 
@@ -165,10 +172,42 @@ function ScoreDialog({ exam, trackId, onClose }: { exam: PastExam | null; trackI
   </Dialog>;
 }
 
+function RenameDialog({ exam, onClose }: { exam: PastExam; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState(exam.title);
+  const [busy, setBusy] = useState(false);
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    const t = title.trim().slice(0, 200);
+    if (!t) return;
+    setBusy(true);
+    const { error } = await supabase.from("past_exams").update({ title: t }).eq("id", exam.id);
+    setBusy(false);
+    if (error) { toast.error("Não foi possível renomear"); return; }
+    await qc.invalidateQueries({ queryKey: ["past-exams", exam.track_id] });
+    toast.success("Nome atualizado");
+    onClose();
+  }
+  return <Dialog open onOpenChange={(v) => !v && onClose()}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader><DialogTitle>Editar nome da prova</DialogTitle><DialogDescription>Ex.: Técnico Judiciário – TRT 2ª Região – FCC 2024</DialogDescription></DialogHeader>
+      <form onSubmit={save} className="space-y-4">
+        <div className="space-y-2"><Label htmlFor="rn-title">Nome da prova</Label><Input id="rn-title" autoFocus required maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+        <div className="flex justify-end"><Button type="submit" disabled={busy || !title.trim()}>Salvar</Button></div>
+      </form>
+    </DialogContent>
+  </Dialog>;
+}
+
+type Chat = { role: "user" | "assistant"; content: string };
+
 function Practice({ exam, onExit }: { exam: PastExam; onExit: () => void }) {
   const qc = useQueryClient();
+  const { track } = useTrack();
   const [picks, setPicks] = useState<Record<number, string>>({});
+  const [chats, setChats] = useState<Record<number, Chat[]>>({});
   const [index, setIndex] = useState(0);
+  const [startedAt] = useState(() => Date.now());
   const q: ExamQuestion | undefined = exam.questions[index];
   const answered = Object.keys(picks).length;
   const hits = exam.questions.filter((x, i) => picks[i] === x.answer).length;
@@ -178,7 +217,8 @@ function Practice({ exam, onExit }: { exam: PastExam; onExit: () => void }) {
       if (error) toast.error("Não foi possível salvar o resultado");
       else {
         const badge = examBadge(hits, answered);
-        toast.success(`${hits}/${answered} acertos${badge ? ` · ${badge.name}` : ""}`);
+        const minutes = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
+        toast.success(`${hits}/${answered} acertos em ${minutes} min${badge ? ` · ${badge.name}` : ""}`);
         await qc.invalidateQueries({ queryKey: ["past-exams", exam.track_id] });
       }
     }
@@ -188,7 +228,7 @@ function Practice({ exam, onExit }: { exam: PastExam; onExit: () => void }) {
   const picked = picks[index];
   return <div className="mx-auto max-w-2xl space-y-6">
     <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0"><p className="font-mono text-xs text-track-accent">{exam.title.toUpperCase()}</p><p className="text-sm text-muted-foreground">Questão {index + 1} de {exam.questions.length} · {hits}/{answered} acertos</p></div>
+      <div className="min-w-0"><p className="font-mono text-xs text-track-accent">{exam.title.toUpperCase()}{track?.exam_board ? ` · ${track.exam_board}` : ""}</p><p className="text-sm text-muted-foreground">Questão {index + 1} de {exam.questions.length} · {hits}/{answered} acertos</p></div>
       <Button variant="outline" onClick={finish}>Encerrar e salvar</Button>
     </div>
     <p className="whitespace-pre-line">{q.number}. {q.statement}</p>
@@ -201,9 +241,43 @@ function Practice({ exam, onExit }: { exam: PastExam; onExit: () => void }) {
       </button>;
     })}</div>
     {picked && <p className="text-sm text-muted-foreground">Gabarito oficial: <strong>{q.answer}</strong></p>}
+    {picked && <QuestionChat key={index} exam={exam} q={q} picked={picked} chat={chats[index] ?? []} onChange={(c) => setChats((s) => ({ ...s, [index]: c }))} />}
     <div className="flex justify-between">
       <Button variant="ghost" disabled={index === 0} onClick={() => setIndex(index - 1)}>Anterior</Button>
       {index < exam.questions.length - 1 ? <Button onClick={() => setIndex(index + 1)}>Próxima</Button> : <Button onClick={finish}>Finalizar prova</Button>}
     </div>
+  </div>;
+}
+
+function QuestionChat({ exam, q, picked, chat, onChange }: { exam: PastExam; q: ExamQuestion; picked: string; chat: Chat[]; onChange: (c: Chat[]) => void }) {
+  const discuss = useServerFn(discussPastExamQuestion);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const textarea = useRef<HTMLTextAreaElement>(null);
+  async function send(text: string) {
+    text = text.trim(); if (!text || busy) return;
+    const next: Chat[] = [...chat, { role: "user", content: text }];
+    onChange(next); setInput(""); setBusy(true); setErr(null);
+    try {
+      const { text: reply } = await discuss({ data: { trackId: exam.track_id, examTitle: exam.title.slice(0, 200), question: JSON.stringify({ number: q.number, statement: q.statement, options: q.options }), answer: q.answer, picked, messages: next.slice(-40) } });
+      onChange([...next, { role: "assistant", content: reply }]);
+    } catch (e) { setErr(errMsg(e)); onChange(chat); setInput(text); } finally { setBusy(false); textarea.current?.focus(); }
+  }
+  return <div className="space-y-3">
+    <p className="font-mono text-xs text-track-accent">CONVERSE COM A QUESTÃO</p>
+    {!chat.length && !busy && <Button size="sm" variant="outline" onClick={() => void send("Explique o fundamento do gabarito e por que cada outra alternativa está errada.")}><MessageSquare className="size-4" />Explicar gabarito e alternativas</Button>}
+    {(!!chat.length || busy) && <Conversation className="relative max-h-[50vh] border-y">
+      <ConversationContent className="gap-5 px-1 py-5">
+        {chat.map((m, i) => <Message key={i} from={m.role}><MessageContent className="group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground"><MessageResponse>{m.content}</MessageResponse></MessageContent></Message>)}
+        {busy && <Shimmer>Analisando a questão…</Shimmer>}
+      </ConversationContent>
+      <ConversationScrollButton />
+    </Conversation>}
+    {err && <p className="text-sm text-destructive">{err}</p>}
+    <PromptInput onSubmit={() => void send(input)}>
+      <PromptInputTextarea ref={textarea} aria-label="Pergunte sobre a questão" placeholder="Ex.: Por que a letra B não se aplica aqui?" value={input} onChange={(e) => setInput(e.target.value)} maxLength={8000} disabled={busy} />
+      <PromptInputFooter className="justify-end"><PromptInputSubmit status={busy ? "submitted" : "ready"} disabled={busy || !input.trim()} aria-label="Enviar pergunta" /></PromptInputFooter>
+    </PromptInput>
   </div>;
 }
