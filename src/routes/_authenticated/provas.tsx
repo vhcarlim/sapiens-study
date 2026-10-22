@@ -101,7 +101,7 @@ async function readUploads(files: File[], range: string, maxImages: number, labe
     const pages = await readPdfPages(file, (d, t) => status(`Lendo ${label}: página ${d} de ${t}…`));
     const wanted = parsePageRange(range, pages.length) ?? pages.map((_, i) => i + 1);
     const chosen = wanted.filter((n) => n <= pages.length);
-    const chars = chosen.reduce((s, n) => s + pages[n - 1].replace(/\s/g, "").length, 0);
+    const chars = chosen.reduce((s, n) => s + (pages[n - 1] ?? "").replace(/\s/g, "").length, 0);
     if (chars >= chosen.length * 80) {
       texts.push(chosen.map((n) => `[[PÁGINA ${n}]]\n${pages[n - 1]}`).join("\n"));
     } else {
