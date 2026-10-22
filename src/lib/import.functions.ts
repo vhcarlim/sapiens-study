@@ -71,7 +71,7 @@ skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-6-astra",
+        model: "openai/gpt-5.4-mini",
         stream: true,
         store: false,
         reasoning: { effort: "low" },
