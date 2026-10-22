@@ -85,9 +85,33 @@ function Provas() {
   </div>;
 }
 
-async function fileText(file: File) {
-  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) return (await readPdfPages(file)).map((p, i) => `[[PÁGINA ${i + 1}]]\n${p}`).join("\n");
-  return file.text();
+const MAX_EXAM_IMAGES = 30;
+const MAX_KEY_IMAGES = 6;
+const ACCEPT = "application/pdf,.pdf,.txt,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp";
+const isPdf = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+const isImage = (f: File) => f.type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(f.name);
+
+/** Reads uploads into text (digital PDFs/txt) or page images (photos, scanned PDFs). */
+async function readUploads(files: File[], range: string, maxImages: number, label: string, status: (s: string) => void) {
+  const { readPdfPages, renderPdfPages, imageToJpeg, parsePageRange } = await import("@/lib/pdf-text");
+  const texts: string[] = [];
+  const images: string[] = [];
+  for (const file of files) {
+    if (isImage(file)) { status(`Preparando imagem ${file.name}…`); images.push(await imageToJpeg(file)); continue; }
+    if (!isPdf(file)) { texts.push(await file.text()); continue; }
+    const pages = await readPdfPages(file, (d, t) => status(`Lendo ${label}: página ${d} de ${t}…`));
+    const wanted = parsePageRange(range, pages.length) ?? pages.map((_, i) => i + 1);
+    const chosen = wanted.filter((n) => n <= pages.length);
+    const chars = chosen.reduce((s, n) => s + pages[n - 1].replace(/\s/g, "").length, 0);
+    if (chars >= chosen.length * 80) {
+      texts.push(chosen.map((n) => `[[PÁGINA ${n}]]\n${pages[n - 1]}`).join("\n"));
+    } else {
+      if (images.length + chosen.length > maxImages) throw new Error(`O ${label} é digitalizado (imagem) e tem ${chosen.length} páginas. Informe no campo "Páginas" no máximo ${maxImages} páginas (ex.: 1-${maxImages}) e importe o restante depois.`);
+      images.push(...await renderPdfPages(file, chosen, (d, t) => status(`Convertendo ${label} digitalizado: página ${d} de ${t}…`)));
+    }
+  }
+  if (images.length > maxImages) throw new Error(`Envie no máximo ${maxImages} imagens para o ${label}.`);
+  return { text: texts.join("\n\n"), images };
 }
 
 function ImportDialog({ open, onOpenChange, trackId }: { open: boolean; onOpenChange: (v: boolean) => void; trackId: string }) {
@@ -95,41 +119,45 @@ function ImportDialog({ open, onOpenChange, trackId }: { open: boolean; onOpenCh
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [role, setRole] = useState("");
-  const [examFile, setExamFile] = useState<File | null>(null);
-  const [keyFile, setKeyFile] = useState<File | null>(null);
+  const [range, setRange] = useState("");
+  const [examFiles, setExamFiles] = useState<File[]>([]);
+  const [keyFiles, setKeyFiles] = useState<File[]>([]);
   const [keyText, setKeyText] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
-    if (!examFile || !title.trim()) return;
+    if (!examFiles.length || !title.trim()) return;
     try {
       setBusy("Lendo a prova…");
-      const exam = (await fileText(examFile)).slice(0, 300000);
-      const key = (keyFile ? await fileText(keyFile) : keyText).slice(0, 60000);
-      if (exam.replace(/\s/g, "").length < 200) throw new Error("A prova parece ser digitalizada (imagem). Envie um PDF com texto selecionável.");
-      if (key.trim().length < 5) throw new Error("Envie ou cole o gabarito.");
-      setBusy("A IA está separando as questões e o gabarito…");
-      const questions = await extract({ data: { exam, key, role: role.trim() || undefined } });
+      const exam = await readUploads(examFiles, range, MAX_EXAM_IMAGES, "caderno", setBusy);
+      const key = keyFiles.length ? await readUploads(keyFiles, "", MAX_KEY_IMAGES, "gabarito", setBusy) : { text: keyText, images: [] };
+      if (exam.text.replace(/\s/g, "").length < 50 && !exam.images.length) throw new Error("Não consegui ler o caderno. Tente outro arquivo ou fotos das páginas.");
+      if (key.text.trim().length < 5 && !key.images.length) throw new Error("Envie ou cole o gabarito.");
+      setBusy(exam.images.length ? `A IA está lendo ${exam.images.length} página(s) digitalizada(s)… pode levar 1–2 minutos` : "A IA está separando as questões e o gabarito…");
+      const questions = await extract({ data: { exam: exam.text.slice(0, 300000), examImages: exam.images, key: key.text.slice(0, 60000), keyImages: key.images, role: role.trim() || undefined } });
       const { error } = await supabase.from("past_exams").insert({ track_id: trackId, title: title.trim().slice(0, 200), questions });
       if (error) throw error;
       await qc.invalidateQueries({ queryKey: ["past-exams", trackId] });
       toast.success(`${questions.length} questões importadas`);
-      setTitle(""); setExamFile(null); setKeyFile(null); setKeyText("");
+      setTitle(""); setExamFiles([]); setKeyFiles([]); setKeyText(""); setRange("");
       onOpenChange(false);
     } catch (err) { toast.error(errMsg(err)); } finally { setBusy(null); }
   }
 
   return <Dialog open={open} onOpenChange={(v) => !busy && onOpenChange(v)}>
     <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-      <DialogHeader><DialogTitle>Importar prova anterior</DialogTitle><DialogDescription>A prova precisa ter texto selecionável. Questões anuladas ficam de fora.</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>Importar prova anterior</DialogTitle><DialogDescription>Aceita PDF (com texto ou digitalizado) e fotos/prints das páginas (PNG, JPG). Questões anuladas ficam de fora.</DialogDescription></DialogHeader>
       <form onSubmit={run} className="space-y-4">
         <div className="space-y-2"><Label htmlFor="pe-title">Nome da prova</Label><Input id="pe-title" required maxLength={200} placeholder="Ex.: Analista Judiciário 2023" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-        <div className="space-y-2"><Label htmlFor="pe-exam">Caderno de questões (PDF)</Label><Input id="pe-exam" type="file" accept="application/pdf,.pdf,.txt" onChange={(e) => setExamFile(e.target.files?.[0] ?? null)} /></div>
-        <div className="space-y-2"><Label htmlFor="pe-key">Gabarito (PDF ou texto)</Label><Input id="pe-key" type="file" accept="application/pdf,.pdf,.txt" onChange={(e) => setKeyFile(e.target.files?.[0] ?? null)} />
-          {!keyFile && <Textarea placeholder="Ou cole aqui: 1-A 2-C 3-E…" value={keyText} onChange={(e) => setKeyText(e.target.value)} rows={3} />}</div>
+        <div className="space-y-2"><Label htmlFor="pe-exam">Caderno de questões (PDF ou imagens)</Label><Input id="pe-exam" type="file" multiple accept={ACCEPT} onChange={(e) => setExamFiles(Array.from(e.target.files ?? []))} />
+          {examFiles.length > 1 && <p className="text-xs text-muted-foreground">{examFiles.length} arquivos, lidos na ordem selecionada.</p>}</div>
+        <div className="space-y-2"><Label htmlFor="pe-range">Páginas do caderno (opcional)</Label><Input id="pe-range" placeholder="Ex.: 2-12 — deixe vazio para ler tudo" value={range} onChange={(e) => setRange(e.target.value)} />
+          <p className="text-xs text-muted-foreground">Para PDF digitalizado, até {MAX_EXAM_IMAGES} páginas por importação.</p></div>
+        <div className="space-y-2"><Label htmlFor="pe-key">Gabarito (PDF, imagem ou texto)</Label><Input id="pe-key" type="file" multiple accept={ACCEPT} onChange={(e) => setKeyFiles(Array.from(e.target.files ?? []))} />
+          {!keyFiles.length && <Textarea placeholder="Ou cole aqui: 1-A 2-C 3-E…" value={keyText} onChange={(e) => setKeyText(e.target.value)} rows={3} />}</div>
         <div className="space-y-2"><Label htmlFor="pe-role">Cargo / tipo de prova (opcional)</Label><Input id="pe-role" maxLength={200} placeholder="Use se o gabarito tiver vários cargos" value={role} onChange={(e) => setRole(e.target.value)} /></div>
-        <div className="flex items-center justify-end gap-3">{busy && <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />{busy}</span>}<Button type="submit" disabled={!!busy || !examFile || !title.trim()}>Importar</Button></div>
+        <div className="flex items-center justify-end gap-3">{busy && <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />{busy}</span>}<Button type="submit" disabled={!!busy || !examFiles.length || !title.trim()}>Importar</Button></div>
       </form>
     </DialogContent>
   </Dialog>;
