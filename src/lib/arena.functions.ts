@@ -8,14 +8,14 @@ import type { ArenaObjective, ArenaOpen, ArenaVerdict } from "@/lib/arena";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
 
 /** Streams a Responses call and returns the final text. */
-export async function respond(instructions: string, input: unknown, schema?: { name: string; schema: object }, effort = "medium"): Promise<string> {
+export async function respond(instructions: string, input: unknown, schema?: { name: string; schema: object }, effort = "low"): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("IA não configurada");
   const res = await fetch(GATEWAY, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch", "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "openai/gpt-6-astra",
+      model: "openai/gpt-5.4-mini",
       stream: true,
       store: false,
       reasoning: { effort },
