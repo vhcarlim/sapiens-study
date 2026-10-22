@@ -18,13 +18,36 @@ const schema = {
 /** Extracts objective questions from a past exam and matches each with the official answer key. Nothing is saved here. */
 export const extractPastExam = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ exam: z.string().min(50).max(300000), key: z.string().min(5).max(60000), role: z.string().max(200).optional() }).parse(d))
+  .inputValidator((d: unknown) => {
+    const img = z.string().startsWith("data:image/jpeg;base64,").max(1_500_000);
+    return z.object({
+      exam: z.string().max(300000).default(""),
+      examImages: z.array(img).max(30).default([]),
+      key: z.string().max(60000).default(""),
+      keyImages: z.array(img).max(6).default([]),
+      role: z.string().max(200).optional(),
+    }).refine((v) => v.exam.trim().length >= 50 || v.examImages.length, "Envie o caderno de questões.")
+      .refine((v) => v.key.trim().length >= 5 || v.keyImages.length, "Envie ou cole o gabarito.")
+      .parse(d);
+  })
   .handler(async ({ data }) => {
-    const instructions = `Você recebe o texto de um caderno de prova de concurso e o texto do gabarito oficial.
+    const instructions = `Você recebe um caderno de prova de concurso e o gabarito oficial, em texto e/ou imagens de páginas (fotos ou digitalizações).
 Extraia TODAS as questões objetivas na ordem, com número, enunciado completo (incluindo texto-base resumido quando necessário), alternativas (letras A–E, ou "C"/"E" para Certo/Errado) e a resposta oficial do gabarito para aquele número.
+Nas imagens, leia o texto com atenção (OCR); ignore cabeçalhos, rodapés e marcas d'água.
 ${data.role ? `Se o gabarito tiver vários cargos/tipos de prova, use apenas o de: ${data.role}.` : ""}
 Ignore questões anuladas (sem resposta no gabarito) e questões discursivas. Não invente conteúdo: copie o texto da prova. A resposta deve ser apenas a letra.`;
-    const text = await respond(instructions, [{ role: "user", content: `PROVA:\n${data.exam}\n\nGABARITO:\n${data.key}` }], { name: "past_exam", schema }, "low");
+    const content: unknown[] = [];
+    if (data.exam.trim()) content.push({ type: "input_text", text: `PROVA (texto):\n${data.exam}` });
+    if (data.examImages.length) {
+      content.push({ type: "input_text", text: `PROVA (${data.examImages.length} imagens de páginas, em ordem):` });
+      for (const url of data.examImages) content.push({ type: "input_image", image_url: url });
+    }
+    if (data.key.trim()) content.push({ type: "input_text", text: `GABARITO (texto):\n${data.key}` });
+    if (data.keyImages.length) {
+      content.push({ type: "input_text", text: "GABARITO (imagens):" });
+      for (const url of data.keyImages) content.push({ type: "input_image", image_url: url });
+    }
+    const text = await respond(instructions, [{ role: "user", content }], { name: "past_exam", schema }, "low");
     const parsed = JSON.parse(text) as { questions: ExamQuestion[] };
     const questions = parsed.questions.filter((q) => q.options.length >= 2 && q.options.some((o) => o.letter === q.answer));
     if (!questions.length) throw new Error("Não encontrei questões com gabarito correspondente.");
