@@ -119,6 +119,81 @@ export type Database = {
           },
         ]
       }
+      ai_preferences: {
+        Row: {
+          document_effort: string
+          document_model: string
+          monthly_token_goal: number | null
+          study_effort: string
+          study_model: string
+          user_id: string
+        }
+        Insert: {
+          document_effort?: string
+          document_model?: string
+          monthly_token_goal?: number | null
+          study_effort?: string
+          study_model?: string
+          user_id: string
+        }
+        Update: {
+          document_effort?: string
+          document_model?: string
+          monthly_token_goal?: number | null
+          study_effort?: string
+          study_model?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_usage: {
+        Row: {
+          cached_input_tokens: number | null
+          created_at: string
+          effort: string
+          feature: string
+          finished_at: string | null
+          id: string
+          input_tokens: number | null
+          model: string
+          output_tokens: number | null
+          reasoning_tokens: number | null
+          run_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cached_input_tokens?: number | null
+          created_at?: string
+          effort: string
+          feature: string
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number | null
+          model: string
+          output_tokens?: number | null
+          reasoning_tokens?: number | null
+          run_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cached_input_tokens?: number | null
+          created_at?: string
+          effort?: string
+          feature?: string
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number | null
+          model?: string
+          output_tokens?: number | null
+          reasoning_tokens?: number | null
+          run_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       import_snapshots: {
         Row: {
           data: Json
@@ -573,6 +648,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ai_monthly_usage: { Args: never; Returns: Json }
       claim_active_review: {
         Args: { p_thread: string; p_user: string }
         Returns: boolean

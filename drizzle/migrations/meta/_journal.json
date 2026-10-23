@@ -106,6 +106,13 @@
       "when": 1792412960814,
       "tag": "0014_exam_date_and_past_exams",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792725240338,
+      "tag": "0015_ai_preferences_and_usage",
+      "breakpoints": true
     }
   ]
 }
