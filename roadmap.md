@@ -15,3 +15,7 @@
 - [x] Adicionar missão prioritária, protetores, conquistas e som opcional.
 - [x] Facilitar resumos com tópicos e organização por IA.
 - [x] Verificar regras e fluxos reais de estudo.- [x] Arena de estudo ativo por tópico do edital, com banca na trilha e recomendação diária.
+- [ ] Salvar modelos, raciocínio e meta informativa por conta.
+- [ ] Registrar consumo informado em todas as ferramentas de IA, sem conteúdo privado duplicado.
+- [ ] Exibir seletor e uso realizado/estimado nas conversas e configurações.
+- [ ] Testar isolamento, contabilização, preferência persistida e conversa autenticada.
