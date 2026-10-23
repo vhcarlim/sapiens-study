@@ -60,7 +60,9 @@ export async function handleReviewChat(request: Request) {
       }
     };
     const run = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
-    const provider = createOpenAI({ baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: key, headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: run.fetch });
+    const { createTrackedAiFetch } = await import("@/lib/ai/tracked-fetch.server");
+    const trackedFetch = await createTrackedAiFetch({ userId, supabase: client }, question ? "review_question" : "review_answer", run.fetch);
+    const provider = createOpenAI({ baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: key, headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: trackedFetch });
     let evaluation: z.infer<typeof evaluationSchema> | undefined;
     let streamFailed = false;
     const result = streamText({

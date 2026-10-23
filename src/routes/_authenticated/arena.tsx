@@ -1,3 +1,4 @@
+import { AIControls } from "@/components/AIControls";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -111,6 +112,7 @@ function Arena() {
   if (!startedAt) {
     return <div className="mx-auto max-w-2xl space-y-8">
       <header><p className="font-mono text-xs text-track-accent">ARENA DE ESTUDO ATIVO</p><h1 className="mt-1 text-3xl font-bold">Estude um tópico do edital</h1><p className="mt-2 text-muted-foreground">Questões no padrão da sua banca, debate de cada alternativa e correção da sua explicação. O tempo vira estudo registrado ao encerrar.</p><Button asChild variant="outline" size="sm" className="mt-4"><Link to="/provas">Provas anteriores e gabaritos<ArrowRight className="size-4" /></Link></Button></header>
+      <AIControls feature="arena_objective" contextChars={topic.length} busy={!!loading} />
       {!withTopics.length ? <div className="border-l-2 border-track-accent bg-secondary/40 p-5"><p>Importe o conteúdo programático do edital para liberar a Arena.</p><Button asChild className="mt-3" variant="outline"><Link to="/skills">Ir para Competências</Link></Button></div> : <>
         {rec && <button type="button" onClick={() => { setSkillId(rec.skillId); setTopic(rec.topic); }} className={cn("w-full border-l-2 border-track-accent bg-secondary/40 p-5 text-left transition-colors hover:bg-secondary", skillId === rec.skillId && topic === rec.topic && "ring-1 ring-track-accent")}>
           <p className="font-mono text-xs text-track-accent">RECOMENDADO HOJE · {rec.reason === "novo" ? "AINDA NÃO ESTUDADO" : `ÚLTIMO ESTUDO EM ${rec.lastStudied?.split("-").reverse().join("/")}`}</p>
@@ -136,6 +138,7 @@ function Arena() {
       <div className="flex items-center gap-3"><span className="flex items-center gap-1.5 font-mono text-sm text-muted-foreground"><Timer className="size-4" />{String(Math.floor(elapsed / 60)).padStart(2, "0")}:{String(elapsed % 60).padStart(2, "0")}</span><Button variant="outline" size="sm" disabled={!!loading} onClick={finish}>Encerrar e registrar</Button></div>
     </header>
 
+    <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
     {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} />}
     {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={nextObjective}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
 
@@ -200,6 +203,7 @@ function ObjectiveCard({ index, round, ctx, onChange }: { index: number; round: 
         <ConversationScrollButton />
       </Conversation>}
       {err && <p className="text-sm text-destructive">{err}</p>}
+      <AIControls feature="arena_discuss" contextChars={JSON.stringify(q).length + round.chat.reduce((n,m) => n+m.content.length,0) + input.length} busy={busy} />
       <PromptInput onSubmit={() => void send()}>
         <PromptInputTextarea ref={textarea} aria-label="Pergunte sobre a questão" placeholder="Pergunte sobre qualquer alternativa" value={input} onChange={(e) => setInput(e.target.value)} maxLength={8000} disabled={busy} />
         <PromptInputFooter className="justify-end"><PromptInputSubmit status={busy ? "submitted" : "ready"} disabled={busy || !input.trim()} aria-label="Enviar pergunta" /></PromptInputFooter>

@@ -1,3 +1,4 @@
+import { AISettingsPanel } from "@/components/AIControls";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -35,14 +36,15 @@ export function SettingsDialog({ userId, onClose }: { userId: string; onClose: (
   }
 
   return <Dialog open onOpenChange={(o) => !o && onClose()}>
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader><DialogTitle>Configurações</DialogTitle><DialogDescription>Preferências salvas neste navegador.</DialogDescription></DialogHeader>
+    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogHeader><DialogTitle>Configurações</DialogTitle><DialogDescription>Tema e som neste navegador; preferências de IA na sua conta.</DialogDescription></DialogHeader>
       <div>
         <Row title="Tema escuro" desc="Homo Deus (preto e verde) ou Sapiens (bege e azul)."><Switch checked={dark} onCheckedChange={setTheme} aria-label="Tema escuro" /></Row>
         <Row title="Som de recompensas" desc={`Efeitos ao ganhar XP${track ? ` na trilha ${track.name}` : ""}.`}><Switch checked={sound} disabled={!trackId} onCheckedChange={setSoundPref} aria-label="Som de recompensas" /></Row>
         <Row title="Fuso do dia de estudo" desc="Ofensiva e meta diária viram à meia-noite de Brasília."><span className="font-mono text-xs text-muted-foreground">UTC−3</span></Row>
         <Row title="Registro rápido" desc="Abre o lançamento de estudo de qualquer tela."><span className="font-mono text-xs text-muted-foreground">Ctrl/⌘ + K</span></Row>
       </div>
+      <AISettingsPanel />
     </DialogContent>
   </Dialog>;
 }

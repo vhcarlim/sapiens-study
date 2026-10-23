@@ -1,3 +1,4 @@
+import { AIControls } from "@/components/AIControls";
 import { useTrack } from "@/lib/tracks";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -251,6 +252,7 @@ export function ActivityDialog({
               <Button type="button" variant="outline" size="sm" disabled={organizing || !reviewEligible(f.knowledge_summary)} onClick={organizeNotes}><Wand2 className="size-4" />{organizing ? "Organizando…" : "Organizar com IA"}</Button>
               {originalSummary !== null && <Button type="button" variant="ghost" size="icon-sm" title="Restaurar notas originais" aria-label="Restaurar notas originais" onClick={() => { setF(p => ({ ...p, knowledge_summary: originalSummary })); setOriginalSummary(null); }}><Undo2 /></Button>}
             </div>
+          <AIControls feature="summary" contextChars={f.knowledge_summary.length} busy={organizing} />
             <Textarea id="knowledge-summary" rows={4} maxLength={12000} disabled={organizing} placeholder="Com minhas palavras, aprendi que…" value={f.knowledge_summary} onChange={(e) => setF({ ...f, knowledge_summary: e.target.value })} />
             <p className="text-xs text-muted-foreground">Opcional · {f.knowledge_summary.trim().length}/12.000 · +20 XP pelo resumo</p>
             <p className={cn("text-xs", reviewEligible(f.knowledge_summary) ? "text-primary" : "text-warning")}>{reviewEligible(f.knowledge_summary) ? "Conhecimento pronto para arguição ativa." : "Sem ao menos 30 caracteres, a atividade será salva sem arguição ativa."}</p>

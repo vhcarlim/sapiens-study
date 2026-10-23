@@ -1,3 +1,4 @@
+import { AIControls } from "@/components/AIControls";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
@@ -120,6 +121,7 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
                 <Input id="syllabus-file" type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
               </div>
               <Textarea rows={5} maxLength={60000} placeholder="Ou cole aqui o conteúdo programático" value={text} onChange={(e) => setText(e.target.value)} />
+          <AIControls feature="syllabus" contextChars={text.length} busy={busy} />
               {status && <p className="text-sm text-muted-foreground" role="status">{status}</p>}
               <DialogFooter>
                 <Button onClick={read} disabled={busy || (!file && text.trim().length < 20)}><Wand2 className="size-4" />{busy ? "Analisando…" : "Ler com IA"}</Button>
