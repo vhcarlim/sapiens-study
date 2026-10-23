@@ -1,3 +1,4 @@
+import { AIControls } from "@/components/AIControls";
 import { useTrack } from "@/lib/tracks";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -74,6 +75,7 @@ export function PasteImportDialog({ open, onOpenChange }: { open: boolean; onOpe
           />
           <p className="text-right font-mono text-[10px] text-muted-foreground">{text.length.toLocaleString()}/30.000</p>
         </div>
+          <AIControls feature="activity_import" contextChars={text.length} busy={busy} />
         <DialogFooter>
           <Button onClick={submit} disabled={busy}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />} Interpretar e enviar para revisão

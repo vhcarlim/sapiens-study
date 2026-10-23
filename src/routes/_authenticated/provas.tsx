@@ -1,3 +1,4 @@
+import { AIControls } from "@/components/AIControls";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
@@ -156,6 +157,7 @@ function ImportDialog({ open, onOpenChange, trackId }: { open: boolean; onOpenCh
         <div className="space-y-2"><Label htmlFor="pe-key">Gabarito (PDF, imagem ou texto)</Label><Input id="pe-key" type="file" multiple accept={ACCEPT} onChange={(e) => setKeyFiles(Array.from(e.target.files ?? []))} />
           {!keyFiles.length && <Textarea placeholder="Ou cole aqui: 1-A 2-C 3-E…" value={keyText} onChange={(e) => setKeyText(e.target.value)} rows={3} />}</div>
         <div className="space-y-2"><Label htmlFor="pe-role">Cargo / tipo de prova (opcional)</Label><Input id="pe-role" maxLength={200} placeholder="Use se o gabarito tiver vários cargos" value={role} onChange={(e) => setRole(e.target.value)} /></div>
+        <AIControls feature="exam_import" contextChars={keyText.length} busy={!!busy} />
         <div className="flex items-center justify-end gap-3">{busy && <span className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" />{busy}</span>}<Button type="submit" disabled={!!busy || !examFiles.length || !title.trim()}>Importar</Button></div>
       </form>
     </DialogContent>
@@ -293,6 +295,7 @@ function QuestionChat({ exam, q, picked, chat, onChange }: { exam: PastExam; q: 
   }
   return <div className="space-y-3">
     <p className="font-mono text-xs text-track-accent">CONVERSE COM A QUESTÃO</p>
+    <AIControls feature="exam_discuss" contextChars={JSON.stringify(q).length + chat.reduce((n,m) => n+m.content.length,0) + input.length} busy={busy} />
     {!chat.length && !busy && <Button size="sm" variant="outline" onClick={() => void send("Explique o fundamento do gabarito e por que cada outra alternativa está errada.")}><MessageSquare className="size-4" />Explicar gabarito e alternativas</Button>}
     {(!!chat.length || busy) && <Conversation className="relative max-h-[50vh] border-y">
       <ConversationContent className="gap-5 px-1 py-5">

@@ -8,7 +8,7 @@ import type { ArenaObjective, ArenaOpen, ArenaVerdict } from "@/lib/arena";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
 
 /** Streams a Responses call and returns the final text. */
-export async function respond(instructions: string, input: unknown, schema?: { name: string; schema: object }, effort = "low", identity: { userId: string; supabase: SupabaseClient<Database> }, feature: string): Promise<string> {
+export async function respond(instructions: string, input: unknown, schema: { name: string; schema: object } | undefined, effort: string, identity: { userId: string; supabase: SupabaseClient<Database> }, feature: string): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("IA não configurada");
   const { createTrackedAiFetch } = await import("@/lib/ai/tracked-fetch.server");

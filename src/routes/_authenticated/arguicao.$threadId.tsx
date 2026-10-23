@@ -1,3 +1,4 @@
+import { AIControls } from "@/components/AIControls";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useChat } from "@ai-sdk/react";
@@ -152,6 +153,7 @@ function Arguicao({ thread, title }: { thread: ReviewThread; title: string }) {
         <p className="flex items-center gap-2 font-semibold">{latestResult.score >= 70 ? <CheckCircle2 className="size-4 text-track-accent" /> : <TriangleAlert className="size-4 text-warning" />}{latestResult.score >= 70 ? "Domínio demonstrado" : "Fragilidade na memória"} · {latestResult.score}/100</p>
         <p className="mt-1 text-sm text-muted-foreground">{latestResult.mastery_delta > 0 ? "+" : ""}{latestResult.mastery_delta} de domínio · +{latestResult.xp} XP · próxima revisão em {new Date(thread.next_review_at).toLocaleDateString("pt-BR", { timeZone: STUDY_TIME_ZONE })}</p>
       </div>}
+      <AIControls feature={thread.question_open ? "review_answer" : "review_question"} contextChars={input.length + JSON.stringify(thread.messages).length} busy={busy} />
       {thread.question_open || busy ? <PromptInput onSubmit={answer}>
         <PromptInputTextarea ref={textarea} aria-label="Sua argumentação" placeholder="Minha argumentação…" value={input} onChange={e => setInput(e.target.value)} maxLength={12000} disabled={busy} className="min-h-28" />
         <PromptInputFooter className="justify-between"><span className="text-xs text-muted-foreground">{draftSaved ? "Rascunho salvo neste dispositivo" : ""}</span><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => { void stop(); setRetryable(true); setFailure("Arguição interrompida. Sua resposta foi preservada; nenhuma avaliação incompleta conta no progresso."); }} aria-label={busy ? "Parar arguição" : "Enviar argumentação"} title={busy ? "Parar arguição" : "Enviar argumentação"} /></PromptInputFooter>
