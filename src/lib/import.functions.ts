@@ -62,7 +62,9 @@ skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo 
       },
     };
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    const { createTrackedAiFetch } = await import("@/lib/ai/tracked-fetch.server");
+    const trackedFetch = await createTrackedAiFetch(context, "activity_import");
+    const res = await trackedFetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
