@@ -643,6 +643,102 @@ export type Database = {
         }
         Relationships: []
       }
+      track_exam_blocks: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: number
+          total_questions: number
+          track_id: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          total_questions?: number
+          track_id: string
+          user_id?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          total_questions?: number
+          track_id?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_exam_blocks_track_owner_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      track_skill_rules: {
+        Row: {
+          block_id: string | null
+          difficulty: number
+          questions: number | null
+          skill_id: string
+          track_id: string
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          block_id?: string | null
+          difficulty?: number
+          questions?: number | null
+          skill_id: string
+          track_id: string
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Update: {
+          block_id?: string | null
+          difficulty?: number
+          questions?: number | null
+          skill_id?: string
+          track_id?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_skill_rules_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "track_exam_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "track_skill_rules_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "track_skill_rules_track_owner_fkey"
+            columns: ["track_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
