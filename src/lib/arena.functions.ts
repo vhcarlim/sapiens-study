@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { ArenaObjective, ArenaOpen, ArenaVerdict } from "@/lib/arena";
+import { PT_BR_RULE, stripForeignScripts } from "@/lib/ai-text";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
 
@@ -21,7 +22,7 @@ export async function respond(instructions: string, input: unknown, schema: { na
       stream: true,
       store: false,
       reasoning: { effort },
-      instructions,
+      instructions: `${instructions}\n${PT_BR_RULE}`,
       input,
       ...(schema ? { text: { format: { type: "json_schema", name: schema.name, strict: true, schema: schema.schema } } } : {}),
     }),
@@ -53,7 +54,7 @@ export async function respond(instructions: string, input: unknown, schema: { na
     }
   }
   if (!text.trim()) throw new Error("A IA não retornou conteúdo.");
-  return text;
+  return stripForeignScripts(text);
 }
 
 const Ctx = z.object({ trackId: z.string().uuid(), skillId: z.string().uuid(), topic: z.string().trim().min(2).max(400) });
