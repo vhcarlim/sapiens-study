@@ -113,6 +113,13 @@
       "when": 1792725240338,
       "tag": "0015_ai_preferences_and_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792810816874,
+      "tag": "0016_exam_blocks_and_skill_rules",
+      "breakpoints": true
     }
   ]
 }
