@@ -20,12 +20,12 @@ describe("computeExamWeights", () => {
 
   it("applies block weight to points", () => {
     const out = computeExamWeights(["a", "b"], [{ id: "b2", total_questions: 40, weight: 1.5 }], [rule("a", { block_id: "b2" }), rule("b", { block_id: "b2" })]);
-    expect(out[0].points).toBe(30);
+    expect(out[0]?.points).toBe(30);
   });
 
   it("uses a subject's own questions and weight outside blocks", () => {
     const out = computeExamWeights(["a", "z"], [], [rule("a", { questions: 12, weight: 2 })]);
-    expect(out[0].points).toBe(24);
-    expect(out[1]).toMatchObject({ questions: 0, weight: 1, points: 0, difficulty: 3 });
+    expect(out[0]?.points).toBe(24);
+    expect(out[1]!).toMatchObject({ questions: 0, weight: 1, points: 0, difficulty: 3 });
   });
 });

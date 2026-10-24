@@ -19,3 +19,6 @@
 - [x] Registrar consumo informado em todas as ferramentas de IA, sem conteúdo privado duplicado.
 - [x] Exibir seletor e uso realizado/estimado nas conversas e configurações.
 - [x] Testar isolamento, contabilização, preferência persistida e conversa autenticada.
+- [x] Estrutura da prova (blocos, questões, peso, facilidade) em Competências
+- [ ] Estratégia de estudos no Painel baseada nas regras
+- [ ] Prova de títulos e discursiva
