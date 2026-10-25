@@ -1,4 +1,5 @@
 import type { Activity, Skill } from "@/lib/data";
+import { studyDay } from "@/lib/study-day";
 
 export const EXAM_BOARDS = ["Cebraspe", "FGV", "FCC", "Vunesp", "Cesgranrio", "Quadrix", "IBFC", "Instituto AOCP", "FAFIPA", "Outra"] as const;
 
@@ -66,7 +67,7 @@ export function recommendTopic(skills: Pick<Skill, "id" | "name" | "topics">[], 
     if (!latest || a.date > latest.date || (a.date === latest.date && (a.created_at ?? "") > (latest.created_at ?? ""))) latest = a;
   }
   const justDone = latest ? skillsOf(latest) : new Set<string>();
-  const today = ctx.today ?? new Date().toISOString().slice(0, 10);
+  const today = ctx.today ?? studyDay();
   const pts = cands.map((s) => ctx.points?.get(s.id) ?? 0);
   const avgPts = pts.some((p) => p > 0) ? pts.reduce((a, b) => a + b, 0) / pts.filter((p) => p > 0).length : 1;
 

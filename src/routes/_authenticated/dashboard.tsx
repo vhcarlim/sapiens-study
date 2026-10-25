@@ -430,7 +430,7 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
       points: new Map(w.map((x) => [x.skillId, x.points])),
       difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])),
       mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])),
-      today: todayISO(),
+      today: studyDay(),
     });
   }, [skills, activities, blocks, rules, mastery]);
   if (!rec) return null;
