@@ -8,6 +8,8 @@ import { ArrowRight, Check, Loader2, Swords, Timer, X } from "lucide-react";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data";
+import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
+import { masteryQuery } from "@/lib/reviews";
 import { EXAM_BOARDS, groupTopics, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
 import { arenaDiscuss, arenaEvaluate, arenaObjective, arenaOpen } from "@/lib/arena.functions";
 import { Button } from "@/components/ui/button";
@@ -45,7 +47,13 @@ function Arena() {
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const { data: acts = [] } = useQuery(activitiesQuery("approved", trackId));
   const withTopics = skills.filter((s) => s.topics?.length);
-  const rec = useMemo(() => recommendTopic(withTopics, acts), [withTopics, acts]);
+  const { data: blocks = [] } = useQuery(examBlocksQuery(trackId));
+  const { data: rules = [] } = useQuery(skillRulesQuery(trackId));
+  const { data: mastery = [] } = useQuery(masteryQuery(trackId));
+  const rec = useMemo(() => {
+    const w = computeExamWeights(withTopics.map((s) => s.id), blocks, rules);
+    return recommendTopic(withTopics, acts, { points: new Map(w.map((x) => [x.skillId, x.points])), difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])), mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])) });
+  }, [withTopics, acts, blocks, rules, mastery]);
 
   const [skillId, setSkillId] = useState(search.skill ?? "");
   const [topic, setTopic] = useState(search.topic ?? "");
