@@ -1,6 +1,7 @@
 import { useTrack } from "@/lib/tracks";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { recommendTopic } from "@/lib/arena";
+import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
 import { Swords } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -204,7 +205,7 @@ function Dashboard() {
 
       {!global && track?.exam_date && <ExamCountdown examDate={track.exam_date} name={track.name} now={now} />}
       {!global && userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
-      {!global && <ArenaSuggestion skills={trackSkills.data ?? []} activities={acts} />}
+      {!global && <ArenaSuggestion trackId={trackId} skills={trackSkills.data ?? []} activities={acts} mastery={trackMastery.data ?? []} />}
       {!global && <PriorityMission trackId={trackId} activities={acts} now={now} />}
       {!global && <StreakProtection trackId={trackId} activities={acts} results={reviewResults} now={now} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -420,11 +421,21 @@ function Heatmap({
   );
 }
 
-function ArenaSuggestion({ skills, activities }: { skills: { id: string; name: string; topics: string[] }[]; activities: Activity[] }) {
-  const rec = recommendTopic(skills, activities);
+function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: string; skills: { id: string; name: string; topics: string[] }[]; activities: Activity[]; mastery: { skill_id: string; mastery: number }[] }) {
+  const { data: blocks = [] } = useQuery(examBlocksQuery(trackId));
+  const { data: rules = [] } = useQuery(skillRulesQuery(trackId));
+  const rec = useMemo(() => {
+    const w = computeExamWeights(skills.map((s) => s.id), blocks, rules);
+    return recommendTopic(skills, activities, {
+      points: new Map(w.map((x) => [x.skillId, x.points])),
+      difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])),
+      mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])),
+      today: todayISO(),
+    });
+  }, [skills, activities, blocks, rules, mastery]);
   if (!rec) return null;
   return <section aria-label="Estudo recomendado" className="flex flex-wrap items-center justify-between gap-5 border-l-2 border-track-accent bg-secondary/40 px-5 py-5">
-    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="font-mono text-xs text-track-accent">HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p></div></div>
+    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="font-mono text-xs text-track-accent">HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p><p className="mt-2 font-mono text-[11px] text-muted-foreground">{rec.why.join(" · ")}</p></div></div>
     <div className="flex gap-2"><Button variant="outline" asChild><Link to="/arena">Escolher outro</Link></Button><Button asChild><Link to="/arena" search={{ skill: rec.skillId, topic: rec.topic }}>Estudar na Arena</Link></Button></div>
   </section>;
 }
