@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { LayoutGrid, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +12,58 @@ import { DIFFICULTY_LABELS, fmtNum, type ExamBlock, type SkillExamWeight, type S
 const selectCls = "h-8 w-full rounded-md border border-input bg-background px-2 text-xs";
 const toNum = (v: string) => (v.trim() === "" ? null : Number(v.replace(",", ".")));
 
-export function ExamBlocksPanel({ trackId, blocks, weights }: { trackId: string; blocks: ExamBlock[]; weights: SkillExamWeight[] }) {
+function BulkAssignDialog({ trackId, blocks, skills, rules }: { trackId: string; blocks: ExamBlock[]; skills: { id: string; name: string }[]; rules: SkillRule[] }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const current = (id: string) => rules.find((r) => r.skill_id === id)?.block_id ?? "";
+  function openDialog(o: boolean) {
+    if (o) setDraft(Object.fromEntries(skills.map((s) => [s.id, current(s.id)])));
+    setOpen(o);
+  }
+  async function save() {
+    const changed = skills.filter((s) => (draft[s.id] ?? "") !== current(s.id));
+    if (!changed.length) return setOpen(false);
+    setSaving(true);
+    const rows = changed.map((s) => {
+      const r = rules.find((x) => x.skill_id === s.id);
+      return { track_id: trackId, skill_id: s.id, block_id: draft[s.id] || null, questions: r?.questions ?? null, weight: r?.weight ?? null, difficulty: r?.difficulty ?? 3 };
+    });
+    const { error } = await supabase.from("track_skill_rules").upsert(rows, { onConflict: "track_id,skill_id" });
+    setSaving(false);
+    if (error) return void toast.error("Falha ao distribuir matérias");
+    toast.success(`${changed.length} matéria(s) atualizada(s)`);
+    qc.invalidateQueries({ queryKey: ["skill_rules", trackId] });
+    setOpen(false);
+  }
+  return (
+    <Dialog open={open} onOpenChange={openDialog}>
+      <DialogTrigger asChild><Button size="sm" variant="outline"><LayoutGrid className="size-4" />Distribuir matérias nos blocos</Button></DialogTrigger>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader><DialogTitle>Distribuir matérias nos blocos</DialogTitle><DialogDescription>Escolha o bloco de cada matéria e salve tudo de uma vez.</DialogDescription></DialogHeader>
+        <div className="space-y-2">
+          {skills.map((s) => (
+            <div key={s.id} className="grid grid-cols-[1fr_auto] items-center gap-2 border-b border-dashed pb-2">
+              <span className="text-sm">{s.name}</span>
+              <div className="flex flex-wrap justify-end gap-1">
+                {[{ id: "", name: "Avulsa" }, ...blocks].map((b) => (
+                  <button key={b.id || "none"} type="button" onClick={() => setDraft((d) => ({ ...d, [s.id]: b.id }))}
+                    className={cn("rounded-full border px-2.5 py-1 text-xs transition-colors", (draft[s.id] ?? "") === b.id ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary")}>
+                    {b.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <DialogFooter><Button onClick={save} disabled={saving}>{saving ? "Salvando…" : "Salvar distribuição"}</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ExamBlocksPanel({ trackId, blocks, weights, skills = [], rules = [] }: { trackId: string; blocks: ExamBlock[]; weights: SkillExamWeight[]; skills?: { id: string; name: string }[]; rules?: SkillRule[] }) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [questions, setQuestions] = useState("");
