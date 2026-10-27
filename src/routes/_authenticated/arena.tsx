@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowRight, Check, Loader2, Swords, Timer, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Swords, Timer, Trophy, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data";
@@ -65,6 +66,7 @@ function Arena() {
   const [open, setOpen] = useState<{ q: ArenaOpen; answer: string; verdict: ArenaVerdict | null } | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{ answered: number; hits: number; minutes: number; skillName: string; topic: string; open: string | null } | null>(null);
   const [now, setNow] = useState(Date.now());
   useEffect(() => { if (!startedAt) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [startedAt]);
 
@@ -166,7 +168,9 @@ function Arena() {
     </header>
 
     <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
-    {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} />}
+    {summaryDialog}
+    {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} onNext={() => { if (!loading) void nextObjective(); }} />}
+    {!open && current && !current.picked && <p className="font-mono text-[11px] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p>}
     {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={nextObjective}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
 
     {open && <section className="space-y-4">
@@ -182,13 +186,26 @@ function Arena() {
   </div>;
 }
 
-function ObjectiveCard({ index, round, ctx, onChange }: { index: number; round: Round; ctx: { trackId: string; skillId: string; topic: string }; onChange: (r: Round) => void }) {
+function ObjectiveCard({ index, round, ctx, onChange, onNext }: { index: number; round: Round; ctx: { trackId: string; skillId: string; topic: string }; onChange: (r: Round) => void; onNext: () => void }) {
   const { q, picked } = round;
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const why = (l: string) => q.explanations.find((e) => e.letter === l)?.why;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (e.ctrlKey || e.metaKey || e.altKey || t?.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) return;
+      if (e.key === "Enter" && picked) { e.preventDefault(); onNext(); return; }
+      if (picked) return;
+      const opt = q.options.find((o) => o.letter.toUpperCase() === e.key.toUpperCase());
+      if (opt) { e.preventDefault(); onChange({ ...round, picked: opt.letter }); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [q, picked, round, onChange, onNext]);
 
   async function send() {
     const text = input.trim(); if (!text || busy) return;
