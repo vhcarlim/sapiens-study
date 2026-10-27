@@ -61,7 +61,7 @@ function SkillsPage() {
         </div>
         {trackId && <SyllabusImportDialog trackId={trackId} skills={skills} />}
       </div>
-      {trackId && <ExamBlocksPanel trackId={trackId} blocks={blocks} weights={weights} />}
+      {trackId && <ExamBlocksPanel trackId={trackId} blocks={blocks} weights={weights} skills={skills} rules={rules} />}
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {skills.map((s) => (
           <SkillRow key={s.id} trackId={trackId} blocks={blocks} rule={rules.find((r) => r.skill_id === s.id)} weight={weights.find((w) => w.skillId === s.id)} s={s} foreign={s.track_id !== trackId} progress={progress.find(p => p.id === s.id)} studied={new Set(activities.filter(a => a.syllabus_topic && a.activity_skills.some(x => x.skill_id === s.id)).map(a => a.syllabus_topic as string))} />

@@ -22,3 +22,6 @@
 - [x] Estrutura da prova (blocos, questões, peso, facilidade) em Competências
 - [x] Estratégia de estudos no Painel baseada nas regras
 - [ ] Prova de títulos e discursiva
+- [x] UX: aba Provas no menu, dica no Registrar, distribuição em lote nos blocos, atalhos de teclado e resumo de fim de sessão na Arena
+- [ ] UX: termômetro "fatia da prova vs. tempo da semana" no Painel
+- [ ] UX: resumo assistido por IA na aba "Sem resumo" da Revisão
