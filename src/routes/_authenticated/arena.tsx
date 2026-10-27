@@ -108,14 +108,33 @@ function Arena() {
     const answered = rounds.filter((r) => r.picked);
     const hits = answered.filter((r) => r.picked === r.q.answer).length;
     const notes = [`${hits}/${answered.length} objetivas corretas`, open?.verdict ? `Discursiva: ${open.verdict.verdict} (${open.verdict.score})` : null, track?.exam_board ? `Banca: ${track.exam_board}` : null].filter(Boolean).join(" · ");
+    const minutes = sessionMinutes(startedAt, Date.now());
     setLoading("Registrando sessão…");
     try {
-      await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes: sessionMinutes(startedAt, Date.now()), xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
+      await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes, xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
       await qc.invalidateQueries({ queryKey: ["activities"] });
-      toast.success("Sessão registrada no seu painel!");
-      navigate({ to: "/dashboard" });
+      setSummary({ answered: answered.length, hits, minutes, skillName: skill.name, topic, open: open?.verdict ? `${open.verdict.verdict} (${open.verdict.score})` : null });
+      setLoading(null);
     } catch (e) { toast.error(errMsg(e)); setLoading(null); }
   }
+
+  function restart() {
+    setSummary(null); setStartedAt(null); setRounds([]); setOpen(null); setSkillId(""); setTopic(""); setFailure(null);
+  }
+
+  const summaryDialog = <Dialog open={!!summary} onOpenChange={(o) => { if (!o) navigate({ to: "/dashboard" }); }}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader><DialogTitle className="flex items-center gap-2"><Trophy className="size-5 text-track-accent" />Sessão concluída!</DialogTitle><DialogDescription>{summary?.skillName} · {summary?.topic}</DialogDescription></DialogHeader>
+      {summary && <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="rounded-md bg-secondary/50 p-3"><p className="font-mono text-2xl font-bold">{summary.answered}</p><p className="text-xs text-muted-foreground">questões</p></div>
+        <div className="rounded-md bg-secondary/50 p-3"><p className="font-mono text-2xl font-bold text-primary">{summary.answered ? Math.round((summary.hits / summary.answered) * 100) : 0}%</p><p className="text-xs text-muted-foreground">{summary.hits} acertos</p></div>
+        <div className="rounded-md bg-secondary/50 p-3"><p className="font-mono text-2xl font-bold">{summary.minutes}</p><p className="text-xs text-muted-foreground">min de foco</p></div>
+      </div>}
+      {summary?.open && <p className="text-sm text-muted-foreground">Discursiva: {summary.open}</p>}
+      <p className="text-sm text-muted-foreground">O tempo e o XP já entraram no seu painel.</p>
+      <DialogFooter className="gap-2"><Button variant="outline" onClick={restart}>Próxima matéria recomendada</Button><Button onClick={() => navigate({ to: "/dashboard" })}>Ver no Painel</Button></DialogFooter>
+    </DialogContent>
+  </Dialog>;
 
   if (!startedAt) {
     return <div className="mx-auto max-w-2xl space-y-8">
