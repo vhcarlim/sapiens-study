@@ -100,7 +100,10 @@ export function ExamBlocksPanel({ trackId, blocks, weights, skills = [], rules =
           <h2 className="text-lg font-semibold">Estrutura da prova</h2>
           <p className="text-xs text-muted-foreground">Blocos do edital (ex.: Conhecimentos Básicos · 40 questões · peso 1). Sem distribuição por matéria, as questões são divididas igualmente.</p>
         </div>
-        <span className="font-mono text-xs text-muted-foreground">{fmtNum(totalQ)} questões · {fmtNum(totalP)} pontos</span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs text-muted-foreground">{fmtNum(totalQ)} questões · {fmtNum(totalP)} pontos</span>
+          {blocks.length > 0 && skills.length > 0 && <BulkAssignDialog trackId={trackId} blocks={blocks} skills={skills} rules={rules} />}
+        </div>
       </div>
       {blocks.length > 0 && (
         <div className="space-y-2">

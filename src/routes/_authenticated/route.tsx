@@ -2,7 +2,7 @@ import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery } from "@/lib/data";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated")({
 const nav = [
   { to: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { to: "/arena", label: "Arena", icon: Swords },
+  { to: "/provas", label: "Provas", icon: FileText },
   { to: "/review", label: "Revisão", icon: Inbox },
   { to: "/activities", label: "Atividades", icon: ListChecks },
   { to: "/skills", label: "Competências", icon: Sparkles },
@@ -86,9 +87,11 @@ function TrackLayout() {
             ))}
           </nav>
           <ThemeToggle />
-          <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)} title="Registro rápido (Ctrl + K)">
-            <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
-          </Button>
+          <span title={trackId ? "Registro rápido (Ctrl + K)" : "Selecione uma trilha específica para registrar atividades"}>
+            <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)}>
+              <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
+            </Button>
+          </span>
           <UserNav userId={user.id} email={user.email ?? ""} />
         </div>
       </header>
