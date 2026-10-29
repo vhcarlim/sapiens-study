@@ -44,6 +44,7 @@ import { studyDay, studyCalendarDate } from "@/lib/study-day";
 import { protectionQuery } from "@/lib/engagement";
 import { ExamCountdown, PriorityMission, StreakProtection, TrophyShelf, SoundToggle } from "@/components/StudyEngagement";
 import { pastExamsQuery } from "@/lib/past-exams";
+import { SkillMasteryViews } from "@/components/SkillMasteryViews";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — Sapiens Study" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — Sapiens Study" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -93,6 +94,8 @@ function Dashboard() {
     return { acts, skills: merged, mastery: [...byCanon.values()] };
   }, [global, trackActs.data, trackSkills.data, trackMastery.data, gActs.data, gSkills.data, gMastery.data]);
   const { data: exams = [] } = useQuery(pastExamsQuery(trackId));
+  const { data: blocks = [] } = useQuery(examBlocksQuery(trackId));
+  const { data: rules = [] } = useQuery(skillRulesQuery(trackId));
   const { data: trackProtection } = useQuery(protectionQuery(trackId));
   const protection = global ? undefined : trackProtection;
   const [now, setNow] = useState(new Date());
@@ -280,28 +283,7 @@ function Dashboard() {
 
         <section className="border-t border-border pt-5 lg:col-span-2">
           <h2 className="mb-2 font-semibold">Domínio das competências</h2>
-          <div className="h-56">
-            {skillData.length >= 3 ? (
-              <ResponsiveContainer>
-                <RadarChart data={skillData}>
-                  <PolarGrid stroke="var(--border)" />
-                  <PolarAngleAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
-                  <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar dataKey="mastery" name="Domínio" stroke="var(--track-accent)" fill="var(--track-accent)" fillOpacity={0.35} />
-                </RadarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground">Crie ao menos 3 competências.</p>
-            )}
-          </div>
-          <div className="mt-2 space-y-3">
-            {skillData.map((s) => <div key={s.id} className="space-y-2 border-b border-border pb-4 text-sm">
-              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="break-words font-semibold">{s.name}</p><p className="mt-1 font-mono text-xs text-primary">NÍVEL {s.level} / 10 · {s.title}</p></div><span className="shrink-0 font-mono text-xs text-muted-foreground"><AnimatedNumber value={s.xp} /> XP</span></div>
-              <NeonProgress progress={s.progress} label={`Nível de ${s.name}`} />
-              <div className="flex flex-wrap justify-between gap-1 font-mono text-[10px] text-muted-foreground"><span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span><span>{s.maxed ? "nível máximo" : `${s.xpToNext} XP p/ NV ${s.level + 1}`}</span></div>
-              <p className={cn("text-xs", s.fragile ? "text-warning" : "text-muted-foreground")}>{s.reviewed ? `${s.mastery}% de domínio${s.fragile ? " · Memória frágil" : ""}` : "Domínio ainda não avaliado"}</p>
-            </div>)}
-          </div>
+          <SkillMasteryViews skills={skillData} blocks={global ? [] : blocks} rules={global ? [] : rules} storageKey={`sapiens:mastery-view:${userId}`} />
         </section>
       </div>
 
