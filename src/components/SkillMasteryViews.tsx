@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedNumber, NeonProgress } from "@/components/Gamification";
 
 export type MasterySkill = {
-  id: string; name: string; level: number; title: string; xp: number; progress: number;
+  id: string; name: string; level: number; title?: string; xp: number; progress: number;
   minutes: number; quantity: number; maxed: boolean; xpToNext: number;
   mastery: number; reviewed: boolean; fragile: boolean;
 };
@@ -135,7 +135,7 @@ function MatrixView({ skills }: { skills: MasterySkill[] }) {
       <div className="flex gap-2">
         <div className="flex w-5 items-center justify-center"><span className="-rotate-90 whitespace-nowrap font-mono text-[10px] text-muted-foreground">Retenção ↑</span></div>
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
-          {[quads[3], quads[1], quads[2], quads[0]].map((q) => (
+          {[3, 1, 2, 0].map((i) => quads[i]!).map((q) => (
             <div key={q.title} className={cn("min-h-32 rounded-lg border-2 border-dashed p-3", q.tone)}>
               <p className="font-semibold">{q.title} <span className="font-mono text-xs text-muted-foreground">({q.items.length})</span></p>
               <p className="mb-2 text-xs text-muted-foreground">{q.hint}</p>
@@ -152,7 +152,7 @@ function MatrixView({ skills }: { skills: MasterySkill[] }) {
   );
 }
 
-const short = (n: string) => n.split(/,| e /)[0].trim();
+const short = (n: string) => (n.split(/,| e /)[0] ?? n).trim();
 
 function RadarTick({ x, y, payload, textAnchor }: { x?: number; y?: number; payload?: { value: string }; textAnchor?: "start" | "middle" | "end" | "inherit" }) {
   const words = short(payload?.value ?? "").split(" ");
