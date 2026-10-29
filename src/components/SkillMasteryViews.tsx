@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedNumber, NeonProgress } from "@/components/Gamification";
 
 export type MasterySkill = {
-  id: string; name: string; level: number; title?: string; xp: number; progress: number;
+  id: string; name: string; level: number; title?: string | undefined; xp: number; progress: number;
   minutes: number; quantity: number; maxed: boolean; xpToNext: number;
   mastery: number; reviewed: boolean; fragile: boolean;
 };
