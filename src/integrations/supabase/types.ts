@@ -21,8 +21,11 @@ export type Database = {
           external_key: string | null
           id: string
           knowledge_summary: string | null
+          material: string | null
           minutes: number
           notes: string | null
+          perception: number | null
+          phase: string | null
           quantity: number
           source_id: string | null
           status: string
@@ -39,8 +42,11 @@ export type Database = {
           external_key?: string | null
           id?: string
           knowledge_summary?: string | null
+          material?: string | null
           minutes?: number
           notes?: string | null
+          perception?: number | null
+          phase?: string | null
           quantity?: number
           source_id?: string | null
           status?: string
@@ -57,8 +63,11 @@ export type Database = {
           external_key?: string | null
           id?: string
           knowledge_summary?: string | null
+          material?: string | null
           minutes?: number
           notes?: string | null
+          perception?: number | null
+          phase?: string | null
           quantity?: number
           source_id?: string | null
           status?: string

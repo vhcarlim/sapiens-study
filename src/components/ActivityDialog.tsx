@@ -5,11 +5,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
-  ACTIVITY_TYPES,
   type Activity,
   saveActivity,
   skillsQuery,
-  sourcesQuery,
   todayStr,
 } from "@/lib/data";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,6 +23,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { organizeSummary } from "@/lib/summary.functions";
 import { reviewEligible } from "@/lib/study-day";
 import { topicOptions } from "@/lib/syllabus";
+import { MATERIALS, PERCEPTIONS, PHASES, phaseToType } from "@/lib/study-meta";
 
 const schema = z.object({
   title: z.string().trim().min(1, "Informe um título").max(200),
@@ -49,10 +48,11 @@ export function ActivityDialog({
 }) {
   const qc = useQueryClient();
   const { trackId, track } = useTrack();
-  const { data: sources = [] } = useQuery(sourcesQuery(trackId));
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const [f, setF] = useState({
-    source_id: "",
+    material: "pdf",
+    phase: "theory",
+    perception: 0,
     date: todayStr(),
     type: "lesson",
     title: "",
@@ -86,7 +86,9 @@ export function ActivityDialog({
     setOriginalSummary(null);
     if (activity) {
       setF({
-        source_id: activity.source_id ?? "",
+        material: activity.material ?? "other",
+        phase: activity.phase ?? "theory",
+        perception: activity.perception ?? 0,
         date: activity.date,
         type: activity.type,
         title: activity.title,
@@ -100,7 +102,7 @@ export function ActivityDialog({
         skill_ids: activity.activity_skills.map((s) => s.skill_id),
       });
     } else {
-      setF((p) => ({ ...p, source_id: "", title: "", notes: "", knowledge_summary: "", syllabus_topic: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
+      setF((p) => ({ ...p, perception: 0, title: "", notes: "", knowledge_summary: "", syllabus_topic: "", date: todayStr(), skill_ids: [], quantity: "1", xp: "0" }));
     }
   }, [open, activity, trackId]);
 
@@ -123,8 +125,11 @@ export function ActivityDialog({
       await saveActivity({
         track_id: trackId,
         id: activity?.id,
-        source_id: f.source_id || null,
-        type: f.type,
+        source_id: activity?.source_id ?? null,
+        type: activity && (activity.type === "certificate" || activity.type === "level" || activity.type === "exam") ? activity.type : phaseToType(f.phase),
+        material: f.material,
+        phase: f.phase,
+        perception: f.perception || null,
         skill_ids: f.skill_ids,
         ...parsed.data,
         notes: parsed.data.notes || null,
@@ -171,28 +176,32 @@ export function ActivityDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Fonte</Label>
-              <Select value={f.source_id || "none"} onValueChange={(v) => setF({ ...f, source_id: v === "none" ? "" : v })}>
+              <Label>Material de estudo</Label>
+              <Select value={f.material} onValueChange={(v) => setF({ ...f, material: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sem fonte</SelectItem>
-                  {sources.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
+                  {MATERIALS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={f.type} onValueChange={(v) => setF({ ...f, type: v })}>
+              <Label>Fase do ciclo</Label>
+              <Select value={f.phase} onValueChange={(v) => setF({ ...f, phase: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ACTIVITY_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
+                  {PHASES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Como foi a compreensão?</Label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {PERCEPTIONS.map((p) => (
+                <Button key={p.value} type="button" size="sm" variant={f.perception === p.value ? "default" : "outline"} className="h-auto whitespace-normal py-1.5 text-xs" aria-pressed={f.perception === p.value} onClick={() => setF({ ...f, perception: f.perception === p.value ? 0 : p.value })}>{p.label}</Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Opcional · matérias marcadas como difíceis ganham prioridade na recomendação</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="col-span-2 space-y-2 sm:col-span-1">

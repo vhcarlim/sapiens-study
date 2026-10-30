@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { type Activity, type Skill, type Source, fmtMinutes, typeLabel } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { activityXp } from "@/lib/gamification";
+import { materialOf, perceptionLabel, phaseLabel } from "@/lib/study-meta";
 
 export function ActivityRow({
   a,
@@ -18,7 +19,8 @@ export function ActivityRow({
   actions?: React.ReactNode;
   showDate?: boolean;
 }) {
-  const src = sources.find((s) => s.id === a.source_id);
+  void sources;
+  const mat = materialOf(a.material);
   const milestone = a.type === "certificate" || a.type === "level";
   return (
     <div
@@ -27,7 +29,7 @@ export function ActivityRow({
         milestone && "border-warning/60",
       )}
     >
-      <div className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: src?.color ?? "gray" }} />
+      <div className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: mat.color }} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           {a.type === "certificate" && <Award className="size-4 text-warning" />}
@@ -36,8 +38,9 @@ export function ActivityRow({
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {showDate && <span className="font-mono">{format(parseISO(a.date), "dd MMM yyyy", { locale: ptBR })}</span>}
-          <span>{src?.name ?? "Sem fonte"}</span>
-          <span>{typeLabel(a.type)} ×{a.quantity}</span>
+          <span>{mat.label}</span>
+          <span>{phaseLabel(a.phase) ?? typeLabel(a.type)} ×{a.quantity}</span>
+          {perceptionLabel(a.perception) && <span>{perceptionLabel(a.perception)}</span>}
           <span className="font-mono">{fmtMinutes(a.minutes)}</span>
           {activityXp(a) > 0 && <span className="font-mono text-primary">{activityXp(a)} XP</span>}
           {a.activity_skills.map((as) => {

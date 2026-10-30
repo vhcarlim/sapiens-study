@@ -31,6 +31,7 @@ import {
   YAxis,
 } from "recharts";
 import { Award, Clock, Flame, Layers } from "lucide-react";
+import { MATERIALS, materialOf } from "@/lib/study-meta";
 import { type Activity, activitiesQuery, allActivitiesQuery, allSkillsQuery, allSourcesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
@@ -132,9 +133,9 @@ function Dashboard() {
   }, [acts, reviewResults, now, protection?.days]);
 
   const chartData = useMemo(() => {
-    const val = (list: Activity[], sid: string) =>
-      list.filter((a) => (a.source_id ?? "none") === sid).reduce((s, a) => s + a[metric], 0);
-    const keys = [...sources.map((s) => s.id), "none"];
+    const val = (list: Activity[], key: string) =>
+      list.filter((a) => materialOf(a.material).value === key).reduce((s, a) => s + a[metric], 0);
+    const keys = MATERIALS.map((m) => m.value);
     const today = studyCalendarDate(now);
     if (range === "years") {
       const ys = years.length ? [...years].reverse() : [today.getFullYear()];
@@ -166,7 +167,7 @@ function Dashboard() {
       keys.forEach((k) => (row[k] = val(list, k)));
       return row;
     });
-  }, [acts, byDay, sources, range, metric, now, chartYear, years]);
+  }, [acts, byDay, range, metric, now, chartYear, years]);
 
   const skillData = useMemo(() => global ? skillProgress(skills, acts, mastery, reviewResults) : skillProgressWithShared(skills, acts, mastery, reviewResults, { activities: gActs.data ?? [], mastery: gMastery.data ?? [], results: gResults.data ?? [] }), [global, acts, skills, mastery, reviewResults, gActs.data, gMastery.data, gResults.data]);
   const totalXp = acts.reduce((sum, a) => sum + activityXp(a), 0) + reviewXp;
@@ -272,12 +273,14 @@ function Dashboard() {
                   cursor={{ fill: "var(--secondary)" }}
                   contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
                 />
-                {sources.map((s) => (
-                  <Bar key={s.id} dataKey={s.id} name={s.name} stackId="a" fill={s.color} />
+                {MATERIALS.map((m, i) => (
+                  <Bar key={m.value} dataKey={m.value} name={m.label} stackId="a" fill={m.color} radius={i === MATERIALS.length - 1 ? [3, 3, 0, 0] : 0} />
                 ))}
-                <Bar dataKey="none" name="Sem fonte" stackId="a" fill="var(--muted-foreground)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {MATERIALS.map((m) => <span key={m.value} className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ background: m.color }} />{m.label}</span>)}
           </div>
         </section>
 
@@ -408,7 +411,7 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
   const { data: rules = [] } = useQuery(skillRulesQuery(trackId));
   const rec = useMemo(() => {
     const w = computeExamWeights(skills.map((s) => s.id), blocks, rules);
-    return recommendTopic(skills, activities, {
+    return recommendTopic(skills, activities.map((a) => ({ ...a, skill_ids: a.activity_skills?.map((x) => x.skill_id) })), {
       points: new Map(w.map((x) => [x.skillId, x.points])),
       difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])),
       mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])),

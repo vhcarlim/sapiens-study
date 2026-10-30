@@ -53,7 +53,7 @@ function Arena() {
   const { data: mastery = [] } = useQuery(masteryQuery(trackId));
   const rec = useMemo(() => {
     const w = computeExamWeights(withTopics.map((s) => s.id), blocks, rules);
-    return recommendTopic(withTopics, acts, { points: new Map(w.map((x) => [x.skillId, x.points])), difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])), mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])) });
+    return recommendTopic(withTopics, acts.map((a) => ({ ...a, skill_ids: a.activity_skills?.map((x) => x.skill_id) })), { points: new Map(w.map((x) => [x.skillId, x.points])), difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])), mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])) });
   }, [withTopics, acts, blocks, rules, mastery]);
 
   const [skillId, setSkillId] = useState(search.skill ?? "");
@@ -113,7 +113,7 @@ function Arena() {
     const minutes = sessionMinutes(startedAt, Date.now());
     setLoading("Registrando sessão…");
     try {
-      await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes, xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
+      await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", material: "questions", phase: "fixation", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes, xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
       await qc.invalidateQueries({ queryKey: ["activities"] });
       setSummary({ answered: answered.length, hits, minutes, skillName: skill.name, topic, open: open?.verdict ? `${open.verdict.verdict} (${open.verdict.score})` : null });
       setLoading(null);

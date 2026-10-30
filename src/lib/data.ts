@@ -105,6 +105,9 @@ export type ActivityInput = {
   notes: string | null;
   knowledge_summary?: string | null;
   syllabus_topic?: string | null;
+  material?: string | null;
+  phase?: string | null;
+  perception?: number | null;
   skill_ids: string[];
   status?: string;
 };
