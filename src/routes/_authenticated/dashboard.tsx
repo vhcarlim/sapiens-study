@@ -241,8 +241,8 @@ function Dashboard() {
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <section className="border-t border-border pt-5 lg:col-span-3">
+      <div className="grid gap-6">
+        <section className="border-t border-border pt-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Atividade por período</h2>
             <div className="flex flex-wrap gap-2">
@@ -281,7 +281,7 @@ function Dashboard() {
           </div>
         </section>
 
-        <section className="border-t border-border pt-5 lg:col-span-2">
+        <section className="border-t border-border pt-5">
           <h2 className="mb-2 font-semibold">Domínio das competências</h2>
           <SkillMasteryViews skills={skillData} blocks={global ? [] : blocks} rules={global ? [] : rules} storageKey={`sapiens:mastery-view:${userId}`} />
         </section>

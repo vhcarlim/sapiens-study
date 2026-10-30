@@ -102,7 +102,7 @@ function BlocksView({ skills, blocks, rules }: { skills: MasterySkill[]; blocks:
         const avg = rev.length ? Math.round(rev.reduce((a, s) => a + s.mastery, 0) / rev.length) : null;
         return <div key={g.id ?? "none"}>
           <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-semibold">{g.title}</h3><span className="font-mono text-[10px] text-muted-foreground">{g.sub} · domínio médio {avg == null ? "—" : `${avg}%`}</span></div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {g.items.map((s) => { const w = weights.get(s.id); return (
               <div key={s.id} className="rounded-lg border bg-card p-3 text-sm">
                 <div className="flex items-start justify-between gap-2"><p className="min-w-0 break-words font-medium leading-snug">{s.name}</p><StatusBadge s={s} /></div>
