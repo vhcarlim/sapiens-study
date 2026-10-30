@@ -3,7 +3,7 @@ import { activityXp, dailyXp, masteryLevel, missionStates, skillProgress, studyS
 import type { Activity, Skill } from "@/lib/data";
 import type { Tables } from "@/integrations/supabase/types";
 
-const activity = (patch: Partial<Activity> = {}): Activity => ({ id: "a", user_id: "u", track_id: "t", title: "Estudo", date: "2026-10-10", minutes: 60, quantity: 1, knowledge_summary: "Aprendi a parametrizar consultas", status: "approved", xp: 0, type: "lesson", source_id: null, notes: null, external_key: null, syllabus_topic: null, created_at: "2026-10-10T10:00:00Z", activity_skills: [{ skill_id: "s" }], ...patch });
+const activity = (patch: Partial<Activity> = {}): Activity => ({ id: "a", user_id: "u", track_id: "t", title: "Estudo", date: "2026-10-10", minutes: 60, quantity: 1, knowledge_summary: "Aprendi a parametrizar consultas", status: "approved", xp: 0, type: "lesson", source_id: null, notes: null, external_key: null, syllabus_topic: null, material: null, phase: null, perception: null, created_at: "2026-10-10T10:00:00Z", activity_skills: [{ skill_id: "s" }], ...patch });
 const result = (patch: Partial<Tables<"review_results">> = {}): Tables<"review_results"> => ({ id: "r", user_id: "u", track_id: "t", activity_id: "a", thread_id: "thread", round_id: "round", score: 90, mastery_delta: 8, xp: 25, feedback: "Muito bem", created_at: "2026-10-10T12:00:00Z", ...patch });
 describe("gamification", () => {
   it("awards time, items and one summary bonus, excluding pending rows", () => {

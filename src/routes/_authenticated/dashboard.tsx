@@ -274,7 +274,7 @@ function Dashboard() {
                   contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
                 />
                 {MATERIALS.map((m, i) => (
-                  <Bar key={m.value} dataKey={m.value} name={m.label} stackId="a" fill={m.color} radius={i === MATERIALS.length - 1 ? [3, 3, 0, 0] : undefined} />
+                  <Bar key={m.value} dataKey={m.value} name={m.label} stackId="a" fill={m.color} radius={i === MATERIALS.length - 1 ? [3, 3, 0, 0] : 0} />
                 ))}
               </BarChart>
             </ResponsiveContainer>

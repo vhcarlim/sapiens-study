@@ -27,6 +27,6 @@ export const PERCEPTIONS = [
 /** Activity type kept for XP/milestone logic, derived from the chosen phase. */
 export const phaseToType = (phase: string) => (phase === "mock" ? "mock" : phase === "fixation" ? "practice" : "lesson");
 
-export const materialOf = (m: string | null | undefined) => MATERIALS.find((x) => x.value === m) ?? MATERIALS[MATERIALS.length - 1];
+export const materialOf = (m: string | null | undefined) => MATERIALS.find((x) => x.value === m) ?? MATERIALS[6];
 export const phaseLabel = (p: string | null | undefined) => PHASES.find((x) => x.value === p)?.label ?? null;
 export const perceptionLabel = (p: number | null | undefined) => PERCEPTIONS.find((x) => x.value === p)?.label ?? null;
