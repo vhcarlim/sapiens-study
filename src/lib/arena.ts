@@ -29,7 +29,9 @@ export type RecommendContext = {
   today?: string;
 };
 
-type RecAct = Pick<Activity, "syllabus_topic" | "date"> & { skill_ids?: string[]; created_at?: string };
+type RecAct = Pick<Activity, "syllabus_topic" | "date"> & { skill_ids?: string[]; created_at?: string; perception?: number | null };
+/** Latest perceived difficulty (1 fluent – 4 stuck) scales priority. */
+const PERC_FACTOR: Record<number, number> = { 1: 0.85, 2: 1, 3: 1.25, 4: 1.5 };
 const DIFF_FACTOR: Record<number, number> = { 1: 1.4, 2: 1.2, 3: 1, 4: 0.8, 5: 0.6 };
 const norm = (t: string) => t.trim().toLowerCase();
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
@@ -59,11 +61,15 @@ export function recommendTopic(skills: Pick<Skill, "id" | "name" | "topics">[], 
     return ids;
   };
   const lastSkill = new Map<string, string>();
+  const lastPerc = new Map<string, { date: string; v: number }>();
   let latest: RecAct | null = null;
   for (const a of activities) {
     const ids = skillsOf(a);
     if (!ids.size) continue;
-    for (const id of ids) { const p = lastSkill.get(id); if (!p || a.date > p) lastSkill.set(id, a.date); }
+    for (const id of ids) {
+      const p = lastSkill.get(id); if (!p || a.date > p) lastSkill.set(id, a.date);
+      if (a.perception) { const q = lastPerc.get(id); if (!q || a.date >= q.date) lastPerc.set(id, { date: a.date, v: a.perception }); }
+    }
     if (!latest || a.date > latest.date || (a.date === latest.date && (a.created_at ?? "") > (latest.created_at ?? ""))) latest = a;
   }
   const justDone = latest ? skillsOf(latest) : new Set<string>();
@@ -83,13 +89,16 @@ export function recommendTopic(skills: Pick<Skill, "id" | "name" | "topics">[], 
     const m = ctx.mastery?.get(s.id);
     const mf = m == null ? 1 : 1.3 - Math.min(100, Math.max(0, m)) / 100;
     if (m != null && m < 70) why.push("Domínio abaixo de 70%");
+    const pv = lastPerc.get(s.id)?.v;
+    const qf = pv ? PERC_FACTOR[pv] ?? 1 : 1;
+    if (pv && pv >= 3) why.push("Última sessão foi difícil");
     const last = lastSkill.get(s.id);
     const days = last ? Math.max(0, daysBetween(last, today)) : 14;
     if (!last) why.push("Ainda não praticada");
     else if (days >= 3) why.push(`${days} dias sem praticar`);
     const rf = Math.min(days, 14) + 1;
     const rot = justDone.has(s.id) || last === today ? 0.05 : 1;
-    const score = pf * df * mf * rf * rot;
+    const score = pf * df * mf * qf * rf * rot;
     if (!best || score > best.score) best = { s, score, why };
   }
   const { s, why } = best!;
