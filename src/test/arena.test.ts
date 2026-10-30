@@ -23,6 +23,11 @@ describe("arena", () => {
     expect(recommendTopic(two, [], { points: new Map([["a", 10], ["b", 40]]), today: "2026-10-10" })?.skillId).toBe("b");
     expect(recommendTopic(two, [], { difficulty: new Map([["a", 5], ["b", 1]]), today: "2026-10-10" })?.skillId).toBe("b");
   });
+  it("raises priority after a session marked as stuck", () => {
+    const two = [{ id: "a", name: "A", topics: ["a1"] }, { id: "b", name: "B", topics: ["b1"] }];
+    const acts = [{ syllabus_topic: "a1", date: "2026-10-05", perception: 1 }, { syllabus_topic: "b1", date: "2026-10-05", perception: 4 }];
+    expect(recommendTopic(two, acts, { today: "2026-10-10" })?.skillId).toBe("b");
+  });
   it("credits session time between 1 and 360 minutes", () => {
     expect(sessionMinutes(0, 10_000)).toBe(1);
     expect(sessionMinutes(0, 25 * 60000)).toBe(25);

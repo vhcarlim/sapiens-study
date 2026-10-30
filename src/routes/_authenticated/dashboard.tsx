@@ -411,7 +411,7 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
   const { data: rules = [] } = useQuery(skillRulesQuery(trackId));
   const rec = useMemo(() => {
     const w = computeExamWeights(skills.map((s) => s.id), blocks, rules);
-    return recommendTopic(skills, activities, {
+    return recommendTopic(skills, activities.map((a) => ({ ...a, skill_ids: a.activity_skills?.map((x) => x.skill_id) })), {
       points: new Map(w.map((x) => [x.skillId, x.points])),
       difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])),
       mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])),

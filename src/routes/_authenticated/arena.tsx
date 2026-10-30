@@ -53,7 +53,7 @@ function Arena() {
   const { data: mastery = [] } = useQuery(masteryQuery(trackId));
   const rec = useMemo(() => {
     const w = computeExamWeights(withTopics.map((s) => s.id), blocks, rules);
-    return recommendTopic(withTopics, acts, { points: new Map(w.map((x) => [x.skillId, x.points])), difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])), mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])) });
+    return recommendTopic(withTopics, acts.map((a) => ({ ...a, skill_ids: a.activity_skills?.map((x) => x.skill_id) })), { points: new Map(w.map((x) => [x.skillId, x.points])), difficulty: new Map(w.map((x) => [x.skillId, x.difficulty])), mastery: new Map(mastery.map((m) => [m.skill_id, m.mastery])) });
   }, [withTopics, acts, blocks, rules, mastery]);
 
   const [skillId, setSkillId] = useState(search.skill ?? "");
