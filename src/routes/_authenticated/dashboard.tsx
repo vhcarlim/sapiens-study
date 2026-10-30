@@ -279,6 +279,9 @@ function Dashboard() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {MATERIALS.map((m) => <span key={m.value} className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ background: m.color }} />{m.label}</span>)}
+          </div>
         </section>
 
         <section className="border-t border-border pt-5">
