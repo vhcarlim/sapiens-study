@@ -31,6 +31,7 @@ import {
   YAxis,
 } from "recharts";
 import { Award, Clock, Flame, Layers } from "lucide-react";
+import { MATERIALS, materialOf } from "@/lib/study-meta";
 import { type Activity, activitiesQuery, allActivitiesQuery, allSkillsQuery, allSourcesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
 import { cn } from "@/lib/utils";
@@ -132,9 +133,9 @@ function Dashboard() {
   }, [acts, reviewResults, now, protection?.days]);
 
   const chartData = useMemo(() => {
-    const val = (list: Activity[], sid: string) =>
-      list.filter((a) => (a.source_id ?? "none") === sid).reduce((s, a) => s + a[metric], 0);
-    const keys = [...sources.map((s) => s.id), "none"];
+    const val = (list: Activity[], key: string) =>
+      list.filter((a) => materialOf(a.material).value === key).reduce((s, a) => s + a[metric], 0);
+    const keys = MATERIALS.map((m) => m.value);
     const today = studyCalendarDate(now);
     if (range === "years") {
       const ys = years.length ? [...years].reverse() : [today.getFullYear()];
@@ -166,7 +167,7 @@ function Dashboard() {
       keys.forEach((k) => (row[k] = val(list, k)));
       return row;
     });
-  }, [acts, byDay, sources, range, metric, now, chartYear, years]);
+  }, [acts, byDay, range, metric, now, chartYear, years]);
 
   const skillData = useMemo(() => global ? skillProgress(skills, acts, mastery, reviewResults) : skillProgressWithShared(skills, acts, mastery, reviewResults, { activities: gActs.data ?? [], mastery: gMastery.data ?? [], results: gResults.data ?? [] }), [global, acts, skills, mastery, reviewResults, gActs.data, gMastery.data, gResults.data]);
   const totalXp = acts.reduce((sum, a) => sum + activityXp(a), 0) + reviewXp;
@@ -272,10 +273,9 @@ function Dashboard() {
                   cursor={{ fill: "var(--secondary)" }}
                   contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
                 />
-                {sources.map((s) => (
-                  <Bar key={s.id} dataKey={s.id} name={s.name} stackId="a" fill={s.color} />
+                {MATERIALS.map((m, i) => (
+                  <Bar key={m.value} dataKey={m.value} name={m.label} stackId="a" fill={m.color} radius={i === MATERIALS.length - 1 ? [3, 3, 0, 0] : undefined} />
                 ))}
-                <Bar dataKey="none" name="Sem fonte" stackId="a" fill="var(--muted-foreground)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
