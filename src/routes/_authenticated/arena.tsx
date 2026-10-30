@@ -113,7 +113,7 @@ function Arena() {
     const minutes = sessionMinutes(startedAt, Date.now());
     setLoading("Registrando sessão…");
     try {
-      await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes, xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
+      await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", material: "questions", phase: "fixation", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes, xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
       await qc.invalidateQueries({ queryKey: ["activities"] });
       setSummary({ answered: answered.length, hits, minutes, skillName: skill.name, topic, open: open?.verdict ? `${open.verdict.verdict} (${open.verdict.score})` : null });
       setLoading(null);

@@ -78,6 +78,13 @@
   --border: oklch(0.87 0.03 85);
   --input: oklch(0.86 0.03 85);
   --ring: oklch(0.52 0.23 263);
+  --material-video: oklch(0.6 0.12 215);
+  --material-pdf: oklch(0.62 0.16 45);
+  --material-law: oklch(0.68 0.14 80);
+  --material-questions: oklch(0.58 0.15 150);
+  --material-summary: oklch(0.55 0.18 305);
+  --material-book: oklch(0.52 0.2 263);
+  --material-other: oklch(0.6 0.02 250);
   --chart-1: oklch(0.52 0.23 263);
   --chart-2: oklch(0.62 0.14 45);
   --chart-3: oklch(0.6 0.13 160);
@@ -95,6 +102,13 @@
 
 /* Escuro — "Homo Deus": preto fosco + verde fósforo da digital */
 .dark {
+  --material-video: oklch(0.75 0.12 215);
+  --material-pdf: oklch(0.72 0.15 45);
+  --material-law: oklch(0.8 0.14 85);
+  --material-questions: oklch(0.8 0.2 145);
+  --material-summary: oklch(0.72 0.16 305);
+  --material-book: oklch(0.68 0.16 263);
+  --material-other: oklch(0.6 0.01 250);
   --shadow-neon: 0 0 12px color-mix(in oklch, var(--primary) 45%, transparent);
   --shadow-reward: 0 0 40px color-mix(in oklch, var(--primary) 20%, transparent);
   --track-accent: oklch(0.8 0.25 142);
