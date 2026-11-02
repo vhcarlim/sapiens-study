@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowRight, Check, Loader2, Swords, Timer, Trophy, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Repeat, SlidersHorizontal, Swords, Timer, Trophy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,8 @@ import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data
 import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
 import { masteryQuery } from "@/lib/reviews";
 import { EXAM_BOARDS, groupTopics, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
-import { arenaDiscuss, arenaEvaluate, arenaObjective, arenaOpen } from "@/lib/arena.functions";
+import { arenaDiscuss, arenaEvaluate, arenaMarkRepeated, arenaObjective, arenaOpen } from "@/lib/arena.functions";
+import { DEFAULT_PREFS, DIFFICULTIES, QUESTION_STYLES, STYLE_KEYS, type ArenaPrefs, type Difficulty } from "@/lib/arena-prefs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,13 @@ function Arena() {
 
   const ctx = { trackId, skillId, topic };
   const current = rounds.at(-1);
+  const prefsKey = `sapiens:arena-prefs:${trackId}`;
+  const [prefs, setPrefsState] = useState<ArenaPrefs>(DEFAULT_PREFS);
+  useEffect(() => {
+    try { const raw = localStorage.getItem(prefsKey); setPrefsState(raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS); } catch { setPrefsState(DEFAULT_PREFS); }
+  }, [prefsKey]);
+  const setPrefs = (p: ArenaPrefs) => { setPrefsState(p); try { localStorage.setItem(prefsKey, JSON.stringify(p)); } catch { /* ignore */ } };
+  const genPrefs = { focus: prefs.focus, styles: prefs.styles, difficulty: prefs.difficulty };
 
   async function setBoard(board: string) {
     const { error } = await supabase.from("study_tracks").update({ exam_board: board }).eq("id", trackId);
@@ -79,19 +87,26 @@ function Arena() {
     await qc.invalidateQueries({ queryKey: ["tracks"] });
   }
 
-  async function nextObjective() {
+  async function nextObjective(replaceLast = false) {
     setLoading("Elaborando questão no padrão da banca…"); setFailure(null);
     try {
-      const q = await arenaObjective({ data: { ...ctx, avoid: rounds.map((r) => r.q.statement.slice(0, 500)) } });
-      setRounds((r) => [...r, { q, picked: null, chat: [] }]);
+      const q = await arenaObjective({ data: { ...ctx, ...genPrefs, avoid: rounds.slice(-20).map((r) => r.q.statement.slice(0, 500)) } });
+      setRounds((r) => [...(replaceLast ? r.slice(0, -1) : r), { q, picked: null, chat: [] }]);
       setStartedAt((s) => s ?? Date.now());
     } catch (e) { setFailure(errMsg(e)); } finally { setLoading(null); }
+  }
+
+  async function markRepeated() {
+    if (!current) return;
+    const fp = (current.q as ArenaObjective & { historyFingerprint?: string }).historyFingerprint;
+    if (fp) arenaMarkRepeated({ data: { skillId, topic, fingerprint: fp } }).catch(() => {});
+    await nextObjective(true);
   }
 
   async function goOpen() {
     setLoading("Preparando a pergunta discursiva…"); setFailure(null);
     try {
-      const q = await arenaOpen({ data: { ...ctx, avoid: open ? [open.q.prompt] : [] } });
+      const q = await arenaOpen({ data: { ...ctx, ...genPrefs, avoid: open ? [open.q.prompt] : [] } });
       setOpen({ q, answer: "", verdict: null });
     } catch (e) { setFailure(errMsg(e)); } finally { setLoading(null); }
   }
@@ -154,8 +169,9 @@ function Arena() {
             <Select value={track?.exam_board ?? ""} onValueChange={setBoard}><SelectTrigger><SelectValue placeholder="Selecione a banca" /></SelectTrigger><SelectContent>{EXAM_BOARDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></label>
         </div>
         {skill && <TopicPicker topics={skill.topics ?? []} value={topic} onPick={setTopic} />}
+        <PrefsPanel prefs={prefs} onChange={setPrefs} />
         {failure && <p className="text-sm text-destructive">{failure}</p>}
-        <Button size="lg" disabled={!skill || !topic || !!loading} onClick={nextObjective}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
+        <Button size="lg" disabled={!skill || !topic || !!loading} onClick={() => void nextObjective()}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
       </>}
     </div>;
   }
@@ -170,8 +186,9 @@ function Arena() {
     <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
     {summaryDialog}
     {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} onNext={() => { if (!loading) void nextObjective(); }} />}
-    {!open && current && !current.picked && <p className="font-mono text-[11px] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p>}
-    {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={nextObjective}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
+    {!open && current && !current.picked && <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[11px] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p><Button variant="ghost" size="sm" disabled={!!loading} onClick={() => void markRepeated()}><Repeat className="size-4" />Essa já vi / parecida</Button></div>}
+    {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={() => void nextObjective()}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
+    {!open && <PrefsPanel prefs={prefs} onChange={setPrefs} />}
 
     {open && <section className="space-y-4">
       <p className="font-mono text-xs text-track-accent">DESAFIO DISCURSIVO</p>
@@ -291,4 +308,21 @@ function TopicPicker({ topics, value, onPick }: { topics: string[]; value: strin
       {!groups.length && <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum tópico encontrado.</p>}
     </div>
   </div>;
+}
+
+function PrefsPanel({ prefs, onChange }: { prefs: ArenaPrefs; onChange: (p: ArenaPrefs) => void }) {
+  const active = prefs.styles.length + (prefs.focus.trim() ? 1 : 0) + (prefs.difficulty !== "banca" ? 1 : 0);
+  return <details className="group border border-border bg-secondary/20 p-4">
+    <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium"><SlidersHorizontal className="size-4 text-track-accent" />Personalizar questões{active > 0 && <span className="font-mono text-xs text-track-accent">· {active} ativo{active > 1 ? "s" : ""}</span>}</summary>
+    <div className="mt-4 space-y-4">
+      <label className="block space-y-1.5 text-sm"><span className="text-muted-foreground">Foco ou pedido para a IA (opcional)</span>
+        <Textarea value={prefs.focus} maxLength={300} placeholder='Ex.: "cobre jurisprudência do STF", "use casos práticos de licitação", "foque em prazos"' className="min-h-16" onChange={(e) => onChange({ ...prefs, focus: e.target.value })} />
+        <span className="block text-right font-mono text-[11px] text-muted-foreground">{prefs.focus.length}/300</span></label>
+      <div className="space-y-1.5 text-sm"><span className="text-muted-foreground">Estilo da questão {prefs.styles.length ? "" : "(automático: alterna o ângulo a cada questão)"}</span>
+        <div className="flex flex-wrap gap-2">{STYLE_KEYS.map((k) => { const on = prefs.styles.includes(k); return <button key={k} type="button" aria-pressed={on} onClick={() => onChange({ ...prefs, styles: on ? prefs.styles.filter((s) => s !== k) : [...prefs.styles, k] })} className={cn("rounded-full border px-3 py-1 text-xs transition-colors", on ? "border-track-accent bg-track-accent/15 text-foreground" : "border-border text-muted-foreground hover:bg-secondary")}>{QUESTION_STYLES[k]}</button>; })}</div></div>
+      <div className="space-y-1.5 text-sm"><span className="text-muted-foreground">Dificuldade</span>
+        <div className="flex gap-2">{(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => <Button key={d} type="button" size="sm" variant={prefs.difficulty === d ? "default" : "outline"} onClick={() => onChange({ ...prefs, difficulty: d })}>{DIFFICULTIES[d]}</Button>)}</div></div>
+      {active > 0 && <Button type="button" variant="ghost" size="sm" onClick={() => onChange(DEFAULT_PREFS)}>Limpar personalização</Button>}
+    </div>
+  </details>;
 }

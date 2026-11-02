@@ -203,6 +203,42 @@ export type Database = {
         }
         Relationships: []
       }
+      arena_question_history: {
+        Row: {
+          angle: string | null
+          created_at: string
+          fingerprint: string
+          id: string
+          repeated: boolean
+          skill_id: string
+          topic: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          angle?: string | null
+          created_at?: string
+          fingerprint: string
+          id?: string
+          repeated?: boolean
+          skill_id: string
+          topic: string
+          track_id: string
+          user_id?: string
+        }
+        Update: {
+          angle?: string | null
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          repeated?: boolean
+          skill_id?: string
+          topic?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       import_snapshots: {
         Row: {
           data: Json
