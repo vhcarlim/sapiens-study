@@ -169,8 +169,9 @@ function Arena() {
             <Select value={track?.exam_board ?? ""} onValueChange={setBoard}><SelectTrigger><SelectValue placeholder="Selecione a banca" /></SelectTrigger><SelectContent>{EXAM_BOARDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></label>
         </div>
         {skill && <TopicPicker topics={skill.topics ?? []} value={topic} onPick={setTopic} />}
+        <PrefsPanel prefs={prefs} onChange={setPrefs} />
         {failure && <p className="text-sm text-destructive">{failure}</p>}
-        <Button size="lg" disabled={!skill || !topic || !!loading} onClick={nextObjective}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
+        <Button size="lg" disabled={!skill || !topic || !!loading} onClick={() => void nextObjective()}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
       </>}
     </div>;
   }
@@ -307,4 +308,21 @@ function TopicPicker({ topics, value, onPick }: { topics: string[]; value: strin
       {!groups.length && <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum tópico encontrado.</p>}
     </div>
   </div>;
+}
+
+function PrefsPanel({ prefs, onChange }: { prefs: ArenaPrefs; onChange: (p: ArenaPrefs) => void }) {
+  const active = prefs.styles.length + (prefs.focus.trim() ? 1 : 0) + (prefs.difficulty !== "banca" ? 1 : 0);
+  return <details className="group border border-border bg-secondary/20 p-4">
+    <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium"><SlidersHorizontal className="size-4 text-track-accent" />Personalizar questões{active > 0 && <span className="font-mono text-xs text-track-accent">· {active} ativo{active > 1 ? "s" : ""}</span>}</summary>
+    <div className="mt-4 space-y-4">
+      <label className="block space-y-1.5 text-sm"><span className="text-muted-foreground">Foco ou pedido para a IA (opcional)</span>
+        <Textarea value={prefs.focus} maxLength={300} placeholder='Ex.: "cobre jurisprudência do STF", "use casos práticos de licitação", "foque em prazos"' className="min-h-16" onChange={(e) => onChange({ ...prefs, focus: e.target.value })} />
+        <span className="block text-right font-mono text-[11px] text-muted-foreground">{prefs.focus.length}/300</span></label>
+      <div className="space-y-1.5 text-sm"><span className="text-muted-foreground">Estilo da questão {prefs.styles.length ? "" : "(automático: alterna o ângulo a cada questão)"}</span>
+        <div className="flex flex-wrap gap-2">{STYLE_KEYS.map((k) => { const on = prefs.styles.includes(k); return <button key={k} type="button" aria-pressed={on} onClick={() => onChange({ ...prefs, styles: on ? prefs.styles.filter((s) => s !== k) : [...prefs.styles, k] })} className={cn("rounded-full border px-3 py-1 text-xs transition-colors", on ? "border-track-accent bg-track-accent/15 text-foreground" : "border-border text-muted-foreground hover:bg-secondary")}>{QUESTION_STYLES[k]}</button>; })}</div></div>
+      <div className="space-y-1.5 text-sm"><span className="text-muted-foreground">Dificuldade</span>
+        <div className="flex gap-2">{(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => <Button key={d} type="button" size="sm" variant={prefs.difficulty === d ? "default" : "outline"} onClick={() => onChange({ ...prefs, difficulty: d })}>{DIFFICULTIES[d]}</Button>)}</div></div>
+      {active > 0 && <Button type="button" variant="ghost" size="sm" onClick={() => onChange(DEFAULT_PREFS)}>Limpar personalização</Button>}
+    </div>
+  </details>;
 }
