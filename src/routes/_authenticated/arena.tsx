@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowRight, Check, Loader2, Swords, Timer, Trophy, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Repeat, SlidersHorizontal, Swords, Timer, Trophy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,8 @@ import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data
 import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
 import { masteryQuery } from "@/lib/reviews";
 import { EXAM_BOARDS, groupTopics, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
-import { arenaDiscuss, arenaEvaluate, arenaObjective, arenaOpen } from "@/lib/arena.functions";
+import { arenaDiscuss, arenaEvaluate, arenaMarkRepeated, arenaObjective, arenaOpen } from "@/lib/arena.functions";
+import { DEFAULT_PREFS, DIFFICULTIES, QUESTION_STYLES, STYLE_KEYS, type ArenaPrefs, type Difficulty } from "@/lib/arena-prefs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -184,8 +185,9 @@ function Arena() {
     <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
     {summaryDialog}
     {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} onNext={() => { if (!loading) void nextObjective(); }} />}
-    {!open && current && !current.picked && <p className="font-mono text-[11px] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p>}
-    {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={nextObjective}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
+    {!open && current && !current.picked && <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[11px] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p><Button variant="ghost" size="sm" disabled={!!loading} onClick={() => void markRepeated()}><Repeat className="size-4" />Essa já vi / parecida</Button></div>}
+    {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={() => void nextObjective()}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
+    {!open && <PrefsPanel prefs={prefs} onChange={setPrefs} />}
 
     {open && <section className="space-y-4">
       <p className="font-mono text-xs text-track-accent">DESAFIO DISCURSIVO</p>
