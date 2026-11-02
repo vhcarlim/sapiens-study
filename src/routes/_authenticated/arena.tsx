@@ -72,6 +72,13 @@ function Arena() {
 
   const ctx = { trackId, skillId, topic };
   const current = rounds.at(-1);
+  const prefsKey = `sapiens:arena-prefs:${trackId}`;
+  const [prefs, setPrefsState] = useState<ArenaPrefs>(DEFAULT_PREFS);
+  useEffect(() => {
+    try { const raw = localStorage.getItem(prefsKey); setPrefsState(raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS); } catch { setPrefsState(DEFAULT_PREFS); }
+  }, [prefsKey]);
+  const setPrefs = (p: ArenaPrefs) => { setPrefsState(p); try { localStorage.setItem(prefsKey, JSON.stringify(p)); } catch { /* ignore */ } };
+  const genPrefs = { focus: prefs.focus, styles: prefs.styles, difficulty: prefs.difficulty };
 
   async function setBoard(board: string) {
     const { error } = await supabase.from("study_tracks").update({ exam_board: board }).eq("id", trackId);
@@ -79,19 +86,26 @@ function Arena() {
     await qc.invalidateQueries({ queryKey: ["tracks"] });
   }
 
-  async function nextObjective() {
+  async function nextObjective(replaceLast = false) {
     setLoading("Elaborando questão no padrão da banca…"); setFailure(null);
     try {
-      const q = await arenaObjective({ data: { ...ctx, avoid: rounds.map((r) => r.q.statement.slice(0, 500)) } });
-      setRounds((r) => [...r, { q, picked: null, chat: [] }]);
+      const q = await arenaObjective({ data: { ...ctx, ...genPrefs, avoid: rounds.slice(-20).map((r) => r.q.statement.slice(0, 500)) } });
+      setRounds((r) => [...(replaceLast ? r.slice(0, -1) : r), { q, picked: null, chat: [] }]);
       setStartedAt((s) => s ?? Date.now());
     } catch (e) { setFailure(errMsg(e)); } finally { setLoading(null); }
+  }
+
+  async function markRepeated() {
+    if (!current) return;
+    const fp = (current.q as ArenaObjective & { historyFingerprint?: string }).historyFingerprint;
+    if (fp) arenaMarkRepeated({ data: { skillId, topic, fingerprint: fp } }).catch(() => {});
+    await nextObjective(true);
   }
 
   async function goOpen() {
     setLoading("Preparando a pergunta discursiva…"); setFailure(null);
     try {
-      const q = await arenaOpen({ data: { ...ctx, avoid: open ? [open.q.prompt] : [] } });
+      const q = await arenaOpen({ data: { ...ctx, ...genPrefs, avoid: open ? [open.q.prompt] : [] } });
       setOpen({ q, answer: "", verdict: null });
     } catch (e) { setFailure(errMsg(e)); } finally { setLoading(null); }
   }
