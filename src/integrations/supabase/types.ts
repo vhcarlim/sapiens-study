@@ -652,6 +652,76 @@ export type Database = {
           },
         ]
       }
+      study_plan_overrides: {
+        Row: {
+          id: string
+          pinned: string[]
+          skipped: string[]
+          track_id: string
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          id?: string
+          pinned?: string[]
+          skipped?: string[]
+          track_id: string
+          updated_at?: string
+          user_id?: string
+          week_start: string
+        }
+        Update: {
+          id?: string
+          pinned?: string[]
+          skipped?: string[]
+          track_id?: string
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_plan_overrides_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_plan_settings: {
+        Row: {
+          block_minutes: number
+          track_id: string
+          updated_at: string
+          user_id: string
+          weekly_minutes: number[]
+        }
+        Insert: {
+          block_minutes?: number
+          track_id: string
+          updated_at?: string
+          user_id?: string
+          weekly_minutes?: number[]
+        }
+        Update: {
+          block_minutes?: number
+          track_id?: string
+          updated_at?: string
+          user_id?: string
+          weekly_minutes?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_plan_settings_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: true
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_tracks: {
         Row: {
           archived: boolean
