@@ -134,6 +134,13 @@
       "when": 1793586257971,
       "tag": "0018_arena_question_history",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794274623067,
+      "tag": "0019_study_plan",
+      "breakpoints": true
     }
   ]
 }
