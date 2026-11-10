@@ -46,6 +46,7 @@ import { protectionQuery } from "@/lib/engagement";
 import { ExamCountdown, PriorityMission, StreakProtection, TrophyShelf, SoundToggle } from "@/components/StudyEngagement";
 import { pastExamsQuery } from "@/lib/past-exams";
 import { SkillMasteryViews } from "@/components/SkillMasteryViews";
+import { TodayPlanCard } from "@/components/StudyPlanCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel — Sapiens Study" }, { name: "description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:title", content: "Painel — Sapiens Study" }, { property: "og:description", content: "Acompanhe o tempo, XP, níveis e evolução da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -208,6 +209,7 @@ function Dashboard() {
       })()}
 
       {!global && track?.exam_date && <ExamCountdown examDate={track.exam_date} name={track.name} now={now} />}
+      {!global && <TodayPlanCard />}
       {!global && userId && <DailyQuest key={`daily-${trackId}`} xp={todayXp} streak={stats.streak} now={now} storageKey={`sapiens:goal:${userId}:${trackId}`} />}
       {!global && <ArenaSuggestion trackId={trackId} skills={trackSkills.data ?? []} activities={acts} mastery={trackMastery.data ?? []} />}
       {!global && <PriorityMission trackId={trackId} activities={acts} now={now} />}
