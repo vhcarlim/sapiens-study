@@ -90,7 +90,7 @@ export function buildWeek(input: WeekInput): PlanDay[] {
   const skipped = new Set(input.skipped ?? []);
   const skills = input.skills.filter((s) => !skipped.has(s.id) && s.topics?.length);
   const byName = new Map(input.skills.map((s) => [s.id, s]));
-  const sim: PlanActivity[] = input.activities.filter((a) => a.date < input.today || a.date <= input.today);
+  const sim: PlanActivity[] = input.activities.filter((a) => a.date <= input.today);
   const days: PlanDay[] = [];
   const dueSet = new Set(input.reviewDue ?? []);
   const lastDue = (input.reviewDue ?? []).filter((d) => d <= input.today).length > 0;
