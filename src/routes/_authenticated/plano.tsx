@@ -46,7 +46,7 @@ function PlanPage() {
     const other = (kind === "pinned" ? skipped : pinned).filter((id) => id !== skillId);
     const row = { track_id: trackId, week_start: weekStart, pinned: kind === "pinned" ? [...cur] : other, skipped: kind === "skipped" ? [...cur] : other, updated_at: new Date().toISOString() };
     const { error } = await supabase.from("study_plan_overrides").upsert(row, { onConflict: "track_id,week_start" });
-    if (error) return toast.error("Não foi possível ajustar a semana.");
+    if (error) { toast.error("Não foi possível ajustar a semana."); return; }
     qc.invalidateQueries({ queryKey: ["plan-overrides", trackId, weekStart] });
   }
 
@@ -162,7 +162,7 @@ function Availability({ trackId, weekly, blockMinutes }: { trackId: string; week
     setSaving(true);
     const { error } = await supabase.from("study_plan_settings").upsert({ track_id: trackId, weekly_minutes: mins, block_minutes: b, updated_at: new Date().toISOString() });
     setSaving(false);
-    if (error) return toast.error("Não foi possível salvar a disponibilidade.");
+    if (error) { toast.error("Não foi possível salvar a disponibilidade."); return; }
     toast.success("Disponibilidade salva — plano recalculado.");
     qc.invalidateQueries({ queryKey: ["plan-settings", trackId] });
   }

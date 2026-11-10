@@ -23,17 +23,17 @@ describe("study plan", () => {
   });
   it("gives more blocks to the subject worth more points", () => {
     const w = buildWeek({ ...base, ctx: { points: new Map([["a", 5], ["b", 40]]) } });
-    expect(w[0].blocks[0].skillId).toBe("b");
-    expect(w[0].blocks.map((b) => b.skillId)).toEqual(["b", "a"]);
+    expect(w[0]!.blocks[0]!.skillId).toBe("b");
+    expect(w[0]!.blocks.map((b) => b.skillId)).toEqual(["b", "a"]);
   });
   it("skipped subjects never appear and pinned open the day", () => {
     const w = buildWeek({ ...base, ctx: { points: new Map([["a", 5], ["b", 40]]) }, pinned: ["a"] });
-    expect(w[0].blocks[0].skillId).toBe("a");
+    expect(w[0]!.blocks[0]!.skillId).toBe("a");
     const s = buildWeek({ ...base, ctx: {}, skipped: ["b"] });
-    expect(s[0].blocks.every((b) => b.skillId === "a")).toBe(true);
+    expect(s[0]!.blocks.every((b) => b.skillId === "a")).toBe(true);
   });
   it("marks a block done when the subject was studied that day", () => {
     const w = buildWeek({ ...base, ctx: { points: new Map([["b", 40]]) }, activities: [{ date: "2026-11-09", syllabus_topic: "Remédios", skill_ids: ["b"], minutes: 30 }] });
-    expect(w[0].blocks.some((b) => b.skillId === "b" && b.done)).toBe(true);
+    expect(w[0]!.blocks.some((b) => b.skillId === "b" && b.done)).toBe(true);
   });
 });

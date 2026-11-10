@@ -111,7 +111,7 @@ export function buildWeek(input: WeekInput): PlanDay[] {
         const s = byName.get(id);
         if (s) blocks.push({ kind: "study", skillId: id, skillName: s.name, topic: real.find((a) => a.skill_ids.includes(id))?.syllabus_topic ?? null, minutes: real.filter((a) => a.skill_ids.includes(id)).reduce((n, a) => n + (a.minutes ?? 0), 0), phase: info.blockPhase, phaseLabel: info.blockLabel, done: true, why: [] });
       }
-      days.push({ date, weekday: WEEKDAYS[i], capacity, blocks, isPast, isToday, studied });
+      days.push({ date, weekday: WEEKDAYS[i] ?? "", capacity, blocks, isPast, isToday, studied });
       continue;
     }
     let left = capacity;
@@ -140,7 +140,7 @@ export function buildWeek(input: WeekInput): PlanDay[] {
       sim.push({ date, syllabus_topic: pick.topic, skill_ids: [pick.skillId], created_at: `${date}T23:${String(blocks.length).padStart(2, "0")}` });
       left -= m;
     }
-    days.push({ date, weekday: WEEKDAYS[i], capacity, blocks, isPast, isToday, studied });
+    days.push({ date, weekday: WEEKDAYS[i] ?? "", capacity, blocks, isPast, isToday, studied });
   }
   return days;
 }
