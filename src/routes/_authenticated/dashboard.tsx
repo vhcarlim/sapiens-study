@@ -429,7 +429,7 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
   </section>;
 }
 
-function JourneySection({ storageKey, children }: { storageKey: string; children: React.ReactNode }) {
+function JourneySection({ storageKey, children }: { storageKey: string; children: import("react").ReactNode }) {
   const [open, setOpen] = useState(true);
   useEffect(() => { const v = localStorage.getItem(storageKey); if (v !== null) setOpen(v === "1"); }, [storageKey]);
   const toggle = () => setOpen((o) => { localStorage.setItem(storageKey, o ? "0" : "1"); return !o; });

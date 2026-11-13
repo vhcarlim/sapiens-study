@@ -2,7 +2,9 @@ import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange, MoreHorizontal, Keyboard } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activitiesQuery } from "@/lib/data";
@@ -28,10 +30,13 @@ const nav = [
   { to: "/plano", label: "Plano", icon: CalendarRange },
   { to: "/arena", label: "Arena", icon: Swords },
   { to: "/provas", label: "Provas", icon: FileText },
-  { to: "/review", label: "Revisão", icon: Inbox },
-  { to: "/activities", label: "Atividades", icon: ListChecks },
   { to: "/skills", label: "Competências", icon: Sparkles },
 ] as const;
+const more = [
+  { to: "/review", label: "Revisão", icon: Inbox },
+  { to: "/activities", label: "Atividades", icon: ListChecks },
+] as const;
+const linkCls = "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function Layout() {
   const { user } = Route.useRouteContext();
@@ -43,6 +48,7 @@ function TrackLayout() {
   const { trackId, track, loading, error } = useTrack();
   const { data: pending } = useQuery(activitiesQuery("pending", trackId));
   const [open, setOpen] = useState(false);
+  const [help, setHelp] = useState(false);
 
   useEffect(() => {
     setOpen(false);
@@ -54,6 +60,9 @@ function TrackLayout() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setOpen((o) => !o);
+      } else if (e.key === "?" && !(e.target instanceof HTMLElement && e.target.closest("input,textarea,select,[contenteditable=true]"))) {
+        e.preventDefault();
+        setHelp((h) => !h);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -68,27 +77,32 @@ function TrackLayout() {
             <Logo />
           </Link>
           <TrackSelector />
-          <nav className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:w-auto md:flex-1">
+          <nav aria-label="Principal" className="hidden flex-1 gap-1 md:flex">
             {nav.map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                aria-label={n.label}
-                className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                activeProps={{ className: "bg-secondary !text-foreground" }}
-              >
-                <n.icon className="size-4" />
-                <span className="hidden sm:inline">{n.label}</span>
-                {n.to === "/review" && !!pending?.length && (
-                  <span className="rounded-full bg-warning px-1.5 font-mono text-[10px] font-bold text-background">
-                    {pending.length}
-                  </span>
-                )}
+              <Link key={n.to} to={n.to} className={linkCls} activeProps={{ className: "bg-secondary !text-foreground" }}>
+                <n.icon className="size-4" /><span className="hidden lg:inline">{n.label}</span>
               </Link>
             ))}
+            <DropdownMenu>
+              <DropdownMenuTrigger className={linkCls} aria-label="Mais páginas">
+                <MoreHorizontal className="size-4" /><span className="hidden lg:inline">Mais</span>
+                {!!pending?.length && <span className="rounded-full bg-warning px-1.5 font-mono text-[10px] font-bold text-background">{pending.length}</span>}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {more.map((n) => (
+                  <DropdownMenuItem key={n.to} asChild>
+                    <Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}
+                      {n.to === "/review" && !!pending?.length && <span className="ml-auto rounded-full bg-warning px-1.5 font-mono text-[10px] font-bold text-background">{pending.length}</span>}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuItem onSelect={() => setHelp(true)} className="flex items-center gap-2"><Keyboard className="size-4" />Atalhos do teclado</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
+          <div className="flex-1 md:hidden" />
           <ThemeToggle />
-          <span title={trackId ? "Registro rápido (Ctrl + K)" : "Selecione uma trilha específica para registrar atividades"}>
+          <span title={trackId ? "Registro rápido (Ctrl + K) · aperte ? para ver todos os atalhos" : "Selecione uma trilha específica para registrar atividades"}>
             <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)}>
               <Plus className="size-4" /> <span className="hidden sm:inline">Registrar</span>
             </Button>
@@ -96,9 +110,35 @@ function TrackLayout() {
           <UserNav userId={user.id} email={user.email ?? ""} />
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 pb-24 pt-8 md:pb-8">
         {loading ? <p className="text-muted-foreground">Carregando trilhas…</p> : error ? <p className="text-destructive">Não foi possível carregar suas trilhas. Tente recarregar a página.</p> : trackId ? <div key={trackId} className="border-t-2 border-track-accent pt-6"><Outlet /></div> : <div className="py-16 text-center"><LayersEmpty /></div>}
       </main>
+      <nav aria-label="Principal (celular)" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 backdrop-blur md:hidden">
+        {nav.map((n) => (
+          <Link key={n.to} to={n.to} className="flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground" activeProps={{ className: "!text-track-accent" }}>
+            <n.icon className="size-5" />{n.label === "Competências" ? "Matérias" : n.label}
+          </Link>
+        ))}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="relative flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground" aria-label="Mais páginas">
+            <MoreHorizontal className="size-5" />Mais
+            {!!pending?.length && <span className="absolute right-3 top-1 rounded-full bg-warning px-1 font-mono text-[9px] font-bold text-background">{pending.length}</span>}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top">
+            {more.map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}</Link></DropdownMenuItem>)}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </nav>
+      <Dialog open={help} onOpenChange={setHelp}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Atalhos do teclado</DialogTitle></DialogHeader>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+            {[["Ctrl + K", "Registrar atividade"], ["A – E", "Escolher alternativa (Arena)"], ["Enter", "Confirmar / próxima questão"], ["?", "Abrir esta ajuda"]].map(([k, d]) => (
+              <div key={k} className="contents"><dt><kbd className="rounded border bg-secondary px-1.5 py-0.5 font-mono text-xs">{k}</kbd></dt><dd className="text-muted-foreground">{d}</dd></div>
+            ))}
+          </dl>
+        </DialogContent>
+      </Dialog>
       <ActivityDialog key={`activity-${trackId}`} open={open && !!trackId} onOpenChange={setOpen} />
       <RewardOverlay key={`reward-${trackId}`} trackId={trackId} />
     </div>
