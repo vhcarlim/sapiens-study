@@ -292,6 +292,7 @@ function Dashboard() {
         </section>
       </div>
 
+      <JourneySection storageKey={`sapiens:journey-open:${userId}:${global ? "all" : trackId}`}>
       {!global && userId && <SkillMissionMap key={`map-${trackId}`} skills={skillData} storageKey={`sapiens:map:${userId}:${trackId}`} />}
       <TrophyShelf activities={acts} skills={skillData} exams={global ? [] : exams} />
 
@@ -305,6 +306,7 @@ function Dashboard() {
           </div>
         </section>
       )}
+      </JourneySection>
     </div>
   );
 }
@@ -424,5 +426,18 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
   return <section aria-label="Estudo recomendado" className="flex flex-wrap items-center justify-between gap-5 border-l-2 border-track-accent bg-secondary/40 px-5 py-5">
     <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="font-mono text-xs text-track-accent">HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p><p className="mt-2 font-mono text-[11px] text-muted-foreground">{rec.why.join(" · ")}</p></div></div>
     <div className="flex gap-2"><Button variant="outline" asChild><Link to="/arena">Escolher outro</Link></Button><Button asChild><Link to="/arena" search={{ skill: rec.skillId, topic: rec.topic }}>Estudar na Arena</Link></Button></div>
+  </section>;
+}
+
+function JourneySection({ storageKey, children }: { storageKey: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  useEffect(() => { const v = localStorage.getItem(storageKey); if (v !== null) setOpen(v === "1"); }, [storageKey]);
+  const toggle = () => setOpen((o) => { localStorage.setItem(storageKey, o ? "0" : "1"); return !o; });
+  return <section className="space-y-6 border-t border-border pt-5">
+    <button type="button" onClick={toggle} aria-expanded={open} className="flex w-full items-center justify-between rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <span><span className="block font-mono text-xs text-track-accent">JORNADA</span><span className="font-semibold">Missões, conquistas e marcos</span></span>
+      <span className="font-mono text-xs text-muted-foreground">{open ? "Recolher ▲" : "Mostrar ▼"}</span>
+    </button>
+    {open && children}
   </section>;
 }
