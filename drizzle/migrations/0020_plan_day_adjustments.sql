@@ -1,0 +1,1 @@
+ALTER TABLE public.study_plan_overrides ADD COLUMN IF NOT EXISTS day_adjust jsonb NOT NULL DEFAULT '{}'::jsonb;

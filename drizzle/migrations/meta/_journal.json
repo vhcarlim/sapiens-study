@@ -141,6 +141,13 @@
       "when": 1794274623067,
       "tag": "0019_study_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794620265792,
+      "tag": "0020_plan_day_adjustments",
+      "breakpoints": true
     }
   ]
 }
