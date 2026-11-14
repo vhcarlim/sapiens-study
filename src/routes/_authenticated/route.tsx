@@ -36,7 +36,7 @@ const more = [
   { to: "/review", label: "Revisão", icon: Inbox },
   { to: "/activities", label: "Atividades", icon: ListChecks },
 ] as const;
-const linkCls = "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const linkCls = "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary [&:hover_svg]:scale-110 [&_svg]:transition-transform";
 
 function Layout() {
   const { user } = Route.useRouteContext();
@@ -115,7 +115,7 @@ function TrackLayout() {
       </main>
       <nav aria-label="Principal (celular)" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 backdrop-blur md:hidden">
         {nav.map((n) => (
-          <Link key={n.to} to={n.to} className="flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground" activeProps={{ className: "!text-track-accent" }}>
+          <Link key={n.to} to={n.to} className="flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15" activeProps={{ className: "!text-track-accent" }}>
             <n.icon className="size-5" />{n.label === "Competências" ? "Matérias" : n.label}
           </Link>
         ))}

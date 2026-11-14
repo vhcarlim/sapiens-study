@@ -105,7 +105,7 @@ function PlanPage() {
         </div>
         <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 xl:grid-cols-3">
           {week.map((d, i) => { const adj = dayAdjust[d.date]; const def = weekly[i] ?? 0; const fill = d.isPast ? (def ? Math.min(1, d.studied / def) : 0) : d.capacity ? Math.min(1, d.studied / d.capacity) : 0;
-          return <article key={d.date} className={cn("w-[82vw] shrink-0 snap-start border bg-card p-3 sm:w-auto", d.isToday && "border-track-accent", d.isPast && "opacity-75")}>
+          return <article key={d.date} className={cn("interactive-card w-[82vw] shrink-0 snap-start border bg-card p-3 sm:w-auto", d.isToday && "border-track-accent", d.isPast && "opacity-75")}>
             <header className="flex items-baseline justify-between gap-2"><h3 className="font-semibold">{d.weekday} <span className="font-mono text-xs text-muted-foreground">{fmtDay(d.date)}</span></h3>
               <span className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground">{d.isPast ? `${fmtMinutes(d.studied)} estudados` : d.capacity ? fmtMinutes(d.capacity) : "livre"}
                 {!d.isPast && def > 0 && <Button size="icon" variant={adj ? "default" : "ghost"} className="size-6" title={adj ? "Restaurar o dia ao padrão" : "Dia corrido: metade do tempo, só nesta semana"} aria-label={adj ? "Restaurar dia" : "Marcar dia corrido"} onClick={() => (adj ? resetDay(d.date) : toggleBusy(d, def))}>{adj ? <RotateCcw className="size-3" /> : <Hourglass className="size-3" />}</Button>}</span></header>
