@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/PageTransition";
 import { AIControls } from "@/components/AIControls";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,7 +65,7 @@ function Provas() {
       <Button onClick={() => setImporting(true)}><FileUp className="size-4" />Importar prova e gabarito</Button>
       <Button variant="outline" onClick={() => setScoring("new")}><Award className="size-4" />Registrar nota de prova feita no papel</Button>
     </div>
-    {isLoading ? <p className="text-muted-foreground">Carregando…</p> : !exams.length ? <p className="text-sm text-muted-foreground">Nenhuma prova ainda nesta trilha.</p> :
+    {isLoading ? <PageSkeleton /> : !exams.length ? <p className="text-sm text-muted-foreground">Nenhuma prova ainda nesta trilha.</p> :
       <div className="divide-y rounded-lg border">{exams.map((e) => {
         const badge = examBadge(e.score_correct, e.score_total);
         return <div key={e.id} className="flex flex-wrap items-center gap-3 p-4">

@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/PageTransition";
 import { AIControls } from "@/components/AIControls";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,7 +31,7 @@ function ReviewConversation() {
   const { data: activities = [] } = useQuery(activitiesQuery("approved", trackId));
   const thread = threads?.find(t => t.id === threadId);
   const activity = activities.find(a => a.id === thread?.activity_id);
-  if (isLoading) return <p className="text-muted-foreground">Carregando arguição…</p>;
+  if (isLoading) return <PageSkeleton />;
   if (error || !thread || !activity) return <div className="space-y-4"><p>Arguição indisponível nesta trilha.</p><Button asChild variant="outline"><Link to="/review">Voltar à revisão</Link></Button></div>;
   return <Arguicao key={threadId} thread={thread} title={activity.title} />;
 }
