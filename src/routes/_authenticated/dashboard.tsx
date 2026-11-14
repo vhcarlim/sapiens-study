@@ -194,7 +194,7 @@ function Dashboard() {
       {(() => {
         const g = masteryLevel(totalXp);
         return (
-          <div className="border-l-2 border-primary py-2 pl-5">
+          <div onPointerMove={spotlight} className="surface-pro aura-accent rounded-xl border px-5 py-4">
             <div className="flex items-center justify-between">
               <span className="font-mono text-sm">
                 <span className="text-track-accent font-bold">NÍVEL {g.level}</span> · {g.name}
@@ -222,7 +222,7 @@ function Dashboard() {
         <Stat icon={Award} label="Certificados" value={String(stats.certs)} />
       </div>
 
-      <section className="border-t border-border pt-5">
+      <section className="surface-pro rounded-xl border p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold">{heatYear ? `Ano de ${heatYear}` : "Último ano"}</h2>
           <select aria-label="Ano do mapa" className="rounded-md border bg-background px-2 py-1 text-xs" value={heatYear ?? "recent"} onChange={(e) => setHeatYear(e.target.value === "recent" ? null : Number(e.target.value))}>
@@ -246,7 +246,7 @@ function Dashboard() {
       </section>
 
       <div className="grid gap-6">
-        <section className="border-t border-border pt-5">
+        <section onPointerMove={spotlight} className="surface-pro rounded-xl border p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Atividade por período</h2>
             <div className="flex flex-wrap gap-2">
@@ -287,7 +287,7 @@ function Dashboard() {
           </div>
         </section>
 
-        <section className="border-t border-border pt-5">
+        <section className="surface-pro rounded-xl border p-5">
           <h2 className="mb-2 font-semibold">Domínio das competências</h2>
           <SkillMasteryViews skills={skillData} blocks={global ? [] : blocks} rules={global ? [] : rules} storageKey={`sapiens:mastery-view:${userId}`} />
         </section>
@@ -312,13 +312,19 @@ function Dashboard() {
   );
 }
 
+function spotlight(e: import("react").PointerEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+}
+
 function Stat({ icon: Icon, label, value, accent }: { icon: typeof Flame; label: string; value: string; accent?: boolean }) {
   return (
-    <div className={cn("rounded-lg border bg-card p-4", accent && "border-track-accent/50")}>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className={cn("size-4", accent && "text-track-accent")} /> {label}
+    <div onPointerMove={spotlight} className={cn("surface-pro rounded-xl border p-4", accent && "aura-accent border-track-accent/50")}>
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+        <span className={cn("grid size-6 place-items-center rounded-md border bg-secondary/60", accent && "border-track-accent/40 text-track-accent")}><Icon className="size-3.5" /></span> {label}
       </div>
-      <div className="mt-2 font-mono text-2xl font-bold">{value}</div>
+      <div className="mt-3 font-mono text-2xl font-bold tracking-tight">{value}</div>
     </div>
   );
 }
@@ -424,9 +430,9 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
     });
   }, [skills, activities, blocks, rules, mastery]);
   if (!rec) return null;
-  return <section aria-label="Estudo recomendado" className="flex flex-wrap items-center justify-between gap-5 border-l-2 border-track-accent bg-secondary/40 px-5 py-5">
-    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="font-mono text-xs text-track-accent">HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p><p className="mt-2 font-mono text-[11px] text-muted-foreground">{rec.why.join(" · ")}</p></div></div>
-    <div className="flex gap-2"><Button variant="outline" asChild><Link to="/arena">Escolher outro</Link></Button><Button asChild><Link to="/arena" search={{ skill: rec.skillId, topic: rec.topic }}>Estudar na Arena</Link></Button></div>
+  return <section aria-label="Estudo recomendado" onPointerMove={spotlight} className="surface-pro aura-accent flex flex-wrap items-center justify-between gap-5 rounded-xl border border-track-accent/40 px-5 py-5">
+    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="flex items-center gap-2 font-mono text-xs text-track-accent"><span className="pulse-dot size-1.5 rounded-full bg-track-accent" />HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p><p className="mt-2 font-mono text-[11px] text-muted-foreground">{rec.why.join(" · ")}</p></div></div>
+    <div className="flex gap-2"><Button variant="outline" asChild><Link to="/arena">Escolher outro</Link></Button><Button asChild className="cta-beam"><Link to="/arena" search={{ skill: rec.skillId, topic: rec.topic }}>Estudar na Arena</Link></Button></div>
   </section>;
 }
 
