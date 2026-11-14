@@ -78,7 +78,10 @@ export type WeekInput = {
   /** Due review dates (YYYY-MM-DD) — one short review block per day with due items. */
   reviewDue?: string[];
   hasPastExams?: boolean;
+  /** Per-day adjustments for this week only: reduced minutes and skills skipped that day. */
+  dayAdjust?: DayAdjust;
 };
+export type DayAdjust = Record<string, { minutes?: number; skip?: string[] }>;
 
 /**
  * Builds a 7-day plan. Past days reflect what really happened; today and future days
@@ -88,7 +91,7 @@ export type WeekInput = {
  */
 export function buildWeek(input: WeekInput): PlanDay[] {
   const skipped = new Set(input.skipped ?? []);
-  const skills = input.skills.filter((s) => !skipped.has(s.id) && s.topics?.length);
+  const weekSkills = input.skills.filter((s) => !skipped.has(s.id) && s.topics?.length);
   const byName = new Map(input.skills.map((s) => [s.id, s]));
   const sim: PlanActivity[] = input.activities.filter((a) => a.date <= input.today);
   const days: PlanDay[] = [];
@@ -96,7 +99,10 @@ export function buildWeek(input: WeekInput): PlanDay[] {
   const lastDue = (input.reviewDue ?? []).filter((d) => d <= input.today).length > 0;
   for (let i = 0; i < 7; i++) {
     const date = shiftStudyDay(input.weekStart, i);
-    const capacity = input.weekly[i] ?? 0;
+    const adj = input.dayAdjust?.[date];
+    const capacity = adj?.minutes != null ? Math.max(0, Math.min(adj.minutes, input.weekly[i] ?? 0)) : input.weekly[i] ?? 0;
+    const daySkip = new Set(adj?.skip ?? []);
+    const skills = weekSkills.filter((s) => !daySkip.has(s.id));
     const isPast = date < input.today;
     const isToday = date === input.today;
     const real = input.activities.filter((a) => a.date === date);
@@ -205,3 +211,55 @@ export const dueReviewsQuery = (trackId: string) => queryOptions({
     return (data ?? []).map((r) => r.next_review_at);
   },
 });
+
+/** Planned vs studied for days up to today, plus streak of consecutive studied days ending yesterday/today. */
+export function weekAdherence(week: PlanDay[]) {
+  const elapsed = week.filter((d) => d.isPast || d.isToday);
+  const planned = elapsed.reduce((n, d) => n + d.capacity, 0);
+  const studied = elapsed.reduce((n, d) => n + d.studied, 0);
+  const activeDays = elapsed.filter((d) => d.studied > 0).length;
+  const skills = new Set(elapsed.flatMap((d) => (d.isPast ? d.blocks.map((b) => b.skillId) : d.blocks.filter((b) => b.done).map((b) => b.skillId))).filter(Boolean));
+  return { planned, studied, pct: planned ? Math.min(1, studied / planned) : 0, activeDays, elapsedDays: elapsed.length, skillsStudied: skills.size };
+}
+
+/** Extra minutes per week needed so capacity covers the estimated need before the exam. */
+export function extraMinutesPerWeek(need: number, capacity: number, daysLeft: number) {
+  if (daysLeft <= 0 || capacity >= need) return 0;
+  return Math.ceil((need - capacity) / Math.max(1, daysLeft / 7) / 10) * 10;
+}
+
+export type Balance = { skillId: string; name: string; plannedShare: number; actualShare: number };
+/** Exam-point share vs share of minutes studied in the last 28 days, per skill. */
+export function studyBalance(skills: { id: string; name: string }[], activities: PlanActivity[], points: Map<string, number>, today: string): Balance[] {
+  const since = shiftStudyDay(today, -27);
+  const mins = new Map<string, number>();
+  for (const a of activities) {
+    if (a.date < since || a.date > today || !a.skill_ids.length) continue;
+    const each = (a.minutes ?? 0) / a.skill_ids.length;
+    for (const id of a.skill_ids) mins.set(id, (mins.get(id) ?? 0) + each);
+  }
+  const totalPts = skills.reduce((n, s) => n + (points.get(s.id) ?? 0), 0);
+  const totalMin = [...mins.values()].reduce((n, m) => n + m, 0);
+  return skills.filter((s) => (points.get(s.id) ?? 0) > 0 || mins.has(s.id)).map((s) => ({
+    skillId: s.id, name: s.name,
+    plannedShare: totalPts ? (points.get(s.id) ?? 0) / totalPts : 0,
+    actualShare: totalMin ? (mins.get(s.id) ?? 0) / totalMin : 0,
+  }));
+}
+
+/** iCalendar export of upcoming planned blocks (sequential from 19:00 local). */
+export function weekToIcs(week: PlanDay[], trackName: string) {
+  const esc = (t: string) => t.replace(/[\\,;]/g, (c) => `\\${c}`).replace(/\n/g, "\\n");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Sapiens Study//Plano//PT"];
+  for (const d of week) {
+    if (d.isPast) continue;
+    let start = 19 * 60;
+    d.blocks.forEach((b, i) => {
+      const t = (m: number) => `${d.date.replace(/-/g, "")}T${String(Math.floor(m / 60) % 24).padStart(2, "0")}${String(m % 60).padStart(2, "0")}00`;
+      lines.push("BEGIN:VEVENT", `UID:${d.date}-${i}-${b.skillId ?? b.kind}@sapiens-study`, `DTSTART;TZID=America/Sao_Paulo:${t(start)}`, `DTEND;TZID=America/Sao_Paulo:${t(start + b.minutes)}`, `SUMMARY:${esc(`${b.phaseLabel}: ${b.skillName}`)}`, `DESCRIPTION:${esc(`${trackName}${b.topic ? ` — ${b.topic}` : ""}`)}`, "END:VEVENT");
+      start += b.minutes;
+    });
+  }
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}

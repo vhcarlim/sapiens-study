@@ -654,6 +654,7 @@ export type Database = {
       }
       study_plan_overrides: {
         Row: {
+          day_adjust: Json
           id: string
           pinned: string[]
           skipped: string[]
@@ -663,6 +664,7 @@ export type Database = {
           week_start: string
         }
         Insert: {
+          day_adjust?: Json
           id?: string
           pinned?: string[]
           skipped?: string[]
@@ -672,6 +674,7 @@ export type Database = {
           week_start: string
         }
         Update: {
+          day_adjust?: Json
           id?: string
           pinned?: string[]
           skipped?: string[]
