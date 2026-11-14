@@ -62,8 +62,8 @@ function PlanPage() {
   }
   function toggleBusy(d: PlanDay, defaultCap: number) {
     const cur = dayAdjust[d.date] ?? {};
-    const next = { ...cur, minutes: cur.minutes != null ? undefined : Math.max(0, Math.round(defaultCap / 2 / 10) * 10) };
-    if (next.minutes == null) delete next.minutes;
+    const { minutes, ...rest } = cur;
+    const next = minutes != null ? rest : { ...rest, minutes: Math.max(0, Math.round(defaultCap / 2 / 10) * 10) };
     saveRow({ day_adjust: { ...dayAdjust, [d.date]: next } });
   }
   function resetDay(date: string) { const { [date]: _, ...rest } = dayAdjust; saveRow({ day_adjust: rest }); }
