@@ -92,7 +92,7 @@ function PlanPage() {
 
     <Timeline examDate={track?.exam_date ?? null} daysLeft={daysLeft} phase={phase} />
 
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="@container"><div className="grid gap-6 @4xl:grid-cols-[1fr_320px]">
       <section aria-label="Semana" className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ function PlanPage() {
           <div className="flex items-center gap-2"><p className="font-mono text-xs text-muted-foreground">feito {fmtMinutes(weekDone)} · planejado {fmtMinutes(weekTotal)}</p>
             <Button size="sm" variant="ghost" onClick={exportIcs} title="Baixar os blocos para Google Agenda, Outlook ou celular"><Download className="size-4" />Agenda</Button></div>
         </div>
-        <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 xl:grid-cols-3">
+        <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 @3xl:grid-cols-3">
           {week.map((d, i) => { const adj = dayAdjust[d.date]; const def = weekly[i] ?? 0; const fill = d.isPast ? (def ? Math.min(1, d.studied / def) : 0) : d.capacity ? Math.min(1, d.studied / d.capacity) : 0;
           return <article key={d.date} className={cn("interactive-card w-[82vw] shrink-0 snap-start border bg-card p-3 sm:w-auto", d.isToday && "border-track-accent", d.isPast && "opacity-75")}>
             <header className="flex items-baseline justify-between gap-2"><h3 className="font-semibold">{d.weekday} <span className="font-mono text-xs text-muted-foreground">{fmtDay(d.date)}</span></h3>
@@ -148,7 +148,7 @@ function PlanPage() {
           </ul>
         </section>
       </aside>
-    </div>
+    </div></div>
 
     <section aria-label="Cobertura do edital" className="border bg-card p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
