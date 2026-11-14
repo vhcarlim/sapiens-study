@@ -8,7 +8,7 @@ import { masteryQuery } from "@/lib/reviews";
 import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
 import { pastExamsQuery } from "@/lib/past-exams";
 import { studyDay } from "@/lib/study-day";
-import { buildWeek, DEFAULT_BLOCK, DEFAULT_WEEKLY, dueReviewsQuery, planOverridesQuery, planSettingsQuery, weekStartOf, type PlanActivity } from "@/lib/study-plan";
+import { buildWeek, DEFAULT_BLOCK, DEFAULT_WEEKLY, dueReviewsQuery, planOverridesQuery, planSettingsQuery, weekStartOf, type DayAdjust, type PlanActivity } from "@/lib/study-plan";
 import { fmtMinutes } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 
@@ -35,7 +35,7 @@ export function useStudyPlan(weekStart: string) {
     skills: skills.data ?? [], activities: planActs,
     ctx: { points, difficulty: new Map(weights.map((w) => [w.skillId, w.difficulty])), mastery: new Map((mastery.data ?? []).map((m) => [m.skill_id, m.mastery])) },
     examDate: track?.exam_date ?? null,
-    pinned: overrides.data?.pinned ?? [], skipped: overrides.data?.skipped ?? [],
+    pinned: overrides.data?.pinned ?? [], skipped: overrides.data?.skipped ?? [], dayAdjust: (overrides.data?.day_adjust ?? {}) as DayAdjust,
     reviewDue: (due.data ?? []).map((d) => studyDay(d)),
     hasPastExams: (exams.data ?? []).length > 0,
   }), [weekStart, today, weekly, blockMinutes, skills.data, planActs, points, weights, mastery.data, track?.exam_date, overrides.data, due.data, exams.data]);
