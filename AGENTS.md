@@ -33,3 +33,4 @@
 - Arena generation records a one-line fingerprint + angle per question in `arena_question_history` (owner RLS) and feeds the last 25 per topic back to the prompt; student focus/style/difficulty prefs live in localStorage per track and are wrapped as data in the prompt. Why: questions stopped repeating across sessions without extra AI calls.
 
 - The study plan (`/plano`) is derived, never persisted: `src/lib/study-plan.ts` simulates the week with `recommendTopic`, past days come from approved activities; only availability (`study_plan_settings`) and per-week pin/skip plus per-day adjustments (`study_plan_overrides.day_adjust`) are stored. Why: the plan replans itself after missed days and can't diverge from real study data.
+- Prefer Baseline native web features (container queries, View Transitions, OKLCH tokens, native dialog semantics via Radix) over JS layout/animation libraries. Why: Modern Web Guidance; lighter, accessible UI.
