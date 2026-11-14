@@ -1,5 +1,6 @@
 import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
+import { TopProgress, PageSkeleton } from "@/components/PageTransition";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange, MoreHorizontal, Keyboard } from "lucide-react";
@@ -71,16 +72,17 @@ function TrackLayout() {
 
   return (
     <div className="min-h-screen" data-track-color={track?.color ?? "green"}>
+      <TopProgress />
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
           <Link to="/dashboard" aria-label="Sapiens Study — Painel">
             <Logo />
           </Link>
           <TrackSelector />
-          <nav aria-label="Principal" className="hidden flex-1 gap-1 md:flex">
+          <nav aria-label="Principal" className="isolate hidden flex-1 gap-1 md:flex">
             {nav.map((n) => (
-              <Link key={n.to} to={n.to} className={linkCls} activeProps={{ className: "bg-secondary !text-foreground" }}>
-                <n.icon className="size-4" /><span className="hidden lg:inline">{n.label}</span>
+              <Link key={n.to} to={n.to} className={`relative ${linkCls}`} activeProps={{ className: "!text-foreground" }}>
+                {({ isActive }) => <>{isActive && <span aria-hidden className="nav-indicator absolute inset-0 -z-10 rounded-md bg-secondary" />}<n.icon className="size-4" /><span className="hidden lg:inline">{n.label}</span></>}
               </Link>
             ))}
             <DropdownMenu>
@@ -110,13 +112,13 @@ function TrackLayout() {
           <UserNav userId={user.id} email={user.email ?? ""} />
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-8 md:pb-8">
-        {loading ? <p className="text-muted-foreground">Carregando trilhas…</p> : error ? <p className="text-destructive">Não foi possível carregar suas trilhas. Tente recarregar a página.</p> : trackId ? <div key={trackId} className="border-t-2 border-track-accent pt-6"><Outlet /></div> : <div className="py-16 text-center"><LayersEmpty /></div>}
+      <main className="page-transition mx-auto max-w-7xl px-4 pb-24 pt-8 md:pb-8">
+        {loading ? <PageSkeleton /> : error ? <p className="text-destructive">Não foi possível carregar suas trilhas. Tente recarregar a página.</p> : trackId ? <div key={trackId} className="border-t-2 border-track-accent pt-6 transition-colors duration-500"><Outlet /></div> : <div className="py-16 text-center"><LayersEmpty /></div>}
       </main>
       <nav aria-label="Principal (celular)" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 backdrop-blur md:hidden">
         {nav.map((n) => (
-          <Link key={n.to} to={n.to} className="flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15" activeProps={{ className: "!text-track-accent" }}>
-            <n.icon className="size-5" />{n.label === "Competências" ? "Matérias" : n.label}
+          <Link key={n.to} to={n.to} className="relative flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15" activeProps={{ className: "!text-track-accent" }}>
+            {({ isActive }) => <>{isActive && <span aria-hidden className="nav-indicator-mobile absolute inset-x-4 top-0 h-0.5 bg-track-accent" />}<n.icon className="size-5" />{n.label === "Competências" ? "Matérias" : n.label}</>}
           </Link>
         ))}
         <DropdownMenu>

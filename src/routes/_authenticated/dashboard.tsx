@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/PageTransition";
 import { useTrack } from "@/lib/tracks";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { recommendTopic } from "@/lib/arena";
@@ -176,7 +177,7 @@ function Dashboard() {
   const milestones = acts.filter((a) => a.type === "certificate" || a.type === "level").slice(0, 6);
   const dayList = byDay.get(selected) ?? [];
 
-  if (isLoading) return <div className="text-muted-foreground">Carregando…</div>;
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div className="space-y-8">

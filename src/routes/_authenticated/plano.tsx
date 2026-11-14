@@ -1,3 +1,4 @@
+import { PageSkeleton } from "@/components/PageTransition";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -72,7 +73,7 @@ function PlanPage() {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `plano-${weekStart}.ics`; a.click(); URL.revokeObjectURL(a.href);
   }
 
-  if (loading) return <p className="text-muted-foreground">Montando seu plano…</p>;
+  if (loading) return <PageSkeleton />;
   const thisWeek = weekStartOf(today);
   const weekTotal = week.reduce((n, d) => n + d.blocks.reduce((m, b) => m + (d.isPast ? 0 : b.minutes), 0), 0);
   const weekDone = week.reduce((n, d) => n + d.studied, 0);
