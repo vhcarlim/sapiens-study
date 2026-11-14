@@ -52,6 +52,7 @@
 
 /* Claro — "Sapiens: A Graphic History": papel bege + azul cobalto */
 :root {
+  --shadow-hover: 0 6px 18px -8px color-mix(in oklab, var(--primary) 55%, transparent);
   --shadow-neon: 0 0 10px color-mix(in oklch, var(--primary) 25%, transparent);
   --shadow-reward: 0 0 40px color-mix(in oklch, var(--primary) 15%, transparent);
   --track-accent: oklch(0.55 0.22 262);
@@ -153,6 +154,8 @@
 .reward-burst { animation: reward-enter 500ms ease-out; box-shadow: var(--shadow-reward); }
 .streak-flame { animation: flame-dance 2.4s ease-in-out infinite; transform-origin: bottom center; }
 .xp-counter { animation: counter-roll 450ms ease-out; }
+.interactive-card { transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
+.interactive-card:hover { border-color: color-mix(in oklab, var(--primary) 50%, var(--border)); transform: translateY(-1px); box-shadow: var(--shadow-hover); }
 .mission-node { transition: transform 180ms ease, box-shadow 180ms ease; }
 .mission-node:hover { transform: translateY(-3px); box-shadow: var(--shadow-neon); }
 .mission-path > li::before { content: ""; position: absolute; left: 27px; top: 0; bottom: 0; width: 2px; background: var(--border); z-index: 0; }
@@ -162,7 +165,8 @@
 @media (prefers-reduced-motion: reduce) {
   .reward-burst, .streak-flame, .xp-counter { animation: none; }
   .neon-progress, .mission-node { transition: none; }
-  .mission-node:hover { transform: none; }
+  .mission-node:hover, .interactive-card:hover { transform: none; }
+  .interactive-card { transition: none; }
 }
 
 /* Track accents: denser tones on beige paper, luminous tones on matte black */
