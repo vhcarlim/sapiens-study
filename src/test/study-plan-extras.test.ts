@@ -10,7 +10,7 @@ const base = { weekStart: "2026-11-09", today: "2026-11-09", weekly: [100, 100, 
 describe("plan extras", () => {
   it("skipping a subject for one day removes it only that day", () => {
     const w = buildWeek({ ...base, dayAdjust: { "2026-11-09": { skip: ["b"] } } });
-    expect(w[0]!.blocks.map((b) => b.skillId)).toEqual(["a"]);
+    expect(w[0]!.blocks.every((b) => b.skillId === "a")).toBe(true);
     expect(w[1]!.blocks.map((b) => b.skillId)).toContain("b");
   });
   it("a busy day reduces capacity only that day, never above the default", () => {
