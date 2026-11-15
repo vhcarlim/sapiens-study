@@ -34,7 +34,7 @@ export function useTextScale(): [TextScale, (id: TextScale) => void] {
 export function TextSizeOptions() {
   const [scale, set] = useTextScale();
   return (
-    <div role="radiogroup" aria-label="Tamanho do texto" className="grid grid-cols-[repeat(auto-fit,minmax(4.25rem,1fr))] gap-1.5">
+    <div role="radiogroup" aria-label="Tamanho do texto" className="grid grid-cols-2 gap-1.5 min-[480px]:grid-cols-4">
       {TEXT_SCALES.map((s) => (
         <button key={s.id} type="button" role="radio" aria-checked={scale === s.id} onClick={() => set(s.id)}
           className={cn("flex flex-col items-center gap-1 rounded-md border px-1 py-2 transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-primary",
