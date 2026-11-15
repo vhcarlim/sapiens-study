@@ -29,7 +29,7 @@ export function masteryStatus(s: Pick<MasterySkill, "reviewed" | "fragile" | "ma
 
 function StatusBadge({ s }: { s: MasterySkill }) {
   const st = masteryStatus(s);
-  return <span className={cn("shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px]", st.tone)}>{st.label}</span>;
+  return <span className={cn("shrink-0 rounded-full border px-2 py-0.5 font-mono text-[0.625rem]", st.tone)}>{st.label}</span>;
 }
 
 export function SkillMasteryViews({ skills, blocks, rules, storageKey }: { skills: MasterySkill[]; blocks: ExamBlock[]; rules: SkillRule[]; storageKey: string }) {
@@ -78,11 +78,11 @@ function BarsView({ skills }: { skills: MasterySkill[] }) {
             <div className="flex shrink-0 flex-col items-end gap-1"><span className="font-mono text-xs text-muted-foreground"><AnimatedNumber value={s.xp} /> XP</span><StatusBadge s={s} /></div>
           </div>
           <div>
-            <div className="mb-1 flex justify-between font-mono text-[10px] text-muted-foreground"><span>Domínio</span><span>{s.reviewed ? `${s.mastery}%` : "—"}</span></div>
+            <div className="mb-1 flex justify-between font-mono text-[0.625rem] text-muted-foreground"><span>Domínio</span><span>{s.reviewed ? `${s.mastery}%` : "—"}</span></div>
             <div className="h-2 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", masteryStatus(s).bar)} style={{ width: `${s.reviewed ? Math.max(s.mastery, 2) : 0}%` }} /></div>
           </div>
           <NeonProgress progress={s.progress} label={`Nível de ${s.name}`} />
-          <div className="flex flex-wrap justify-between gap-1 font-mono text-[10px] text-muted-foreground"><span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span><span>{s.maxed ? "nível máximo" : `${s.xpToNext} XP p/ NV ${s.level + 1}`}</span></div>
+          <div className="flex flex-wrap justify-between gap-1 font-mono text-[0.625rem] text-muted-foreground"><span>{fmtMinutes(s.minutes)} · {s.quantity} itens</span><span>{s.maxed ? "nível máximo" : `${s.xpToNext} XP p/ NV ${s.level + 1}`}</span></div>
         </div>)}
       </div>
     </div>
@@ -101,13 +101,13 @@ function BlocksView({ skills, blocks, rules }: { skills: MasterySkill[]; blocks:
         const rev = g.items.filter((s) => s.reviewed);
         const avg = rev.length ? Math.round(rev.reduce((a, s) => a + s.mastery, 0) / rev.length) : null;
         return <div key={g.id ?? "none"}>
-          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-semibold">{g.title}</h3><span className="font-mono text-[10px] text-muted-foreground">{g.sub} · domínio médio {avg == null ? "—" : `${avg}%`}</span></div>
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-semibold">{g.title}</h3><span className="font-mono text-[0.625rem] text-muted-foreground">{g.sub} · domínio médio {avg == null ? "—" : `${avg}%`}</span></div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {g.items.map((s) => { const w = weights.get(s.id); return (
               <div key={s.id} className="rounded-lg border bg-card p-3 text-sm">
                 <div className="flex items-start justify-between gap-2"><p className="min-w-0 break-words font-medium leading-snug">{s.name}</p><StatusBadge s={s} /></div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full", masteryStatus(s).bar)} style={{ width: `${s.reviewed ? s.mastery : 0}%` }} /></div>
-                <div className="mt-2 flex flex-wrap justify-between gap-1 font-mono text-[10px] text-muted-foreground">
+                <div className="mt-2 flex flex-wrap justify-between gap-1 font-mono text-[0.625rem] text-muted-foreground">
                   <span>NV {s.level} · {fmtMinutes(s.minutes)}</span>
                   {w && w.points > 0 && <span>{w.estimated ? "~" : ""}{fmtNum(w.questions)} q · {fmtNum(w.points)} pts</span>}
                 </div>
@@ -133,7 +133,7 @@ function MatrixView({ skills }: { skills: MasterySkill[] }) {
   return (
     <div>
       <div className="flex gap-2">
-        <div className="flex w-5 items-center justify-center"><span className="-rotate-90 whitespace-nowrap font-mono text-[10px] text-muted-foreground">Retenção ↑</span></div>
+        <div className="flex w-5 items-center justify-center"><span className="-rotate-90 whitespace-nowrap font-mono text-[0.625rem] text-muted-foreground">Retenção ↑</span></div>
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
           {[3, 1, 2, 0].map((i) => quads[i]!).map((q) => (
             <div key={q.title} className={cn("min-h-32 rounded-lg border-2 border-dashed p-3", q.tone)}>
@@ -141,13 +141,13 @@ function MatrixView({ skills }: { skills: MasterySkill[] }) {
               <p className="mb-2 text-xs text-muted-foreground">{q.hint}</p>
               <div className="flex flex-wrap gap-1.5">
                 {q.items.map((s) => <span key={s.id} title={`${s.name} · ${fmtMinutes(s.minutes)} · ${s.reviewed ? `${s.mastery}%` : "não avaliado"}`}
-                  className="rounded-md border bg-card px-2 py-1 text-xs">{s.name} <span className="font-mono text-[10px] text-muted-foreground">{s.reviewed ? `${s.mastery}%` : "—"}</span></span>)}
+                  className="rounded-md border bg-card px-2 py-1 text-xs">{s.name} <span className="font-mono text-[0.625rem] text-muted-foreground">{s.reviewed ? `${s.mastery}%` : "—"}</span></span>)}
               </div>
             </div>
           ))}
         </div>
       </div>
-      <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">Tempo investido → (divisão pela mediana: {fmtMinutes(median)})</p>
+      <p className="mt-2 text-center font-mono text-[0.625rem] text-muted-foreground">Tempo investido → (divisão pela mediana: {fmtMinutes(median)})</p>
     </div>
   );
 }

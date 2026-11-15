@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { THEME_KEY } from "@/components/ThemeToggle";
+import { TextSizeOptions } from "@/components/TextSizeControl";
 import { useTrack } from "@/lib/tracks";
 
 function Row({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
@@ -40,6 +41,7 @@ export function SettingsDialog({ userId, onClose }: { userId: string; onClose: (
       <DialogHeader><DialogTitle>Configurações</DialogTitle><DialogDescription>Tema e som neste navegador; preferências de IA na sua conta.</DialogDescription></DialogHeader>
       <div>
         <Row title="Tema escuro" desc="Homo Deus (preto e verde) ou Sapiens (bege e azul)."><Switch checked={dark} onCheckedChange={setTheme} aria-label="Tema escuro" /></Row>
+        <div className="border-b py-3"><p className="text-sm font-medium">Acessibilidade · tamanho do texto</p><p className="mb-2 text-xs text-muted-foreground">Aumenta letras e espaços do site inteiro, sem desalinhar.</p><TextSizeOptions /></div>
         <Row title="Som de recompensas" desc={`Efeitos ao ganhar XP${track ? ` na trilha ${track.name}` : ""}.`}><Switch checked={sound} disabled={!trackId} onCheckedChange={setSoundPref} aria-label="Som de recompensas" /></Row>
         <Row title="Fuso do dia de estudo" desc="Ofensiva e meta diária viram à meia-noite de Brasília."><span className="font-mono text-xs text-muted-foreground">UTC−3</span></Row>
         <Row title="Registro rápido" desc="Abre o lançamento de estudo de qualquer tela."><span className="font-mono text-xs text-muted-foreground">Ctrl/⌘ + K</span></Row>

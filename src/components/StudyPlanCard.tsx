@@ -55,7 +55,7 @@ export function TodayPlanCard() {
       <div className="min-w-0">
         <p className="font-mono text-xs text-track-accent">HOJE NO PLANO · {done}/{day.blocks.length} BLOCOS</p>
         {day.blocks.length === 0 ? <p className="mt-1 text-sm text-muted-foreground">Dia livre no seu plano. Descanso também faz parte da preparação.</p> : <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          {day.blocks.map((b, i) => <li key={i} className="flex items-center gap-1.5">{b.done ? <CheckCircle2 className="size-4 text-track-accent" /> : <Circle className="size-4 text-muted-foreground" />}<span className={b.done ? "text-muted-foreground line-through" : ""}>{b.skillName}</span><span className="font-mono text-[11px] text-muted-foreground">{fmtMinutes(b.minutes)}</span></li>)}
+          {day.blocks.map((b, i) => <li key={i} className="flex items-center gap-1.5">{b.done ? <CheckCircle2 className="size-4 text-track-accent" /> : <Circle className="size-4 text-muted-foreground" />}<span className={b.done ? "text-muted-foreground line-through" : ""}>{b.skillName}</span><span className="font-mono text-[0.6875rem] text-muted-foreground">{fmtMinutes(b.minutes)}</span></li>)}
         </ul>}
       </div>
     </div>

@@ -15,6 +15,7 @@ import { RewardOverlay } from "@/components/Gamification";
 import { UserNav } from "@/components/UserNav";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TextSizeControl } from "@/components/TextSizeControl";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -88,13 +89,13 @@ function TrackLayout() {
             <DropdownMenu>
               <DropdownMenuTrigger className={linkCls} aria-label="Mais páginas">
                 <MoreHorizontal className="size-4" /><span className="hidden lg:inline">Mais</span>
-                {!!pending?.length && <span className="rounded-full bg-warning px-1.5 font-mono text-[10px] font-bold text-background">{pending.length}</span>}
+                {!!pending?.length && <span className="rounded-full bg-warning px-1.5 font-mono text-[0.625rem] font-bold text-background">{pending.length}</span>}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 {more.map((n) => (
                   <DropdownMenuItem key={n.to} asChild>
                     <Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}
-                      {n.to === "/review" && !!pending?.length && <span className="ml-auto rounded-full bg-warning px-1.5 font-mono text-[10px] font-bold text-background">{pending.length}</span>}
+                      {n.to === "/review" && !!pending?.length && <span className="ml-auto rounded-full bg-warning px-1.5 font-mono text-[0.625rem] font-bold text-background">{pending.length}</span>}
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -103,6 +104,7 @@ function TrackLayout() {
             </DropdownMenu>
           </nav>
           <div className="flex-1 md:hidden" />
+          <TextSizeControl />
           <ThemeToggle />
           <span title={trackId ? "Registro rápido (Ctrl + K) · aperte ? para ver todos os atalhos" : "Selecione uma trilha específica para registrar atividades"}>
             <Button size="sm" disabled={!trackId} onClick={() => setOpen(true)}>
@@ -117,14 +119,14 @@ function TrackLayout() {
       </main>
       <nav aria-label="Principal (celular)" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 backdrop-blur md:hidden">
         {nav.map((n) => (
-          <Link key={n.to} to={n.to} className="relative flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15" activeProps={{ className: "!text-track-accent" }}>
+          <Link key={n.to} to={n.to} className="relative flex flex-col items-center gap-0.5 py-2 text-[0.625rem] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15" activeProps={{ className: "!text-track-accent" }}>
             {({ isActive }) => <>{isActive && <span aria-hidden className="nav-indicator-mobile absolute inset-x-4 top-0 h-0.5 bg-track-accent" />}<n.icon className="size-5" />{n.label === "Competências" ? "Matérias" : n.label}</>}
           </Link>
         ))}
         <DropdownMenu>
-          <DropdownMenuTrigger className="relative flex flex-col items-center gap-0.5 py-2 text-[10px] text-muted-foreground" aria-label="Mais páginas">
+          <DropdownMenuTrigger className="relative flex flex-col items-center gap-0.5 py-2 text-[0.625rem] text-muted-foreground" aria-label="Mais páginas">
             <MoreHorizontal className="size-5" />Mais
-            {!!pending?.length && <span className="absolute right-3 top-1 rounded-full bg-warning px-1 font-mono text-[9px] font-bold text-background">{pending.length}</span>}
+            {!!pending?.length && <span className="absolute right-3 top-1 rounded-full bg-warning px-1 font-mono text-[0.5625rem] font-bold text-background">{pending.length}</span>}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="top">
             {more.map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}</Link></DropdownMenuItem>)}

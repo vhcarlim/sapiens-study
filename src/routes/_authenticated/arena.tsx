@@ -186,7 +186,7 @@ function Arena() {
     <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
     {summaryDialog}
     {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} onNext={() => { if (!loading) void nextObjective(); }} />}
-    {!open && current && !current.picked && <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[11px] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p><Button variant="ghost" size="sm" disabled={!!loading} onClick={() => void markRepeated()}><Repeat className="size-4" />Essa já vi / parecida</Button></div>}
+    {!open && current && !current.picked && <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[0.6875rem] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p><Button variant="ghost" size="sm" disabled={!!loading} onClick={() => void markRepeated()}><Repeat className="size-4" />Essa já vi / parecida</Button></div>}
     {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={() => void nextObjective()}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
     {!open && <PrefsPanel prefs={prefs} onChange={setPrefs} />}
 
@@ -317,7 +317,7 @@ function PrefsPanel({ prefs, onChange }: { prefs: ArenaPrefs; onChange: (p: Aren
     <div className="mt-4 space-y-4">
       <label className="block space-y-1.5 text-sm"><span className="text-muted-foreground">Foco ou pedido para a IA (opcional)</span>
         <Textarea value={prefs.focus} maxLength={300} placeholder='Ex.: "cobre jurisprudência do STF", "use casos práticos de licitação", "foque em prazos"' className="min-h-16" onChange={(e) => onChange({ ...prefs, focus: e.target.value })} />
-        <span className="block text-right font-mono text-[11px] text-muted-foreground">{prefs.focus.length}/300</span></label>
+        <span className="block text-right font-mono text-[0.6875rem] text-muted-foreground">{prefs.focus.length}/300</span></label>
       <div className="space-y-1.5 text-sm"><span className="text-muted-foreground">Estilo da questão {prefs.styles.length ? "" : "(automático: alterna o ângulo a cada questão)"}</span>
         <div className="flex flex-wrap gap-2">{STYLE_KEYS.map((k) => { const on = prefs.styles.includes(k); return <button key={k} type="button" aria-pressed={on} onClick={() => onChange({ ...prefs, styles: on ? prefs.styles.filter((s) => s !== k) : [...prefs.styles, k] })} className={cn("rounded-full border px-3 py-1 text-xs transition-colors", on ? "border-track-accent bg-track-accent/15 text-foreground" : "border-border text-muted-foreground hover:bg-secondary")}>{QUESTION_STYLES[k]}</button>; })}</div></div>
       <div className="space-y-1.5 text-sm"><span className="text-muted-foreground">Dificuldade</span>

@@ -202,7 +202,7 @@ function Dashboard() {
               <span className="font-mono text-sm text-muted-foreground"><AnimatedNumber value={g.xp} /> XP</span>
             </div>
             <div className="mt-3"><NeonProgress progress={g.progress} label="Nível geral" /></div>
-            <p className="mt-1 text-right font-mono text-[10px] text-muted-foreground">
+            <p className="mt-1 text-right font-mono text-[0.625rem] text-muted-foreground">
               {g.maxed ? "nível máximo" : `faltam ${g.xpToNext} XP para o nível ${g.level + 1}`}
             </p>
           </div>
@@ -381,7 +381,7 @@ function Heatmap({
         {weeks.map((w, wi) => (
           <div key={wi} className="flex flex-col gap-[3px]">
             {(w[0]?.getDate() ?? 32) <= 7 ? (
-              <span className="h-3 text-[9px] leading-3 text-muted-foreground">{w[0] ? format(w[0], "MMM", { locale: ptBR }) : ""}</span>
+              <span className="h-3 text-[0.5625rem] leading-3 text-muted-foreground">{w[0] ? format(w[0], "MMM", { locale: ptBR }) : ""}</span>
             ) : (
               <span className="h-3" />
             )}
@@ -405,7 +405,7 @@ function Heatmap({
           </div>
         ))}
       </div>
-      <div className="mt-2 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
+      <div className="mt-2 flex items-center justify-end gap-1 text-[0.625rem] text-muted-foreground">
         menos
         {[0, 1, 2, 3, 4].map((l) => (
           <span key={l} className={cn("size-3 min-w-3 p-0 rounded-[3px]", l ? "bg-track-accent" : "bg-foreground")} style={{ opacity: l ? opacity[l] : 0.07 }} />
@@ -431,7 +431,7 @@ function ArenaSuggestion({ trackId, skills, activities, mastery }: { trackId: st
   }, [skills, activities, blocks, rules, mastery]);
   if (!rec) return null;
   return <section aria-label="Estudo recomendado" onPointerMove={spotlight} className="surface-pro aura-accent flex flex-wrap items-center justify-between gap-5 rounded-xl border border-track-accent/40 px-5 py-5">
-    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="flex items-center gap-2 font-mono text-xs text-track-accent"><span className="pulse-dot size-1.5 rounded-full bg-track-accent" />HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p><p className="mt-2 font-mono text-[11px] text-muted-foreground">{rec.why.join(" · ")}</p></div></div>
+    <div className="flex min-w-0 flex-1 items-start gap-4"><Swords className="mt-1 size-7 shrink-0 text-track-accent" /><div className="min-w-0"><p className="flex items-center gap-2 font-mono text-xs text-track-accent"><span className="pulse-dot size-1.5 rounded-full bg-track-accent" />HOJE RECOMENDAMOS</p><h2 className="mt-1 text-lg font-semibold">{rec.skillName}</h2><p className="mt-1 break-words text-sm text-muted-foreground">{rec.topic}</p><p className="mt-2 font-mono text-[0.6875rem] text-muted-foreground">{rec.why.join(" · ")}</p></div></div>
     <div className="flex gap-2"><Button variant="outline" asChild><Link to="/arena">Escolher outro</Link></Button><Button asChild className="cta-beam"><Link to="/arena" search={{ skill: rec.skillId, topic: rec.topic }}>Estudar na Arena</Link></Button></div>
   </section>;
 }

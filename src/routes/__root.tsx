@@ -91,7 +91,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("sapiens-theme")==="light")document.documentElement.classList.remove("dark")}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("sapiens-theme")==="light")document.documentElement.classList.remove("dark");var t=localStorage.getItem("sapiens-text-scale");if(t==="lg"||t==="xl"||t==="xxl")document.documentElement.setAttribute("data-text-scale",t)}catch(e){}` }} />
         <HeadContent />
       </head>
       <body>

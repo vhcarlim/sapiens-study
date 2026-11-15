@@ -108,7 +108,7 @@ function PlanPage() {
           {week.map((d, i) => { const adj = dayAdjust[d.date]; const def = weekly[i] ?? 0; const fill = d.isPast ? (def ? Math.min(1, d.studied / def) : 0) : d.capacity ? Math.min(1, d.studied / d.capacity) : 0;
           return <article key={d.date} className={cn("interactive-card w-[82vw] shrink-0 snap-start border bg-card p-3 sm:w-auto", d.isToday && "border-track-accent", d.isPast && "opacity-75")}>
             <header className="flex items-baseline justify-between gap-2"><h3 className="font-semibold">{d.weekday} <span className="font-mono text-xs text-muted-foreground">{fmtDay(d.date)}</span></h3>
-              <span className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground">{d.isPast ? `${fmtMinutes(d.studied)} estudados` : d.capacity ? fmtMinutes(d.capacity) : "livre"}
+              <span className="flex items-center gap-1 font-mono text-[0.6875rem] text-muted-foreground">{d.isPast ? `${fmtMinutes(d.studied)} estudados` : d.capacity ? fmtMinutes(d.capacity) : "livre"}
                 {!d.isPast && def > 0 && <Button size="icon" variant={adj ? "default" : "ghost"} className="size-6" title={adj ? "Restaurar o dia ao padrão" : "Dia corrido: metade do tempo, só nesta semana"} aria-label={adj ? "Restaurar dia" : "Marcar dia corrido"} onClick={() => (adj ? resetDay(d.date) : toggleBusy(d, def))}>{adj ? <RotateCcw className="size-3" /> : <Hourglass className="size-3" />}</Button>}</span></header>
             <div className="mb-2 mt-1 h-1 bg-secondary" title={d.isPast ? "Estudado x disponível" : "Já estudado hoje x planejado"}><div className="h-full bg-track-accent" style={{ width: `${fill * 100}%` }} /></div>
             {d.blocks.length === 0 ? <p className="text-xs text-muted-foreground">{d.isPast ? "Sem estudo registrado." : "Dia livre."}</p> : <ul className="space-y-2">
@@ -116,7 +116,7 @@ function PlanPage() {
                 <div className="flex items-start gap-1.5">{b.done ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-track-accent" /> : <KindIcon kind={b.kind} phase={b.phase} />}
                   <div className="min-w-0 flex-1"><p className={cn("text-sm font-medium", b.done && "line-through text-muted-foreground")}>{b.skillName}</p>
                     {b.topic && <p className="break-words text-xs text-muted-foreground">{b.topic}</p>}
-                    <p className="font-mono text-[10px] text-muted-foreground">{b.phaseLabel} · {fmtMinutes(b.minutes)}{b.why.length ? ` · ${b.why.slice(0, 2).join(" · ")}` : ""}</p>
+                    <p className="font-mono text-[0.625rem] text-muted-foreground">{b.phaseLabel} · {fmtMinutes(b.minutes)}{b.why.length ? ` · ${b.why.slice(0, 2).join(" · ")}` : ""}</p>
                     {!d.isPast && !b.done && <BlockAction kind={b.kind} skillId={b.skillId} topic={b.topic} />}
                   </div>
                   {!d.isPast && !b.done && b.kind === "study" && b.skillId && <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" className="size-6 shrink-0" aria-label={`Ajustar ${b.skillName}`}><MoreHorizontal className="size-3.5" /></Button></DropdownMenuTrigger>
@@ -128,7 +128,7 @@ function PlanPage() {
                 </div>
               </li>)}
             </ul>}
-            {adj?.skip?.length ? <button className="mt-2 text-[11px] text-muted-foreground underline" onClick={() => resetDay(d.date)}>Desfazer trocas deste dia</button> : null}
+            {adj?.skip?.length ? <button className="mt-2 text-[0.6875rem] text-muted-foreground underline" onClick={() => resetDay(d.date)}>Desfazer trocas deste dia</button> : null}
           </article>; })}
         </div>
       </section>
@@ -191,7 +191,7 @@ function Timeline({ examDate, daysLeft, phase }: { examDate: string | null; days
   return <section aria-label="Linha do tempo" className="border bg-card p-5">
     <div className="flex flex-wrap items-baseline justify-between gap-2"><p className="text-sm"><CalendarRange className="mr-1 inline size-4 text-track-accent" />Fase atual: <b>{PHASE_INFO[phase].label}</b> — {PHASE_INFO[phase].hint}</p><p className="font-mono text-xs text-muted-foreground">{daysLeft} dias · prova em {fmtDay(examDate)}</p></div>
     <div className="mt-3 flex h-3 w-full overflow-hidden">{segs.map((s) => <div key={s.phase} className={PHASE_TONE[s.phase]} style={{ flex: s.days }} title={`${PHASE_INFO[s.phase].label}: ${s.days} dias`} />)}</div>
-    <div className="mt-2 flex text-[11px] text-muted-foreground">{segs.map((s) => <span key={s.phase} style={{ flex: s.days }} className="truncate pr-2">{PHASE_INFO[s.phase].label} · {s.days}d</span>)}</div>
+    <div className="mt-2 flex text-[0.6875rem] text-muted-foreground">{segs.map((s) => <span key={s.phase} style={{ flex: s.days }} className="truncate pr-2">{PHASE_INFO[s.phase].label} · {s.days}d</span>)}</div>
   </section>;
 }
 
@@ -214,7 +214,7 @@ function Availability({ trackId, weekly, blockMinutes }: { trackId: string; week
   return <section aria-label="Disponibilidade" className="border bg-card p-4">
     <h2 className="font-semibold">Disponibilidade semanal</h2>
     <p className="mt-1 text-xs text-muted-foreground">Horas por dia nesta trilha.</p>
-    <div className="mt-3 grid grid-cols-7 gap-1">{WEEKDAYS.map((w, i) => <label key={w} className="text-center text-[11px] text-muted-foreground">{w}<Input inputMode="decimal" aria-label={`Horas ${w}`} className="mt-1 h-8 px-1 text-center" value={hours[i]} onChange={(e) => setHours(hours.map((h, j) => (j === i ? e.target.value : h)))} /></label>)}</div>
+    <div className="mt-3 grid grid-cols-7 gap-1">{WEEKDAYS.map((w, i) => <label key={w} className="text-center text-[0.6875rem] text-muted-foreground">{w}<Input inputMode="decimal" aria-label={`Horas ${w}`} className="mt-1 h-8 px-1 text-center" value={hours[i]} onChange={(e) => setHours(hours.map((h, j) => (j === i ? e.target.value : h)))} /></label>)}</div>
     <label className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">Duração do bloco (min)<Input inputMode="numeric" className="h-8 w-20 text-center" value={block} onChange={(e) => setBlock(e.target.value)} /></label>
     <Button size="sm" className="mt-3 w-full" disabled={saving} onClick={save}>{saving ? "Salvando…" : "Salvar e replanejar"}</Button>
   </section>;
