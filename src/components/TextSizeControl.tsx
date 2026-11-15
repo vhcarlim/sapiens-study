@@ -34,7 +34,7 @@ export function useTextScale(): [TextScale, (id: TextScale) => void] {
 export function TextSizeOptions() {
   const [scale, set] = useTextScale();
   return (
-    <div role="radiogroup" aria-label="Tamanho do texto" className="grid grid-cols-4 gap-1.5">
+    <div role="radiogroup" aria-label="Tamanho do texto" className="grid grid-cols-[repeat(auto-fit,minmax(4.25rem,1fr))] gap-1.5">
       {TEXT_SCALES.map((s) => (
         <button key={s.id} type="button" role="radio" aria-checked={scale === s.id} onClick={() => set(s.id)}
           className={cn("flex flex-col items-center gap-1 rounded-md border px-1 py-2 transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-primary",
@@ -53,7 +53,7 @@ export function TextSizeControl() {
       <PopoverTrigger asChild>
         <Button size="icon" variant="ghost" aria-label="Tamanho do texto" title="Tamanho do texto"><Type className="size-4" /></Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 space-y-3">
+      <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] space-y-3" collisionPadding={12}>
         <div><p className="font-semibold">Tamanho do texto</p><p className="text-sm text-muted-foreground">Aumenta letras e espaços juntos, mantendo tudo alinhado. Fica salvo neste aparelho.</p></div>
         <TextSizeOptions />
       </PopoverContent>
