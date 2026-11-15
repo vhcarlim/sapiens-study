@@ -73,7 +73,7 @@ export function PasteImportDialog({ open, onOpenChange }: { open: boolean; onOpe
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <p className="text-right font-mono text-[10px] text-muted-foreground">{text.length.toLocaleString()}/30.000</p>
+          <p className="text-right font-mono text-[0.625rem] text-muted-foreground">{text.length.toLocaleString()}/30.000</p>
         </div>
           <AIControls feature="activity_import" contextChars={text.length} busy={busy} />
         <DialogFooter>

@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TextSizeControl } from "@/components/TextSizeControl";
 import { TopoBackground } from "@/components/landing/TopoBackground";
 import { ArrowRight, CalendarRange, FileSearch, MessagesSquare, Swords } from "lucide-react";
 
@@ -59,6 +60,7 @@ function Index() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Logo />
         <div className="flex items-center gap-2">
+          <TextSizeControl />
           <ThemeToggle />
           <Button asChild variant="ghost" size="sm"><Link to="/auth">Entrar</Link></Button>
         </div>

@@ -205,7 +205,13 @@
   }
   html {
     color-scheme: dark;
+    --text-scale: 1;
+    font-size: calc(100% * var(--text-scale));
+    -webkit-text-size-adjust: 100%;
   }
+  html[data-text-scale="lg"] { --text-scale: 1.125; }
+  html[data-text-scale="xl"] { --text-scale: 1.25; }
+  html[data-text-scale="xxl"] { --text-scale: 1.4; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -314,7 +320,7 @@
   animation: beam-spin 3.2s linear infinite;
 }
 @keyframes beam-spin { to { --beam-angle: 360deg; } }
-.kbd-cap { display: inline-flex; align-items: center; min-width: 1.4rem; justify-content: center; padding: 0 .35rem; height: 1.25rem; border-radius: .3rem; border: 1px solid var(--border); border-bottom-width: 2px; background: var(--secondary); font-family: var(--font-mono, monospace); font-size: 10px; color: var(--muted-foreground); }
+.kbd-cap { display: inline-flex; align-items: center; min-width: 1.4rem; justify-content: center; padding: 0 .35rem; height: 1.25rem; border-radius: .3rem; border: 1px solid var(--border); border-bottom-width: 2px; background: var(--secondary); font-family: var(--font-mono, monospace); font-size: 0.625rem; color: var(--muted-foreground); }
 .pulse-dot { position: relative; }
 .pulse-dot::after { content: ""; position: absolute; inset: -3px; border-radius: 9999px; border: 1px solid currentColor; animation: pulse-ring 2s ease-out infinite; }
 @keyframes pulse-ring { from { opacity: .7; transform: scale(.6); } to { opacity: 0; transform: scale(1.6); } }
