@@ -23,6 +23,7 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { cn } from "@/lib/utils";
+import { distillRound, saveLearnings } from "@/lib/learnings";
 
 export const Route = createFileRoute("/_authenticated/arena")({
   validateSearch: z.object({ skill: z.string().optional(), topic: z.string().optional() }),
@@ -130,6 +131,10 @@ function Arena() {
     try {
       await saveActivity({ track_id: trackId, source_id: null, date: todayStr(), type: "practice", material: "questions", phase: "fixation", title: `Arena · ${topic}`.slice(0, 200), quantity: Math.max(1, answered.length), minutes, xp: 0, notes, syllabus_topic: topic, skill_ids: [skill.id], status: "approved" });
       await qc.invalidateQueries({ queryKey: ["activities"] });
+      try {
+        await saveLearnings({ track_id: trackId, skill_id: skill.id, topic, source: "arena", session_key: String(startedAt) }, answered.flatMap(distillRound));
+        await qc.invalidateQueries({ queryKey: ["learnings", trackId] });
+      } catch { toast.error("A sessão foi registrada, mas o Caderno não salvou os aprendizados."); }
       setSummary({ answered: answered.length, hits, minutes, skillName: skill.name, topic, open: open?.verdict ? `${open.verdict.verdict} (${open.verdict.score})` : null });
       setLoading(null);
     } catch (e) { toast.error(errMsg(e)); setLoading(null); }
@@ -148,7 +153,7 @@ function Arena() {
         <div className="rounded-md bg-secondary/50 p-3"><p className="font-mono text-2xl font-bold">{summary.minutes}</p><p className="text-xs text-muted-foreground">min de foco</p></div>
       </div>}
       {summary?.open && <p className="text-sm text-muted-foreground">Discursiva: {summary.open}</p>}
-      <p className="text-sm text-muted-foreground">O tempo e o XP já entraram no seu painel.</p>
+      <p className="text-sm text-muted-foreground">O tempo e o XP já entraram no seu painel. Regras, pegadinhas, erros e dúvidas desta sessão foram para o <Link to="/caderno" className="text-track-accent underline">Caderno</Link>.</p>
       <DialogFooter className="gap-2"><Button variant="outline" onClick={restart}>Próxima matéria recomendada</Button><Button onClick={() => navigate({ to: "/dashboard" })}>Ver no Painel</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
