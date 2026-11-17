@@ -652,6 +652,66 @@ export type Database = {
           },
         ]
       }
+      study_learnings: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          kind: string
+          session_key: string | null
+          skill_id: string | null
+          source: string
+          starred: boolean
+          title: string
+          topic: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind: string
+          session_key?: string | null
+          skill_id?: string | null
+          source?: string
+          starred?: boolean
+          title: string
+          topic?: string
+          track_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind?: string
+          session_key?: string | null
+          skill_id?: string | null
+          source?: string
+          starred?: boolean
+          title?: string
+          topic?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_learnings_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_learnings_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_plan_overrides: {
         Row: {
           day_adjust: Json

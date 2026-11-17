@@ -148,6 +148,13 @@
       "when": 1794620265792,
       "tag": "0020_plan_day_adjustments",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794874284740,
+      "tag": "0021_study_learnings",
+      "breakpoints": true
     }
   ]
 }

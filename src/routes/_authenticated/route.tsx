@@ -3,7 +3,7 @@ import { TrackSelector } from "@/components/TrackSelector";
 import { TopProgress, PageSkeleton } from "@/components/PageTransition";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange, MoreHorizontal, Keyboard } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange, BookMarked, MoreHorizontal, Keyboard } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
@@ -35,6 +35,7 @@ const nav = [
   { to: "/skills", label: "Competências", icon: Sparkles },
 ] as const;
 const more = [
+  { to: "/caderno", label: "Caderno", icon: BookMarked },
   { to: "/review", label: "Revisão", icon: Inbox },
   { to: "/activities", label: "Atividades", icon: ListChecks },
 ] as const;
