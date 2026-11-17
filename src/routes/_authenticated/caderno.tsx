@@ -74,7 +74,7 @@ function Caderno() {
   </div>;
 }
 
-function LearningCard({ l, meta, onStar, onDelete }: { l: Learning; meta?: string; onStar: () => void; onDelete: () => void }) {
+function LearningCard({ l, meta, onStar, onDelete }: { l: Learning; meta?: string | undefined; onStar: () => void; onDelete: () => void }) {
   const k = KINDS[l.kind as LearningKind] ?? KINDS.note;
   return <article className={cn("group rounded-md border border-l-4 bg-card p-3 text-sm", k.cls)}>
     <div className="flex items-start gap-2">
@@ -121,7 +121,7 @@ function TimelineView({ items, card }: { items: Learning[]; card: (l: Learning, 
   const days = useMemo(() => { const m = new Map<string, Learning[]>(); for (const l of items) { const d = dayKey(l.created_at); m.set(d, [...(m.get(d) ?? []), l]); } return [...m.entries()]; }, [items]);
   return <ol className="relative space-y-8 border-l-2 border-border pl-6">{days.map(([d, ls]) => <li key={d} className="relative">
     <span className="absolute -left-[1.95rem] top-1 size-3 rounded-full border-2 border-background bg-track-accent" />
-    <p className="font-mono text-xs uppercase text-track-accent">{fmtDay(ls[0].created_at)} · {ls.length} aprendizados</p>
+    <p className="font-mono text-xs uppercase text-track-accent">{fmtDay(ls[0]?.created_at ?? d)} · {ls.length} aprendizados</p>
     <div className="mt-3 space-y-2">{ls.map((l) => card(l, true))}</div>
   </li>)}</ol>;
 }
