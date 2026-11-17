@@ -8,9 +8,9 @@ export type Learning = Tables<"study_learnings">;
 export type LearningKind = "rule" | "trap" | "mistake" | "chat" | "note";
 export const KINDS: Record<LearningKind, { label: string; tag: string; cls: string }> = {
   rule: { label: "Regra-chave", tag: "#Regra", cls: "border-l-primary" },
-  trap: { label: "Pegadinha da banca", tag: "#Pegadinha", cls: "border-l-amber-500" },
+  trap: { label: "Pegadinha da banca", tag: "#Pegadinha", cls: "border-l-warning" },
   mistake: { label: "Ponto cego", tag: "#Erro", cls: "border-l-destructive" },
-  chat: { label: "Dúvida do chat", tag: "#Chat", cls: "border-l-sky-500" },
+  chat: { label: "Dúvida do chat", tag: "#Chat", cls: "border-l-chart-2" },
   note: { label: "Anotação", tag: "#Nota", cls: "border-l-muted-foreground" },
 };
 

@@ -34,3 +34,4 @@
 
 - The study plan (`/plano`) is derived, never persisted: `src/lib/study-plan.ts` simulates the week with `recommendTopic`, past days come from approved activities; only availability (`study_plan_settings`) and per-week pin/skip plus per-day adjustments (`study_plan_overrides.day_adjust`) are stored. Why: the plan replans itself after missed days and can't diverge from real study data.
 - Prefer Baseline native web features (container queries, View Transitions, OKLCH tokens, native dialog semantics via Radix) over JS layout/animation libraries. Why: Modern Web Guidance; lighter, accessible UI.
+- The Memory Notebook (`/caderno`, `study_learnings`, owner RLS) is filled deterministically from answered Arena rounds via `distillRound` in `src/lib/learnings.ts` when a session ends, plus manual notes; no extra AI call. Why: retention without spending credits.
