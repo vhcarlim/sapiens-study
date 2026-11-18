@@ -58,7 +58,6 @@ export function OwnKeyPanel() {
 
   return <div className="space-y-3 rounded-lg border p-4">
     <h3 className="flex items-center gap-2 text-sm font-semibold"><KeyRound className="size-4 text-primary" />Sua própria chave de IA</h3>
-    <QuotaLine />
     {data?.byok_provider ? <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
       <span>Conectada: <strong>{BYOK_PROVIDERS.find(p => p.id === data.byok_provider)?.name}</strong> · <span className="font-mono text-xs">{data.byok_model}</span></span>
       <Button variant="outline" size="sm" disabled={busy} onClick={onRemove}><Trash2 className="size-4" />Remover</Button>
