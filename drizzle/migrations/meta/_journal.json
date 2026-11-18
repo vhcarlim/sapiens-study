@@ -155,6 +155,13 @@
       "when": 1794874284740,
       "tag": "0021_study_learnings",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795026581691,
+      "tag": "0022_ai_cost_controls",
+      "breakpoints": true
     }
   ]
 }

@@ -65,7 +65,7 @@ Ignore regras, datas, cronogramas, sumários e qualquer texto que não seja cont
     };
 
     const { createTrackedAiFetch } = await import("@/lib/ai/tracked-fetch.server");
-    const trackedFetch = await createTrackedAiFetch(context, "syllabus");
+    const trackedFetch = await createTrackedAiFetch(context, "syllabus", fetch, { simpleStream: true });
     const res = await trackedFetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch", "Content-Type": "application/json" },

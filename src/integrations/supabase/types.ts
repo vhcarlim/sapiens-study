@@ -128,6 +128,24 @@ export type Database = {
           },
         ]
       }
+      ai_entitlements: {
+        Row: {
+          plan: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          plan?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          plan?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_preferences: {
         Row: {
           document_effort: string
@@ -157,6 +175,7 @@ export type Database = {
       }
       ai_usage: {
         Row: {
+          byok: boolean
           cached_input_tokens: number | null
           created_at: string
           effort: string
@@ -172,6 +191,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          byok?: boolean
           cached_input_tokens?: number | null
           created_at?: string
           effort: string
@@ -187,6 +207,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          byok?: boolean
           cached_input_tokens?: number | null
           created_at?: string
           effort?: string
@@ -332,6 +353,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      question_bank: {
+        Row: {
+          board_key: string
+          created_at: string
+          created_by: string | null
+          fingerprint: string
+          id: string
+          payload: Json
+          source: string
+          subject_key: string
+          topic_key: string
+        }
+        Insert: {
+          board_key: string
+          created_at?: string
+          created_by?: string | null
+          fingerprint?: string
+          id?: string
+          payload: Json
+          source?: string
+          subject_key: string
+          topic_key: string
+        }
+        Update: {
+          board_key?: string
+          created_at?: string
+          created_by?: string | null
+          fingerprint?: string
+          id?: string
+          payload?: Json
+          source?: string
+          subject_key?: string
+          topic_key?: string
+        }
+        Relationships: []
+      }
+      question_bank_seen: {
+        Row: {
+          created_at: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          question_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_seen_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_ai_access: {
         Row: {
@@ -917,12 +1000,40 @@ export type Database = {
           },
         ]
       }
+      user_ai_keys: {
+        Row: {
+          key_cipher: string
+          key_iv: string
+          model: string
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          key_cipher: string
+          key_iv: string
+          model: string
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          key_cipher?: string
+          key_iv?: string
+          model?: string
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       ai_monthly_usage: { Args: never; Returns: Json }
+      ai_quota_status: { Args: never; Returns: Json }
       claim_active_review: {
         Args: { p_thread: string; p_user: string }
         Returns: boolean

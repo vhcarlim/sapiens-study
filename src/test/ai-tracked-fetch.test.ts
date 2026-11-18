@@ -2,14 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { createTrackedAiFetch } from "@/lib/ai/tracked-fetch.server";
-const { insert, update } = vi.hoisted(() => ({ insert: vi.fn(), update: vi.fn() }));
+const { insert, update, state } = vi.hoisted(() => ({ insert: vi.fn(), update: vi.fn(), state: { used: 0 } }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from: () => ({
+  select: () => { const q: { eq: () => unknown; gte: () => Promise<unknown>; maybeSingle: () => Promise<unknown> } = { eq: () => q, gte: async () => ({ count: state.used, error: null }), maybeSingle: async () => ({ data: null, error: null }) }; return q; },
   insert: (row: unknown) => { insert(row); return { select: () => ({ single: async () => ({ data: { id: "usage-1" }, error: null }) }) }; },
   update: (row: unknown) => { update(row); return { eq: () => ({ eq: async () => ({ error: null }) }) }; },
 }) } }));
 const client = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { study_model: "openai/gpt-6-astra", study_effort: "high" }, error: null }) }) }) }) } as unknown as SupabaseClient<Database>;
 describe("tracked AI request", () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => { vi.clearAllMocks(); state.used = 0; });
   it("resolves the authenticated account choice, preserves streaming and records only metadata", async () => {
     const upstream = vi.fn(async (_input: unknown, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body));
@@ -21,7 +22,7 @@ describe("tracked AI request", () => {
     const result = await tracked("https://ai.gateway.lovable.dev/v1/responses", { body: JSON.stringify({ input: "private question", model: "forged", reasoning: { effort: "low" } }) });
     expect(update).not.toHaveBeenCalled();
     await result.text();
-    expect(insert).toHaveBeenCalledWith({ user_id: "account-1", feature: "arena_discuss", model: "openai/gpt-6-astra", effort: "high" });
+    expect(insert).toHaveBeenCalledWith({ user_id: "account-1", feature: "arena_discuss", model: "openai/gpt-6-astra", effort: "high", byok: false });
     expect(update).toHaveBeenCalledOnce();
     expect(update.mock.calls[0]?.[0]).toMatchObject({ input_tokens: 100, output_tokens: 40, reasoning_tokens: 10, cached_input_tokens: null, status: "completed", run_id: "upstream-run" });
     expect(JSON.stringify(insert.mock.calls)).not.toContain("private question");
@@ -33,5 +34,11 @@ describe("tracked AI request", () => {
     expect(result.status).toBe(403);
     expect(update.mock.calls[0]?.[0]).toMatchObject({ status: "failed", input_tokens: null, output_tokens: null });
     expect(upstream).toHaveBeenCalledOnce();
+  });
+  it("blocks the 21st built-in call of the day on the free plan without calling the AI", async () => {
+    state.used = 20;
+    const upstream = vi.fn();
+    await expect(createTrackedAiFetch({ userId: "account-1", supabase: client }, "arena_discuss", upstream as unknown as typeof fetch)).rejects.toThrow(/Limite diário/);
+    expect(upstream).not.toHaveBeenCalled();
   });
 });

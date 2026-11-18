@@ -23,5 +23,5 @@ export function useAIAccount() {
     return parsed;
   }, onSuccess: (next) => qc.setQueryData(["ai-preferences", user.id], next) });
   return { prefs: preferences.data ?? DEFAULT_AI_PREFERENCES, ready: preferences.isSuccess, error: preferences.error ?? usage.error,
-    usage: usage.data, save, refresh: () => qc.invalidateQueries({ queryKey: ["ai-usage", user.id] }) };
+    usage: usage.data, save, refresh: () => Promise.all([qc.invalidateQueries({ queryKey: ["ai-usage", user.id] }), qc.invalidateQueries({ queryKey: ["ai-quota", user.id] })]) };
 }

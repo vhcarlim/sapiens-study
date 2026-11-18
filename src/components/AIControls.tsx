@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AI_MODELS, AI_EFFORTS, ModelSchema, EffortSchema, FEATURE_NAMES, estimateTokens, resolveAIChoice, tokenValue, usageTotals } from "@/lib/ai-settings";
 import { useAIAccount } from "@/lib/ai-personalization";
+import { OwnKeyPanel, QuotaLine } from "@/components/OwnKeyPanel";
 
 export function AIModelSelector({ document = false, disabled = false }: { document?: boolean; disabled?: boolean }) {
   const { prefs, ready, save, error } = useAIAccount();
@@ -36,6 +37,7 @@ export function AIUsageBar({ feature, contextChars = 0, busy = false }: { featur
   const width = goal && used !== null ? Math.min(100, used / goal * 100) : 0;
   const projected = goal && estimate !== null ? Math.min(100 - width, estimate / goal * 100) : 0;
   return <div className="min-w-0 space-y-2 text-xs text-muted-foreground" aria-live="polite">
+    <QuotaLine />
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"><span className="flex items-center gap-1.5"><Info className="size-3.5" />Uso da IA · mês atual</span><span>{error ? "Uso indisponível" : !usage ? "Carregando…" : `${totals.calls} ${totals.calls === 1 ? "chamada" : "chamadas"} · ${used === null ? "tokens não informados" : `${tokenValue(used)} tokens`}`}</span></div>
     {!!goal && used !== null && <div className="flex h-2 w-full overflow-hidden rounded-full bg-secondary" role="progressbar" aria-label="Meta informativa de tokens" aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(goal, used)}><span className="h-full shrink-0 bg-primary" style={{ width: `${width}%` }} /><span className="h-full shrink-0 bg-track-accent/40" style={{ width: `${projected}%` }} /></div>}
     <div className="flex flex-wrap justify-between gap-2"><span>{goal ? `Já usado / meta: ${tokenValue(used)} / ${tokenValue(goal)}` : "Sem meta mensal definida"}</span><span>{busy ? "Uso desta chamada ao concluir" : estimate === null ? "Uso estimado: indisponível" : `Uso estimado: ~${tokenValue(estimate)} tokens`}</span></div>
@@ -62,6 +64,7 @@ export function AISettingsPanel() {
     <h2 className="flex items-center gap-2 font-semibold"><Brain className="size-4 text-primary" />Inteligência artificial</h2>
     <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><Label>Estudo e conversas</Label><AIModelSelector /></div><div className="space-y-2"><Label>Importações e resumos</Label><AIModelSelector document /></div></div>
     {error && <p role="alert" className="text-sm text-destructive">Não foi possível carregar as preferências ou o uso da IA.</p>}
+    <OwnKeyPanel />
     <div className="space-y-2"><Label htmlFor="ai-token-goal">Meta mensal de tokens (opcional)</Label><div className="flex gap-2"><Input id="ai-token-goal" type="number" min={1} step={1} value={goal} onChange={e => setGoal(e.target.value)} placeholder="Sem meta" /><Button variant="outline" size="icon" aria-label="Salvar meta de tokens" title="Salvar meta de tokens" disabled={!ready || save.isPending} onClick={saveGoal}><Save className="size-4" /></Button></div></div>
     <AIUsageBar feature="arena_discuss" />
     <dl className="grid grid-cols-2 gap-3 text-sm"><div><dt className="text-muted-foreground">Entrada</dt><dd className="font-mono">{tokenValue(totals.input)}</dd></div><div><dt className="text-muted-foreground">Saída</dt><dd className="font-mono">{tokenValue(totals.output)}</dd></div><div><dt className="text-muted-foreground">Raciocínio (incluído na saída)</dt><dd className="font-mono">{tokenValue(totals.reasoning)}</dd></div><div><dt className="text-muted-foreground">Chamadas</dt><dd className="font-mono">{totals.calls}</dd></div></dl>

@@ -92,6 +92,7 @@ function Arena() {
     setLoading("Elaborando questão no padrão da banca…"); setFailure(null);
     try {
       const q = await arenaObjective({ data: { ...ctx, ...genPrefs, avoid: rounds.slice(-20).map((r) => r.q.statement.slice(0, 500)) } });
+      if (q.fromBank) toast.info("Questão do banco compartilhado — sem gastar IA.");
       setRounds((r) => [...(replaceLast ? r.slice(0, -1) : r), { q, picked: null, chat: [] }]);
       setStartedAt((s) => s ?? Date.now());
     } catch (e) { setFailure(errMsg(e)); } finally { setLoading(null); }
