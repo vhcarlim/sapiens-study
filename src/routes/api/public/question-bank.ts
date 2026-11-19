@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/public/question-bank")({
     handlers: {
       POST: async ({ request }) => {
         const secret = process.env['QUESTION_INGEST_TOKEN'];
-        if (!secret || secret.length < 24) return json({ error: "Ingestão desativada no servidor" }, 503);
+        if (!secret || secret.length < 24) return json({ error: "Ingestão desativada no servidor" }, 403);
         const auth = request.headers.get("authorization") ?? "";
         const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
         if (!token || !safeEqual(token, secret)) return json({ error: "Não autorizado" }, 401);
