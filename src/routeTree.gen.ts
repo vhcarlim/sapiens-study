@@ -23,6 +23,7 @@ import { Route as AuthenticatedSkillsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
 import { Route as ApiReviewChatRouteImport } from './routes/api/review-chat'
 import { Route as AuthenticatedArguicaoThreadIdRouteImport } from './routes/_authenticated/arguicao.$threadId'
+import { Route as ApiPublicQuestionBankRouteImport } from './routes/api/public/question-bank'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +95,11 @@ const AuthenticatedArguicaoThreadIdRoute =
     path: '/arguicao/$threadId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicQuestionBankRoute = ApiPublicQuestionBankRouteImport.update({
+  id: '/api/public/question-bank',
+  path: '/api/public/question-bank',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
   '/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
+  '/api/public/question-bank': typeof ApiPublicQuestionBankRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
   '/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
+  '/api/public/question-bank': typeof ApiPublicQuestionBankRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
   '/_authenticated/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
+  '/api/public/question-bank': typeof ApiPublicQuestionBankRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/api/review-chat'
     | '/arguicao/$threadId'
+    | '/api/public/question-bank'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/api/review-chat'
     | '/arguicao/$threadId'
+    | '/api/public/question-bank'
   id:
     | '__root__'
     | '/'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sources'
     | '/api/review-chat'
     | '/_authenticated/arguicao/$threadId'
+    | '/api/public/question-bank'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiReviewChatRoute: typeof ApiReviewChatRoute
+  ApiPublicQuestionBankRoute: typeof ApiPublicQuestionBankRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedArguicaoThreadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/question-bank': {
+      id: '/api/public/question-bank'
+      path: '/api/public/question-bank'
+      fullPath: '/api/public/question-bank'
+      preLoaderRoute: typeof ApiPublicQuestionBankRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -335,6 +355,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiReviewChatRoute: ApiReviewChatRoute,
+  ApiPublicQuestionBankRoute: ApiPublicQuestionBankRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
