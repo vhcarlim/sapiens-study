@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CANONICAL_SUBJECTS, originLabel } from "@/lib/subjects";
 import { bankKeys, decide, IngestBody, IngestQuestion, safeEqual, toPayload } from "@/lib/question-ingest";
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
@@ -7,6 +8,8 @@ const json = (body: unknown, status = 200) => Response.json(body, { status });
 export const Route = createFileRoute("/api/public/question-bank")({
   server: {
     handlers: {
+      // Public, non-sensitive: the canonical subject list the Colab importer must classify into.
+      GET: async () => json({ subjects: CANONICAL_SUBJECTS }),
       POST: async ({ request }) => {
         const secret = process.env['QUESTION_INGEST_TOKEN'];
         if (!secret || secret.length < 24) return json({ error: "Ingestão desativada no servidor" }, 403);
@@ -28,6 +31,8 @@ export const Route = createFileRoute("/api/public/question-bank")({
           const q = IngestQuestion.safeParse(item);
           if (!q.success) { results.push({ index, status: "invalid", detail: q.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ").slice(0, 500) }); continue; }
           const keys = bankKeys(q.data);
+          if (!keys) { results.push({ index, status: "invalid", detail: `subject: "${q.data.subject.slice(0, 80)}" fora da lista oficial (GET neste endereço)` }); continue; }
+          const origin_label = originLabel(q.data.board, q.data.origin);
           const payload = toPayload(q.data);
           try {
             const { data: existing, error } = await supabaseAdmin.from("question_bank").select("id,payload")
@@ -36,12 +41,12 @@ export const Route = createFileRoute("/api/public/question-bank")({
             const d = decide(payload, (existing ?? []).map((r) => ({ id: r.id, payload: r.payload as never })));
             if (d.action === "skip") { results.push({ index, status: "skipped_duplicate", id: d.id }); continue; }
             if (d.action === "replace") {
-              const { error: e } = await supabaseAdmin.from("question_bank").update({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam" }).eq("id", d.id);
+              const { error: e } = await supabaseAdmin.from("question_bank").update({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", origin_label, status: "pending" }).eq("id", d.id);
               if (e) throw e;
               results.push({ index, status: "replaced", id: d.id });
               continue;
             }
-            const { data: row, error: e } = await supabaseAdmin.from("question_bank").insert({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", created_by: null }).select("id").single();
+            const { data: row, error: e } = await supabaseAdmin.from("question_bank").insert({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", created_by: null, origin_label, status: "pending" }).select("id").single();
             if (e) throw e;
             results.push({ index, status: "inserted", id: row.id });
           } catch (e) {

@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedActivitiesRouteImport } from './routes/_authenticated/activities'
 import { Route as AuthenticatedArenaRouteImport } from './routes/_authenticated/arena'
+import { Route as AuthenticatedBancoRouteImport } from './routes/_authenticated/banco'
 import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPlanoRouteImport } from './routes/_authenticated/plano'
@@ -47,6 +48,11 @@ const AuthenticatedActivitiesRoute = AuthenticatedActivitiesRouteImport.update({
 const AuthenticatedArenaRoute = AuthenticatedArenaRouteImport.update({
   id: '/arena',
   path: '/arena',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBancoRoute = AuthenticatedBancoRouteImport.update({
+  id: '/banco',
+  path: '/banco',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCadernoRoute = AuthenticatedCadernoRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/activities': typeof AuthenticatedActivitiesRoute
   '/arena': typeof AuthenticatedArenaRoute
+  '/banco': typeof AuthenticatedBancoRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/plano': typeof AuthenticatedPlanoRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/activities': typeof AuthenticatedActivitiesRoute
   '/arena': typeof AuthenticatedArenaRoute
+  '/banco': typeof AuthenticatedBancoRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/plano': typeof AuthenticatedPlanoRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/activities': typeof AuthenticatedActivitiesRoute
   '/_authenticated/arena': typeof AuthenticatedArenaRoute
+  '/_authenticated/banco': typeof AuthenticatedBancoRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/plano': typeof AuthenticatedPlanoRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/activities'
     | '/arena'
+    | '/banco'
     | '/caderno'
     | '/dashboard'
     | '/plano'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/activities'
     | '/arena'
+    | '/banco'
     | '/caderno'
     | '/dashboard'
     | '/plano'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/activities'
     | '/_authenticated/arena'
+    | '/_authenticated/banco'
     | '/_authenticated/caderno'
     | '/_authenticated/dashboard'
     | '/_authenticated/plano'
@@ -246,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/arena'
       fullPath: '/arena'
       preLoaderRoute: typeof AuthenticatedArenaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/banco': {
+      id: '/_authenticated/banco'
+      path: '/banco'
+      fullPath: '/banco'
+      preLoaderRoute: typeof AuthenticatedBancoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/caderno': {
@@ -324,6 +343,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivitiesRoute: typeof AuthenticatedActivitiesRoute
   AuthenticatedArenaRoute: typeof AuthenticatedArenaRoute
+  AuthenticatedBancoRoute: typeof AuthenticatedBancoRoute
   AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPlanoRoute: typeof AuthenticatedPlanoRoute
@@ -337,6 +357,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivitiesRoute: AuthenticatedActivitiesRoute,
   AuthenticatedArenaRoute: AuthenticatedArenaRoute,
+  AuthenticatedBancoRoute: AuthenticatedBancoRoute,
   AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPlanoRoute: AuthenticatedPlanoRoute,

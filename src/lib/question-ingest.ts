@@ -1,3 +1,4 @@
+import { canonicalSubject } from "@/lib/subjects";
 import { z } from "zod";
 import { bankKey } from "@/lib/ai-quota";
 
@@ -40,8 +41,11 @@ export function toPayload(q: IngestQuestion) {
 }
 export type StoredPayload = ReturnType<typeof toPayload>;
 
+/** Bank keys for an ingested question; null when the subject is outside the canonical list. */
 export function bankKeys(q: IngestQuestion) {
-  return { board_key: bankKey(q.board), subject_key: bankKey(q.subject), topic_key: bankKey(q.topic) };
+  const subject_key = canonicalSubject(q.subject);
+  if (!subject_key) return null;
+  return { board_key: bankKey(q.board), subject_key, topic_key: bankKey(q.topic) };
 }
 
 function tokens(p: Pick<StoredPayload, "statement" | "options">) {

@@ -162,6 +162,20 @@
       "when": 1795026581691,
       "tag": "0022_ai_cost_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795213124806,
+      "tag": "0023_question_bank_quality",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795213275509,
+      "tag": "0024_grant_owner_admin",
+      "breakpoints": true
     }
   ]
 }

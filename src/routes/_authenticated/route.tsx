@@ -1,9 +1,10 @@
+import { isAdminQuery } from "@/lib/admin";
 import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
 import { TopProgress, PageSkeleton } from "@/components/PageTransition";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange, BookMarked, MoreHorizontal, Keyboard } from "lucide-react";
+import { LayoutDashboard, Inbox, ListChecks, Sparkles, Plus, Swords, FileText, CalendarRange, BookMarked, Database, MoreHorizontal, Keyboard } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
@@ -50,6 +51,8 @@ function TrackLayout() {
   const { user } = Route.useRouteContext();
   const { trackId, track, loading, error } = useTrack();
   const { data: pending } = useQuery(activitiesQuery("pending", trackId));
+  const { data: isAdmin } = useQuery(isAdminQuery(user.id));
+  const moreNav = isAdmin ? [...more, { to: "/banco" as const, label: "Banco de questões", icon: Database }] : more;
   const [open, setOpen] = useState(false);
   const [help, setHelp] = useState(false);
 
@@ -93,7 +96,7 @@ function TrackLayout() {
                 {!!pending?.length && <span className="rounded-full bg-warning px-1.5 font-mono text-[0.625rem] font-bold text-background">{pending.length}</span>}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                {more.map((n) => (
+                {moreNav.map((n) => (
                   <DropdownMenuItem key={n.to} asChild>
                     <Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}
                       {n.to === "/review" && !!pending?.length && <span className="ml-auto rounded-full bg-warning px-1.5 font-mono text-[0.625rem] font-bold text-background">{pending.length}</span>}
@@ -130,7 +133,7 @@ function TrackLayout() {
             {!!pending?.length && <span className="absolute right-3 top-1 rounded-full bg-warning px-1 font-mono text-[0.5625rem] font-bold text-background">{pending.length}</span>}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="top">
-            {more.map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}</Link></DropdownMenuItem>)}
+            {moreNav.map((n) => <DropdownMenuItem key={n.to} asChild><Link to={n.to} className="flex items-center gap-2"><n.icon className="size-4" />{n.label}</Link></DropdownMenuItem>)}
           </DropdownMenuContent>
         </DropdownMenu>
       </nav>

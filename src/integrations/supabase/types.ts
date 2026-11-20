@@ -361,8 +361,11 @@ export type Database = {
           created_by: string | null
           fingerprint: string
           id: string
+          origin_label: string
           payload: Json
+          report_count: number
           source: string
+          status: string
           subject_key: string
           topic_key: string
         }
@@ -372,8 +375,11 @@ export type Database = {
           created_by?: string | null
           fingerprint?: string
           id?: string
+          origin_label?: string
           payload: Json
+          report_count?: number
           source?: string
+          status?: string
           subject_key: string
           topic_key: string
         }
@@ -383,8 +389,11 @@ export type Database = {
           created_by?: string | null
           fingerprint?: string
           id?: string
+          origin_label?: string
           payload?: Json
+          report_count?: number
           source?: string
+          status?: string
           subject_key?: string
           topic_key?: string
         }
@@ -409,6 +418,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "question_bank_seen_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_reports: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_reports_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "question_bank"
@@ -1027,6 +1068,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1049,12 +1108,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       purchase_streak_freeze: { Args: { p_track: string }; Returns: undefined }
       streak_protection_state: { Args: { p_track: string }; Returns: Json }
       study_xp_balance: { Args: { p_track: string }; Returns: number }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1181,6 +1247,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
