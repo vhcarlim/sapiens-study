@@ -79,7 +79,7 @@ function Caderno() {
       <Button onClick={() => setAdding(true)}><Plus className="size-4" />Anotação</Button>
     </header>
     <div className="flex flex-wrap gap-2 text-xs">{(Object.keys(KINDS) as LearningKind[]).map((k) => <span key={k} className={cn("rounded-md border border-l-4 bg-card px-2 py-1", KINDS[k].cls)}>{KINDS[k].label}: <b className="font-mono">{counts[k]}</b></span>)}</div>
-    <div role="tablist" className="inline-flex rounded-lg border bg-secondary/40 p-1">
+    <div role="tablist" className="inline-flex max-w-full flex-wrap rounded-lg border bg-secondary/40 p-1">
       {VIEWS.map((v) => <Button variant="ghost" key={v.id} role="tab" aria-selected={view === v.id} onClick={() => changeView(v.id)} className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors", view === v.id ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground")}><v.icon className="size-4" />{v.label}</Button>)}
     </div>
     {!items.length ? <div className="border-l-2 border-track-accent bg-secondary/40 p-5"><BookMarked className="mb-2 size-5 text-track-accent" /><p>Seu caderno está vazio. Faça uma sessão na Arena e encerre — os aprendizados de cada questão aparecem aqui.</p><Button asChild variant="outline" className="mt-3"><Link to="/arena">Ir para a Arena</Link></Button></div>

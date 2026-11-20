@@ -25,7 +25,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     const id = new URLSearchParams(location.searchStr).get("authorization_id");
     if (!id) throw new Error("Solicitação de conexão ausente.");
     const { data, error } = await oauthClient.getAuthorizationDetails(id);
-    if (error || !data) throw new Error("Esta conexão expirou ou não está disponível. Inicie novamente pelo agente.");
+    if (error || !data) throw new Error(error?.message === "unauthorized request origin" ? "A conexão deve ser autorizada no endereço publicado do Sapiens Study. Abra novamente pelo agente após a publicação." : "Esta conexão expirou ou não está disponível. Inicie novamente pelo agente.");
     const immediate = data.redirect_url ?? data.redirect_to;
     if (immediate && !data.client) throw redirect({ href: immediate });
     const { data: session } = await supabase.auth.getSession();
