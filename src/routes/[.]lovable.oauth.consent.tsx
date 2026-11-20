@@ -32,7 +32,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     return { details: data, email: session.session?.user.email ?? "" };
   },
   pendingComponent: () => <main className="p-8 text-center text-muted-foreground">Carregando solicitação de conexão…</main>,
-  errorComponent: ({ error }) => <main className="mx-auto max-w-lg px-6 py-16"><Logo /><h1 className="mt-8 text-2xl font-bold">Não foi possível conectar</h1><p role="alert" className="mt-4 text-muted-foreground">{error.message}</p></main>,
+  errorComponent: ({ error }) => <main className="mx-auto max-w-lg px-6 py-16"><Logo /><h1 className="mt-8 text-2xl font-bold">Não foi possível conectar</h1><p role="alert" className="mt-4 text-muted-foreground">{error instanceof Error ? error.message : "Não foi possível carregar a solicitação."}</p></main>,
   component: Consent,
 });
 function Consent() {

@@ -13,8 +13,10 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ track_id, kind, starred_only, offset, limit }, ctx) => {
+    const userId = ctx.getUserId();
+    if (!userId) throw new ToolError("Entre na sua conta para continuar.");
     const db = supabaseForUser(ctx);
-    let query = db.from("study_learnings").select("id,skill_id,topic,kind,title,detail,starred,created_at").eq("user_id", ctx.getUserId()).eq("track_id", track_id);
+    let query = db.from("study_learnings").select("id,skill_id,topic,kind,title,detail,starred,created_at").eq("user_id", userId).eq("track_id", track_id);
     if (kind) query = query.eq("kind", kind);
     if (starred_only) query = query.eq("starred", true);
     const { data, error } = await query.order("created_at", { ascending: false }).order("id").range(offset, offset + limit - 1);

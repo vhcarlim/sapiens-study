@@ -6,8 +6,10 @@ export default defineTool({
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_args, ctx) => {
+    const userId = ctx.getUserId();
+    if (!userId) throw new ToolError("Entre na sua conta para continuar.");
     const db = supabaseForUser(ctx);
-    const { data, error } = await db.from("study_tracks").select("id,name,exam_board,exam_date,archived").eq("user_id", ctx.getUserId()).order("position").limit(100);
+    const { data, error } = await db.from("study_tracks").select("id,name,exam_board,exam_date,archived").eq("user_id", userId).order("position").limit(100);
     if (error) throw new ToolError("Não foi possível consultar suas trilhas.");
     return { content: [{ type: "text", text: JSON.stringify(data ?? []) }] };
   },

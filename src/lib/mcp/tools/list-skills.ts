@@ -7,10 +7,12 @@ export default defineTool({
   inputSchema: { track_id: z.string().uuid().describe("ID da trilha retornado por list_study_tracks.") },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ track_id }, ctx) => {
+    const userId = ctx.getUserId();
+    if (!userId) throw new ToolError("Entre na sua conta para continuar.");
     const db = supabaseForUser(ctx);
-    const { data: track, error: trackError } = await db.from("study_tracks").select("id").eq("id", track_id).eq("user_id", ctx.getUserId()).maybeSingle();
+    const { data: track, error: trackError } = await db.from("study_tracks").select("id").eq("id", track_id).eq("user_id", userId).maybeSingle();
     if (trackError || !track) throw new ToolError("Trilha indisponível nesta conta.");
-    const { data, error } = await db.from("skills").select("id,name,topics,shared,track_id").eq("user_id", ctx.getUserId()).or(`track_id.eq.${track_id},shared.eq.true`).order("name").limit(100);
+    const { data, error } = await db.from("skills").select("id,name,topics,shared,track_id").eq("user_id", userId).or(`track_id.eq.${track_id},shared.eq.true`).order("name").limit(100);
     if (error) throw new ToolError("Não foi possível consultar as competências.");
     return { content: [{ type: "text", text: JSON.stringify(data ?? []) }] };
   },

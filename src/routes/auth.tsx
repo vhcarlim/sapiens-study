@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({ next: oauthReturnPath(s['next'] ?? "/dashboard") }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({ next: oauthReturnPath(s['next'] ?? "/dashboard") }),
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
@@ -32,7 +32,8 @@ const schema = z.object({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { next } = Route.useSearch();
+  const { next: nextParam } = Route.useSearch();
+  const next = nextParam ?? "/dashboard";
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
