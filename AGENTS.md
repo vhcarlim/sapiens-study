@@ -37,3 +37,5 @@
 - `/caderno` (`study_learnings`) is filled by `distillRound` from Arena rounds at session end, no AI call.
 - AI cost control: `createTrackedAiFetch` enforces per-plan daily caps (`src/lib/ai-quota.ts`) and routes AES-encrypted own keys server-side; Arena serves the shared `question_bank` first.
 - Official questions enter `question_bank` only via token-gated `/api/public/question-bank`, classified by `src/lib/subjects.ts` canonical subjects, `pending` until admin approval at `/banco`; Arena serves `active` rows by board, then topic, then other boards.
+- MCP uses OAuth client-claim verification and caller-scoped RLS clients in `src/lib/mcp`; read-only tools avoid AI costs and generated transport routes remain plugin-owned.
+- OAuth login validates local return paths once and preserves consent through password, signup and social login; browser-local WebMCP tools stay in their owning screen with fail-open telemetry.

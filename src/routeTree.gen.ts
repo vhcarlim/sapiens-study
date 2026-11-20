@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedActivitiesRouteImport } from './routes/_authenticated/activities'
 import { Route as AuthenticatedArenaRouteImport } from './routes/_authenticated/arena'
 import { Route as AuthenticatedBancoRouteImport } from './routes/_authenticated/banco'
@@ -23,6 +25,7 @@ import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSkillsRouteImport } from './routes/_authenticated/skills'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
 import { Route as ApiReviewChatRouteImport } from './routes/api/review-chat'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedArguicaoThreadIdRouteImport } from './routes/_authenticated/arguicao.$threadId'
 import { Route as ApiPublicQuestionBankRouteImport } from './routes/api/public/question-bank'
 
@@ -40,6 +43,17 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedActivitiesRoute = AuthenticatedActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
@@ -95,6 +109,11 @@ const ApiReviewChatRoute = ApiReviewChatRouteImport.update({
   path: '/api/review-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedArguicaoThreadIdRoute =
   AuthenticatedArguicaoThreadIdRouteImport.update({
     id: '/arguicao/$threadId',
@@ -110,6 +129,8 @@ const ApiPublicQuestionBankRoute = ApiPublicQuestionBankRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activities': typeof AuthenticatedActivitiesRoute
   '/arena': typeof AuthenticatedArenaRoute
   '/banco': typeof AuthenticatedBancoRoute
@@ -121,12 +142,15 @@ export interface FileRoutesByFullPath {
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
   '/api/public/question-bank': typeof ApiPublicQuestionBankRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/activities': typeof AuthenticatedActivitiesRoute
   '/arena': typeof AuthenticatedArenaRoute
   '/banco': typeof AuthenticatedBancoRoute
@@ -138,6 +162,7 @@ export interface FileRoutesByTo {
   '/skills': typeof AuthenticatedSkillsRoute
   '/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
   '/api/public/question-bank': typeof ApiPublicQuestionBankRoute
 }
@@ -146,6 +171,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/activities': typeof AuthenticatedActivitiesRoute
   '/_authenticated/arena': typeof AuthenticatedArenaRoute
   '/_authenticated/banco': typeof AuthenticatedBancoRoute
@@ -157,6 +184,7 @@ export interface FileRoutesById {
   '/_authenticated/skills': typeof AuthenticatedSkillsRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
   '/api/review-chat': typeof ApiReviewChatRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/arguicao/$threadId': typeof AuthenticatedArguicaoThreadIdRoute
   '/api/public/question-bank': typeof ApiPublicQuestionBankRoute
 }
@@ -165,6 +193,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/activities'
     | '/arena'
     | '/banco'
@@ -176,12 +206,15 @@ export interface FileRouteTypes {
     | '/skills'
     | '/sources'
     | '/api/review-chat'
+    | '/.lovable/oauth/consent'
     | '/arguicao/$threadId'
     | '/api/public/question-bank'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/activities'
     | '/arena'
     | '/banco'
@@ -193,6 +226,7 @@ export interface FileRouteTypes {
     | '/skills'
     | '/sources'
     | '/api/review-chat'
+    | '/.lovable/oauth/consent'
     | '/arguicao/$threadId'
     | '/api/public/question-bank'
   id:
@@ -200,6 +234,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/activities'
     | '/_authenticated/arena'
     | '/_authenticated/banco'
@@ -211,6 +247,7 @@ export interface FileRouteTypes {
     | '/_authenticated/skills'
     | '/_authenticated/sources'
     | '/api/review-chat'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/arguicao/$threadId'
     | '/api/public/question-bank'
   fileRoutesById: FileRoutesById
@@ -219,7 +256,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiReviewChatRoute: typeof ApiReviewChatRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicQuestionBankRoute: typeof ApiPublicQuestionBankRoute
 }
 
@@ -244,6 +284,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/activities': {
@@ -323,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReviewChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/arguicao/$threadId': {
       id: '/_authenticated/arguicao/$threadId'
       path: '/arguicao/$threadId'
@@ -375,7 +436,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiReviewChatRoute: ApiReviewChatRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicQuestionBankRoute: ApiPublicQuestionBankRoute,
 }
 export const routeTree = rootRouteImport

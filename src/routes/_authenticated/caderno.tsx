@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 export const Route = createFileRoute("/_authenticated/caderno")({
   head: () => ({ meta: [
@@ -38,11 +40,25 @@ const dayKey = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { time
 function Caderno() {
   const { trackId } = useTrack();
   const qc = useQueryClient();
-  const { data: items = [] } = useQuery(learningsQuery(trackId));
+  const { data: items = [], isPending: loadingItems } = useQuery(learningsQuery(trackId));
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const skillName = (id: string | null) => skills.find((s) => s.id === id)?.name ?? "Sem matéria";
   const [view, setView] = useState<View>(() => "tree");
   const [adding, setAdding] = useState(false);
+  function changeView(next: View) {
+    if (!VIEWS.some((v) => v.id === next)) throw new Error("Visualização inválida; escolha tree, atlas ou timeline.");
+    setView(next);
+  }
+  useWebMCP({
+    name: "select_notebook_view", description: "Alternar o Caderno entre árvore, atlas e linha do tempo.",
+    inputSchema: { type: "object", properties: { view: { type: "string", enum: ["tree", "atlas", "timeline"], description: "Visualização do Caderno." } }, required: ["view"], additionalProperties: false },
+    execute: ({ view }: { view: View }) => runWebMCPTool("select_notebook_view", () => { changeView(view); return "Visualização alterada."; }),
+  });
+  useWebMCP({
+    name: "read_notebook_overview", description: "Consultar os contadores de aprendizado exibidos no Caderno da trilha atual.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true },
+    execute: () => runWebMCPTool("read_notebook_overview", () => loadingItems ? "Caderno carregando." : (Object.keys(KINDS) as LearningKind[]).map((kind) => `${KINDS[kind].label}: ${items.filter((item) => item.kind === kind).length}`).join("\n")),
+  });
   const refresh = () => qc.invalidateQueries({ queryKey: ["learnings", trackId] });
 
   async function toggleStar(l: Learning) {
@@ -64,7 +80,7 @@ function Caderno() {
     </header>
     <div className="flex flex-wrap gap-2 text-xs">{(Object.keys(KINDS) as LearningKind[]).map((k) => <span key={k} className={cn("rounded-md border border-l-4 bg-card px-2 py-1", KINDS[k].cls)}>{KINDS[k].label}: <b className="font-mono">{counts[k]}</b></span>)}</div>
     <div role="tablist" className="inline-flex rounded-lg border bg-secondary/40 p-1">
-      {VIEWS.map((v) => <button key={v.id} role="tab" aria-selected={view === v.id} onClick={() => setView(v.id)} className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors", view === v.id ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground")}><v.icon className="size-4" />{v.label}</button>)}
+      {VIEWS.map((v) => <Button variant="ghost" key={v.id} role="tab" aria-selected={view === v.id} onClick={() => changeView(v.id)} className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors", view === v.id ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground")}><v.icon className="size-4" />{v.label}</Button>)}
     </div>
     {!items.length ? <div className="border-l-2 border-track-accent bg-secondary/40 p-5"><BookMarked className="mb-2 size-5 text-track-accent" /><p>Seu caderno está vazio. Faça uma sessão na Arena e encerre — os aprendizados de cada questão aparecem aqui.</p><Button asChild variant="outline" className="mt-3"><Link to="/arena">Ir para a Arena</Link></Button></div>
       : view === "tree" ? <TreeView items={items} skillName={skillName} card={card} />

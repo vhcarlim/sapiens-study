@@ -5,6 +5,7 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 export default defineConfig({
   tanstackStart: {
@@ -13,5 +14,5 @@ export default defineConfig({
     server: { entry: "server" },
   },
   // Pre-bundle the PDF reader so the first edital import doesn't trigger a full page reload in dev.
-  vite: { optimizeDeps: { include: ["pdfjs-dist"] } },
+  vite: { plugins: [mcpPlugin()], optimizeDeps: { include: ["pdfjs-dist"] } },
 });

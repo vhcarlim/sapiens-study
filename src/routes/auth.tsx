@@ -8,8 +8,10 @@ import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({ next: oauthReturnPath(s['next'] ?? "/dashboard") }),
   head: () => ({
     meta: [
       { property: "og:type", content: "website" },
@@ -30,6 +32,7 @@ const schema = z.object({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,13 +40,13 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) navigate({ href: next, replace: true });
     });
     const { data } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/dashboard", replace: true });
+      if (session) navigate({ href: next, replace: true });
     });
     return () => data.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, next]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +59,7 @@ function AuthPage() {
     } else {
       const { error } = await supabase.auth.signUp({
         ...parsed.data,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: new URL(next, window.location.origin).href },
       });
       if (error) toast.error(error.message);
       else toast.success("Confira seu e-mail para confirmar a conta.");
@@ -65,7 +68,7 @@ function AuthPage() {
   }
 
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: new URL(`/auth?next=${encodeURIComponent(next)}`, window.location.origin).href });
     if (r.error) toast.error("Não foi possível entrar com Google");
   }
 
@@ -90,12 +93,12 @@ function AuthPage() {
         <Button variant="outline" className="mt-3 w-full" onClick={google}>
           Continuar com Google
         </Button>
-        <button
+        <Button variant="ghost"
           className="mt-4 w-full text-sm text-muted-foreground hover:text-foreground"
           onClick={() => setMode(mode === "in" ? "up" : "in")}
         >
           {mode === "in" ? "Não tem conta? Criar" : "Já tem conta? Entrar"}
-        </button>
+        </Button>
       </div>
     </main>
   );

@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "sdk_version": "3.6.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://fvqoppolguxkjfojqmvk.supabase.co/auth/v1",
+    "require_oauth_client_claim": true,
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "sapiens-study",
+      "version": "0.1.0",
+      "title": "Sapiens Study"
+    },
+    "tools": [
+      {
+        "name": "list_study_tracks",
+        "title": "Consultar trilhas de estudo",
+        "description": "Lista as trilhas da sua conta, incluindo banca, data da prova e arquivamento.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_track_skills",
+        "title": "Consultar competências da trilha",
+        "description": "Lista matérias e tópicos da trilha selecionada, incluindo suas competências compartilhadas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "track_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID da trilha retornado por list_study_tracks."
+            }
+          },
+          "required": [
+            "track_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "read_memory_notebook",
+        "title": "Consultar Caderno de Memória",
+        "description": "Consulta os aprendizados de uma trilha da sua conta, com filtros por tipo e favoritos e paginação.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "track_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID da trilha retornado por list_study_tracks."
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "rule",
+                "trap",
+                "mistake",
+                "chat",
+                "note"
+              ],
+              "description": "Filtrar tipo de aprendizado."
+            },
+            "starred_only": {
+              "type": "boolean",
+              "default": false,
+              "description": "Mostrar somente favoritos."
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0,
+              "description": "Quantidade de registros a pular para paginação."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 20,
+              "description": "Máximo de aprendizados retornados, de 1 a 30."
+            }
+          },
+          "required": [
+            "track_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
