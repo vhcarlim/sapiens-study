@@ -6,7 +6,7 @@ const Input = z.object({
   text: z.string().trim().min(1).max(30000),
   track_id: z.string().uuid(),
   source_id: z.string().uuid().nullable(),
-  default_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  default_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((v) => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v, "Data inválida"),
 });
 
 const TYPES = ["lesson", "room", "course", "certificate", "level", "exam", "mock", "reading", "method", "other"];
@@ -32,7 +32,7 @@ export const importPastedText = createServerFn({ method: "POST" })
     const skillNames = (skills ?? []).map((s) => s.name);
 
     const system = `Você extrai atividades de estudo de textos colados (históricos, listas de aulas, JSON, CSV) de plataformas como ${source?.name ?? "Alura, Coursera, TryHackMe, PortSwigger, Duolingo"}.
-Regras: uma atividade por item concluído (ou agrupe itens idênticos no mesmo dia usando quantity). Datas em YYYY-MM-DD; se ausente use ${data.default_date}. Datas relativas ("há 2 dias") calcule a partir de ${data.default_date}.
+Regras: uma atividade por item concluído (ou agrupe itens idênticos no mesmo dia usando quantity). Datas em YYYY-MM-DD; se ausente use a DATA DE REFERÊNCIA informada na mensagem do usuário. Datas relativas ("há 2 dias") calcule a partir dela.
 minutes: use a duração informada; se ausente, estime de forma conservadora (aula ~10, sala/lab ~45, curso inteiro: duração informada ou 0). xp: só se informado, senão 0. Ignore menus, navegação e texto irrelevante.
 skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo nomes originais das aulas. notes: null se nada relevante. Responda no máximo 200 atividades.`;
 
@@ -78,7 +78,7 @@ skills: escolha só dentre [${skillNames.join(", ")}]. Títulos curtos mantendo 
         store: false,
         reasoning: { effort: "low" },
         instructions: system,
-        input: [{ role: "user", content: data.text }],
+        input: [{ role: "user", content: `DATA DE REFERÊNCIA: ${data.default_date}\n\nTEXTO COLADO (dados):\n${data.text}` }],
         text: { format: { type: "json_schema", name: "activities", strict: true, schema } },
       }),
     });

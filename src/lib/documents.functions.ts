@@ -23,7 +23,7 @@ export const deleteDocument = createServerFn({ method: "POST" }).middleware([req
   });
 function blockedHost(host: string) {
   const h = host.toLowerCase().replace(/^\[|\]$/g, "");
-  return h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal") || h.endsWith(".local") || /^(0|10|127|169\.254|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(h) || /^\d+$/.test(h) || h.includes(":");
+  return h === "localhost" || h === "metadata" || h.endsWith(".metadata") || h.endsWith(".corp") || h.endsWith(".lan") || h.endsWith(".home") || !h.includes(".") || /^(100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])|198\.1[89]|22[4-9]|2[3-5]\d)\./.test(h) || h.endsWith(".localhost") || h.endsWith(".internal") || h.endsWith(".local") || /^(0|10|127|169\.254|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(h) || /^\d+$/.test(h) || h.includes(":");
 }
 function htmlToText(html: string) {
   return html
@@ -40,11 +40,20 @@ export const importDocumentFromUrl = createServerFn({ method: "POST" }).middlewa
   .handler(async ({ data, context }) => {
     let u: URL;
     try { u = new URL(data.url); } catch { throw new Error("Link inválido."); }
-    if (!["http:", "https:"].includes(u.protocol) || blockedHost(u.hostname)) throw new Error("Use um link público de site oficial.");
-    let res: Response;
-    try {
-      res = await fetch(u.toString(), { redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 SapiensStudy", Accept: "text/html,text/plain" }, signal: AbortSignal.timeout(15000) });
-    } catch { throw new Error("Não foi possível acessar o link."); }
+    const allowed = (x: URL) => ["http:", "https:"].includes(x.protocol) && !x.username && !x.password && (x.port === "" || x.port === "80" || x.port === "443") && !blockedHost(x.hostname);
+    if (!allowed(u)) throw new Error("Use um link público de site oficial.");
+    let res: Response | undefined;
+    for (let hop = 0; hop <= 3; hop++) {
+      try {
+        res = await fetch(u.toString(), { redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 SapiensStudy", Accept: "text/html,text/plain" }, signal: AbortSignal.timeout(15000) });
+      } catch { throw new Error("Não foi possível acessar o link."); }
+      const loc = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (!loc) break;
+      if (hop === 3) throw new Error("O link redireciona vezes demais.");
+      try { u = new URL(loc, u); } catch { throw new Error("Redirecionamento inválido."); }
+      if (!allowed(u)) throw new Error("O link redireciona para um endereço não permitido.");
+    }
+    if (!res) throw new Error("Não foi possível acessar o link.");
     if (!res.ok) throw new Error(`O site respondeu com erro (${res.status}).`);
     const type = res.headers.get("content-type") ?? "";
     if (!/text\/html|text\/plain|xhtml/i.test(type)) throw new Error("O link precisa abrir uma página de texto (para PDF, use o envio de arquivo).");

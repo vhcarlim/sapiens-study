@@ -204,6 +204,13 @@
       "when": 1795283606003,
       "tag": "0028_ai_unlimited_entitlement",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1795285705615,
+      "tag": "0029_harden_rewards_reports_roles",
+      "breakpoints": true
     }
   ]
 }
