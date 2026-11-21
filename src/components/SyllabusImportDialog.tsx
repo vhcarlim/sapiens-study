@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { extractSyllabus, type SyllabusSubject } from "@/lib/syllabus.functions";
+import { extractSyllabus, type SyllabusSubject, type SyllabusLaw } from "@/lib/syllabus.functions";
 import { mergeTopics } from "@/lib/syllabus";
+import { importDocumentFromUrl } from "@/lib/documents.functions";
 import { selectSyllabusPages } from "@/lib/syllabus-pages";
 import type { Skill } from "@/lib/data";
 
@@ -31,6 +32,8 @@ function toBase64(file: File) {
 export function SyllabusImportDialog({ trackId, skills }: { trackId: string; skills: Skill[] }) {
   const qc = useQueryClient();
   const extract = useServerFn(extractSyllabus);
+  const fromUrl = useServerFn(importDocumentFromUrl);
+  const [laws, setLaws] = useState<(SyllabusLaw & { on: boolean })[]>([]);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [role, setRole] = useState("");
@@ -41,7 +44,7 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
 
   function reset(o: boolean) {
     setOpen(o);
-    if (!o) { setText(""); setFile(null); setRows(null); setStatus(""); }
+    if (!o) { setText(""); setFile(null); setRows(null); setLaws([]); setStatus(""); }
   }
 
   async function read() {
@@ -68,8 +71,9 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
       if (text.trim()) parts.push(text.trim());
       if (parts.length) payload.text = parts.join("\n\n");
       if (!payload.file) setStatus((s) => s || "Analisando o conteúdo…");
-      const { subjects } = await extract({ data: payload });
+      const { subjects, laws: found } = await extract({ data: payload });
       setRows(subjects.map((s) => ({ ...s, on: true })));
+      setLaws(found.map((l) => ({ ...l, on: !!l.url })));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao ler o edital");
     }
@@ -94,7 +98,13 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
           created++;
         }
       }
-      toast.success(`${created} competência(s) criada(s), ${updated} atualizada(s)`);
+      let lawsOk = 0; const lawsFail: string[] = [];
+      for (const l of laws.filter((x) => x.on && x.url)) {
+        try { await fromUrl({ data: { trackId, url: l.url, name: l.name } }); lawsOk++; } catch { lawsFail.push(l.name); }
+      }
+      if (lawsOk) qc.invalidateQueries({ queryKey: ["documents", trackId] });
+      if (lawsFail.length) toast.warning(`Não consegui baixar: ${lawsFail.join(", ")}. Adicione pelo link em Fontes ou na Arena.`);
+      toast.success(`${created} competência(s) criada(s), ${updated} atualizada(s)${lawsOk ? `, ${lawsOk} lei(s) salva(s)` : ""}`);
       qc.invalidateQueries({ queryKey: ["skills"] });
       reset(false);
     } catch {
@@ -142,6 +152,19 @@ export function SyllabusImportDialog({ trackId, skills }: { trackId: string; ski
                   </ol>
                 </div>
               ))}
+              {laws.length > 0 && (
+                <div className="space-y-2 rounded-lg border border-border p-3">
+                  <p className="text-sm font-medium">Leis e normativos identificados no edital</p>
+                  <p className="text-xs text-muted-foreground">Marque as que quer guardar como material da trilha (usadas na Arena em "Meus Documentos / Leis"). Corrija ou cole o link oficial quando faltar.</p>
+                  {laws.map((l, i) => (
+                    <div key={i} className="flex flex-wrap items-center gap-2 text-sm">
+                      <Checkbox checked={l.on} disabled={!l.url} onCheckedChange={(v) => setLaws(laws.map((x, j) => j === i ? { ...x, on: !!v } : x))} aria-label={`Salvar ${l.name}`} />
+                      <span className="min-w-0 flex-1">{l.name}{l.subject && <span className="text-xs text-muted-foreground"> · {l.subject}</span>}</span>
+                      <Input className="h-8 sm:w-72" type="url" placeholder="Link oficial" value={l.url} maxLength={500} onChange={(e) => { const url = e.target.value.trim(); setLaws(laws.map((x, j) => j === i ? { ...x, url, on: /^https?:\/\/\S+/.test(url) } : x)); }} />
+                    </div>
+                  ))}
+                </div>
+              )}
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setRows(null)}>Voltar</Button>
                 <Button onClick={save} disabled={busy || !rows.some((r) => r.on)}>{busy ? "Salvando…" : "Criar competências"}</Button>

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { FileText, Loader2, Trash2, Upload } from "lucide-react";
+import { FileText, Link2, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { listDocuments, saveDocument, deleteDocument } from "@/lib/documents.functions";
+import { listDocuments, saveDocument, deleteDocument, importDocumentFromUrl } from "@/lib/documents.functions";
 import { readPdfPages } from "@/lib/pdf-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sourcesQuery } from "@/lib/data";
 export function DocumentMaterials({ trackId, selected, onSelect }: { trackId: string; selected?: string[]; onSelect?: (ids: string[]) => void }) {
-  const list = useServerFn(listDocuments), save = useServerFn(saveDocument), remove = useServerFn(deleteDocument);
+  const list = useServerFn(listDocuments), save = useServerFn(saveDocument), remove = useServerFn(deleteDocument), fromUrl = useServerFn(importDocumentFromUrl);
+  const [url, setUrl] = useState("");
   const qc = useQueryClient();
   const { data: docs = [], error } = useQuery({ queryKey: ["documents", trackId], queryFn: () => list({ data: { trackId } }) });
   const { data: sources = [] } = useQuery(sourcesQuery(trackId));
@@ -43,6 +44,16 @@ export function DocumentMaterials({ trackId, selected, onSelect }: { trackId: st
     } catch (e) { setFailure(e instanceof Error ? e.message : "Não foi possível salvar."); }
     finally { setBusy(false); }
   }
+  async function importUrl() {
+    setBusy(true); setFailure(null);
+    try {
+      const doc = await fromUrl({ data: { trackId, url: url.trim() } });
+      await qc.invalidateQueries({ queryKey: ["documents", trackId] });
+      if (onSelect) onSelect([...(selected ?? []), doc.id].slice(0, 10));
+      setUrl(""); toast.success(`"${doc.name}" salvo nesta trilha.`);
+    } catch (e) { setFailure(e instanceof Error ? e.message : "Não foi possível importar o link."); }
+    finally { setBusy(false); }
+  }
   return <section className="space-y-4">
     <div className="flex items-center gap-2"><FileText className="size-4 text-track-accent" /><h2 className="font-medium">Leis e materiais da trilha</h2></div>
     <p className="text-xs text-muted-foreground">Seus documentos e questões baseadas neles permanecem privados. PDF com texto ou TXT.</p>
@@ -54,6 +65,8 @@ export function DocumentMaterials({ trackId, selected, onSelect }: { trackId: st
     </li>)}</ul>
     <details className="border-b pb-3" open={!docs.length || undefined}><summary className="cursor-pointer text-sm font-medium">Adicionar material</summary>
       <div className="mt-3 space-y-3">
+        <div className="flex gap-2"><Link2 className="mt-2.5 size-4 shrink-0" /><Input aria-label="Link da lei" type="url" placeholder="Cole o link oficial (ex.: planalto.gov.br)" value={url} maxLength={500} disabled={busy} onChange={(e) => setUrl(e.target.value)} /><Button size="sm" className="mt-0.5" disabled={busy || !/^https?:\/\/\S+\.\S+/.test(url.trim())} onClick={() => void importUrl()}>Importar link</Button></div>
+        <p className="text-xs text-muted-foreground">Ou envie um arquivo / cole o texto:</p>
         <label className="flex items-center gap-2 text-sm"><Upload className="size-4" /><Input aria-label="Enviar PDF ou TXT" type="file" accept=".pdf,.txt,application/pdf,text/plain" disabled={busy} onChange={(e) => void upload(e.target.files?.[0])} /></label>
         <Input aria-label="Nome do documento" placeholder="Nome da lei ou material" value={name} maxLength={200} onChange={(e) => setName(e.target.value)} />
         <Textarea aria-label="Texto do material" placeholder="Cole o texto da lei ou material" value={content} maxLength={500000} onChange={(e) => setContent(e.target.value)} className="min-h-28" />

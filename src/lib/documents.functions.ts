@@ -21,3 +21,44 @@ export const deleteDocument = createServerFn({ method: "POST" }).middleware([req
     if (error) throw new Error("Não foi possível excluir o material.");
     return { ok: true };
   });
+function blockedHost(host: string) {
+  const h = host.toLowerCase().replace(/^\[|\]$/g, "");
+  return h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal") || h.endsWith(".local") || /^(0|10|127|169\.254|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(h) || /^\d+$/.test(h) || h.includes(":");
+}
+function htmlToText(html: string) {
+  return html
+    .replace(/<(script|style|noscript|head|nav|footer|svg)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<strike[\s\S]*?<\/strike>/gi, " ")
+    .replace(/<(br|\/p|\/div|\/h\d|\/li|\/tr)[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
+}
+/** Fetches a public law/material page, keeps its text and stores it as a private track document. */
+export const importDocumentFromUrl = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => trackInput.extend({ url: z.string().trim().url().max(500), name: z.string().trim().max(200).optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    let u: URL;
+    try { u = new URL(data.url); } catch { throw new Error("Link inválido."); }
+    if (!["http:", "https:"].includes(u.protocol) || blockedHost(u.hostname)) throw new Error("Use um link público de site oficial.");
+    let res: Response;
+    try {
+      res = await fetch(u.toString(), { redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 SapiensStudy", Accept: "text/html,text/plain" }, signal: AbortSignal.timeout(15000) });
+    } catch { throw new Error("Não foi possível acessar o link."); }
+    if (!res.ok) throw new Error(`O site respondeu com erro (${res.status}).`);
+    const type = res.headers.get("content-type") ?? "";
+    if (!/text\/html|text\/plain|xhtml/i.test(type)) throw new Error("O link precisa abrir uma página de texto (para PDF, use o envio de arquivo).");
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > 6_000_000) throw new Error("Página grande demais.");
+    let charset = /charset=([\w-]+)/i.exec(type)?.[1];
+    if (!charset) charset = /<meta[^>]+charset=["']?([\w-]+)/i.exec(new TextDecoder("latin1").decode(buf.slice(0, 4000)))?.[1];
+    let raw: string;
+    try { raw = new TextDecoder(charset || "utf-8").decode(buf); } catch { raw = new TextDecoder("utf-8").decode(buf); }
+    const title = htmlToText(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(raw)?.[1] ?? "");
+    const content = (/html/i.test(type) ? htmlToText(raw) : raw.trim()).slice(0, 500000);
+    if (content.length < 200) throw new Error("A página não tem texto suficiente para usar como material.");
+    const name = (data.name || title || u.hostname).slice(0, 200);
+    const { data: doc, error } = await context.supabase.from("source_documents").insert({ user_id: context.userId, track_id: data.trackId, source_id: null, name, content }).select("id,name").single();
+    if (error || !doc) throw new Error("Não foi possível guardar o material nesta trilha.");
+    return doc;
+  });
