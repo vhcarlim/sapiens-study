@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 /** Built-in AI calls allowed per São Paulo day, by plan. Own-key calls never count. */
-export const DAILY_AI_LIMITS = { free: 20, basico: 200, avancado: 800 } as const;
+export const DAILY_AI_LIMITS = { free: 20, basico: 200, avancado: 800, ilimitado: Infinity } as const;
 export type AIPlan = keyof typeof DAILY_AI_LIMITS;
-export const PLAN_NAMES: Record<AIPlan, string> = { free: "Gratuito", basico: "Básico", avancado: "Avançado" };
+export const PLAN_NAMES: Record<AIPlan, string> = { free: "Gratuito", basico: "Básico", avancado: "Avançado", ilimitado: "Sem limite" };
 
 export function dailyLimit(plan: string | null | undefined) {
   return DAILY_AI_LIMITS[(plan ?? "free") as AIPlan] ?? DAILY_AI_LIMITS.free;

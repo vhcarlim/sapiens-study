@@ -9,6 +9,11 @@ describe("cota diária de IA", () => {
     expect(quotaExceeded("free", 20)).toBe(true);
   });
   it("plano desconhecido cai no gratuito", () => expect(dailyLimit("xyz")).toBe(20));
+  it("liberação individual não bloqueia uso diário elevado", () => {
+    expect(dailyLimit("ilimitado")).toBe(Infinity);
+    expect(quotaExceeded("ilimitado", 1000000)).toBe(false);
+    expect(quotaExceeded("free", 20)).toBe(true);
+  });
   it("planos pagos têm limites maiores", () => { expect(dailyLimit("basico")).toBe(200); expect(dailyLimit("avancado")).toBe(800); });
 });
 
@@ -25,7 +30,8 @@ describe("chave própria (Gemini/Claude)", () => {
     expect(out.response_format).toBeTruthy();
   });
   it("traduz o streaming em deltas de texto e uso final", async () => {
-    const src = new Response('data: {"choices":[{"delta":{"content":"Olá"}}]}\n\ndata: {"choices":[],"usage":{"prompt_tokens":5,"completion_tokens":2}}\n\ndata: [DONE]\n\n').body!;
+    const src = new Response('data: {"choices":[{"delta":{"content":"Olá"}}]}\n\ndata: {"choices":[],"usage":{"prompt_tokens":5,"completion_tokens":2}}\n\ndata: [DONE]\n\n').body;
+    if (!src) throw new Error("Missing response body");
     const text = await new Response(chatToResponsesStream(src)).text();
     expect(text).toContain('"response.output_text.delta","delta":"Olá"');
     expect(text).toContain('"input_tokens":5');

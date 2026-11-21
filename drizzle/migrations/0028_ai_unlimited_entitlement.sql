@@ -1,0 +1,2 @@
+ALTER TABLE public.ai_entitlements DROP CONSTRAINT ai_entitlements_plan_check;
+ALTER TABLE public.ai_entitlements ADD CONSTRAINT ai_entitlements_plan_check CHECK (plan IN ('free','basico','avancado','ilimitado'));

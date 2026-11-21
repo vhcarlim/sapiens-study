@@ -28,6 +28,7 @@ export function QuotaLine() {
   if (!data) return null;
   if (data.byok_provider) return <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><KeyRound className="size-3.5 text-primary" />Usando sua chave {BYOK_PROVIDERS.find(p => p.id === data.byok_provider)?.name} · sem limite diário</p>;
   const limit = dailyLimit(data.plan);
+  if (!Number.isFinite(limit)) return <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="size-3.5" />IA do site · sem limite diário · {data.used} usos hoje</p>;
   const left = Math.max(0, limit - data.used);
   return <p className={`flex items-center gap-1.5 text-xs ${left === 0 ? "text-destructive" : "text-muted-foreground"}`}><Zap className="size-3.5" />Plano {PLAN_NAMES[data.plan]}: {left} de {limit} usos de IA restantes hoje</p>;
 }
@@ -38,7 +39,7 @@ export function OwnKeyPanel() {
   const save = useServerFn(saveOwnAIKey);
   const remove = useServerFn(removeOwnAIKey);
   const [provider, setProvider] = useState<BYOKProvider>("openai");
-  const info = BYOK_PROVIDERS.find(p => p.id === provider)!;
+  const info = BYOK_PROVIDERS.find(p => p.id === provider) ?? BYOK_PROVIDERS[0];
   const [model, setModel] = useState<string>(info.defaultModel);
   const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,7 +66,7 @@ export function OwnKeyPanel() {
       <p className="text-xs text-muted-foreground">Use uma chave de API paga por você para estudar sem limite diário. Assinaturas como ChatGPT Plus ou Claude Pro não geram chave — crie uma no painel de desenvolvedor do provedor.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5"><Label>Provedor</Label>
-          <Select value={provider} onValueChange={(v) => { const p = v as BYOKProvider; setProvider(p); setModel(BYOK_PROVIDERS.find(x => x.id === p)!.defaultModel); }}>
+          <Select value={provider} onValueChange={(v) => { const selected = BYOK_PROVIDERS.find(x => x.id === v); if (!selected) return; setProvider(selected.id); setModel(selected.defaultModel); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{BYOK_PROVIDERS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
           </Select></div>
