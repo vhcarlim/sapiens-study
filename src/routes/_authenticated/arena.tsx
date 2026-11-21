@@ -85,6 +85,38 @@ function Arena() {
   const [now, setNow] = useState(Date.now());
   useEffect(() => { if (!startedAt) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [startedAt]);
 
+  // Persist the running session so an accidental back/reload doesn't lose time or rounds.
+  const sessionKey = `sapiens:arena-session:${trackId}`;
+  const restored = useRef(false);
+  useEffect(() => {
+    restored.current = false;
+    try {
+      const raw = localStorage.getItem(sessionKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { startedAt: number; rounds: Round[]; open: typeof open; skillId: string; topic: string; mode: "official" | "ai"; generation: "quick" | "rag" };
+        if (saved.startedAt && Date.now() - saved.startedAt < 12 * 3600_000) {
+          setStartedAt(saved.startedAt); setRounds(saved.rounds ?? []); setOpen(saved.open ?? null);
+          setSkillId(saved.skillId); setTopic(saved.topic); setMode(saved.mode); setGeneration(saved.generation);
+          toast.success("Sessão da Arena retomada — o tempo continuou contando.");
+        } else localStorage.removeItem(sessionKey);
+      }
+    } catch { /* ignore */ }
+    restored.current = true;
+  }, [sessionKey]);
+  useEffect(() => {
+    if (!restored.current) return;
+    try {
+      if (startedAt && !summary) localStorage.setItem(sessionKey, JSON.stringify({ startedAt, rounds, open, skillId, topic, mode, generation }));
+      else localStorage.removeItem(sessionKey);
+    } catch { /* ignore */ }
+  }, [sessionKey, startedAt, rounds, open, skillId, topic, mode, generation, summary]);
+  useEffect(() => {
+    if (!startedAt || summary) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [startedAt, summary]);
+
   const ctx = { trackId, skillId, topic };
   const current = rounds.at(-1);
   const prefsKey = `sapiens:arena-prefs:${trackId}`;
