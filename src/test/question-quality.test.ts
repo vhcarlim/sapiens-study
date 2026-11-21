@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { afterFeedback, eligibleForPromotion } from "@/lib/question-quality";
-import { chunkDocument, retrieveChunks } from "@/lib/document-grounding";
+import { chunkDocument, retrieveChunks, validatedCitation } from "@/lib/document-grounding";
 const base = { source_origin: "ai_ephemeral" as const, likes_count: 2, reports_count: 0, quarantined: false };
 describe("Question provenance and quality", () => {
   it("promotes an AI question at three likes with no reports", () => {
@@ -26,6 +26,12 @@ describe("Question provenance and quality", () => {
   });
 });
 describe("Document retrieval without AI expense", () => {
+  it("accepts only literal citations from the selected document", () => {
+    const chunks = [{ ref: "Lei · Art. 5", text: "A licitação deve observar os princípios da legalidade e da impessoalidade." }];
+    expect(validatedCitation(chunks, 0, "os princípios da legalidade e da impessoalidade.")).toContain("Lei · Art. 5");
+    expect(validatedCitation(chunks, 0, "A licitação pode ignorar os princípios da legalidade.")).toBeNull();
+    expect(validatedCitation(chunks, 1, chunks[0]?.text ?? "")).toBeNull();
+  });
   it("retrieves only relevant bounded passages with article references", () => {
     const chunks = chunkDocument("Art. 1º A licitação observa princípios administrativos.\nArt. 2º O servidor possui direito a férias.");
     const found = retrieveChunks(chunks, "licitação");

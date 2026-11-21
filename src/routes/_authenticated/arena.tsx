@@ -17,7 +17,7 @@ import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data
 import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
 import { masteryQuery } from "@/lib/reviews";
 import { EXAM_BOARDS, groupTopics, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
-import { arenaDiscuss, arenaEvaluate, arenaMarkRepeated, arenaObjective, arenaOpen, arenaOfficialCount } from "@/lib/arena.functions";
+import { arenaDiscuss, arenaEvaluate, arenaMarkRepeated, arenaMarkAnswered, arenaObjective, arenaOpen, arenaOfficialCount } from "@/lib/arena.functions";
 import { DEFAULT_PREFS, DIFFICULTIES, QUESTION_STYLES, STYLE_KEYS, type ArenaPrefs, type Difficulty } from "@/lib/arena-prefs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +54,7 @@ function Arena() {
   const navigate = useNavigate();
   const objective = useServerFn(arenaObjective);
   const officialCount = useServerFn(arenaOfficialCount);
+  const markAnswered = useServerFn(arenaMarkAnswered);
   const [mode, setMode] = useState<"official" | "ai">("ai");
   const [generation, setGeneration] = useState<"quick" | "rag">("quick");
   const [year, setYear] = useState("");
@@ -224,7 +225,7 @@ function Arena() {
     {modePanel}
     <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
     {summaryDialog}
-    {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} onNext={() => { if (!loading) void nextObjective(); }} />}
+    {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => { if (r.picked && !current.picked && r.q.bankId) void markAnswered({ data: { questionId: r.q.bankId } }).catch(() => toast.error("Não foi possível registrar esta questão como respondida.")); setRounds((all) => [...all.slice(0, -1), r]); }} onNext={() => { if (!loading) void nextObjective(); }} />}
     {!open && current && !current.picked && <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[0.6875rem] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p><Button variant="ghost" size="sm" disabled={!!loading} onClick={() => void markRepeated()}><Repeat className="size-4" />Essa já vi / parecida</Button></div>}
     {!open && current?.picked && <QuestionFeedback key={current.q.bankId ?? rounds.length} q={current.q} busy={!!loading} onCorrect={(id) => void nextObjective(false, id)} />}
     {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={() => void nextObjective()}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}

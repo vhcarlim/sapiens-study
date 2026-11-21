@@ -41,4 +41,14 @@ describe("tracked AI request", () => {
     await expect(createTrackedAiFetch({ userId: "account-1", supabase: client }, "arena_discuss", upstream as unknown as typeof fetch)).rejects.toThrow(/Limite diário/);
     expect(upstream).not.toHaveBeenCalled();
   });
+  it("sends gateway calls through the SDK transport while preserving quota and usage tracking", async () => {
+    const providerFetch = vi.fn();
+    const gateway = vi.fn(async () => new Response('data: {"type":"response.completed","response":{"usage":{"input_tokens":3,"output_tokens":4}}}\n\n'));
+    const tracked = await createTrackedAiFetch({ userId: "account-1", supabase: client }, "arena_objective", providerFetch as unknown as typeof fetch, { gateway });
+    const res = await tracked("https://ai.gateway.lovable.dev/v1/responses", { body: "{}" });
+    await res.text();
+    expect(gateway).toHaveBeenCalledOnce();
+    expect(providerFetch).not.toHaveBeenCalled();
+    expect(update.mock.calls[0]?.[0]).toMatchObject({ input_tokens: 3, output_tokens: 4, status: "completed" });
+  });
 });

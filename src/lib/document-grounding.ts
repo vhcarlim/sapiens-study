@@ -18,3 +18,9 @@ export function retrieveChunks(chunks: DocumentChunk[], topic: string, max = 5):
   return chunks.map((chunk, i) => ({ chunk, i, score: words(`${chunk.ref} ${chunk.text}`).reduce((n, w) => n + Number(terms.has(w)), 0) }))
     .filter((x) => x.score > 0).sort((a, b) => b.score - a.score || a.i - b.i).slice(0, max).map((x) => x.chunk);
 }
+export function validatedCitation(chunks: DocumentChunk[], index: number, quote: string): string | null {
+  const chunk = chunks[index];
+  const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
+  if (!chunk || normalize(quote).length < 30 || !normalize(chunk.text).includes(normalize(quote))) return null;
+  return `${chunk.ref}\n“${normalize(quote)}”`;
+}
