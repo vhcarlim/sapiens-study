@@ -36,17 +36,17 @@ export const Route = createFileRoute("/api/public/question-bank")({
           const payload = toPayload(q.data);
           try {
             const { data: existing, error } = await supabaseAdmin.from("question_bank").select("id,payload")
-              .eq("board_key", keys.board_key).eq("subject_key", keys.subject_key).limit(5000);
+              .eq("source_origin", "official").eq("board_key", keys.board_key).eq("subject_key", keys.subject_key).limit(5000);
             if (error) throw error;
             const d = decide(payload, (existing ?? []).map((r) => ({ id: r.id, payload: r.payload as never })));
             if (d.action === "skip") { results.push({ index, status: "skipped_duplicate", id: d.id }); continue; }
             if (d.action === "replace") {
-              const { error: e } = await supabaseAdmin.from("question_bank").update({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", origin_label, status: "pending" }).eq("id", d.id);
+              const { error: e } = await supabaseAdmin.from("question_bank").update({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", source_origin: "official", grounding_type: "exam_official", exam_year: q.data.origin.year ?? null, origin_label, status: "pending" }).eq("id", d.id);
               if (e) throw e;
               results.push({ index, status: "replaced", id: d.id });
               continue;
             }
-            const { data: row, error: e } = await supabaseAdmin.from("question_bank").insert({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", created_by: null, origin_label, status: "pending" }).select("id").single();
+            const { data: row, error: e } = await supabaseAdmin.from("question_bank").insert({ ...keys, fingerprint: payload.fingerprint, payload: payload as never, source: "official_exam", source_origin: "official", grounding_type: "exam_official", exam_year: q.data.origin.year ?? null, created_by: null, origin_label, status: "pending" }).select("id").single();
             if (e) throw e;
             results.push({ index, status: "inserted", id: row.id });
           } catch (e) {

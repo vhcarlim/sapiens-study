@@ -28,3 +28,6 @@
 - [x] MCP: acesso OAuth, consultas de trilhas/competências/caderno e consentimento preservado no login; catálogo extraído, acessos anônimo e sessão comum bloqueados.
 - [x] WebMCP: contadores do caderno e troca de visualização; navegação e persistência verificadas em computador/celular (navegador de teste sem WebMCP).
 - [ ] MCP: verificar aprovação/cancelamento e leitura externa após republicação; serviço de autorização rejeita origem localhost.
+- [ ] Arena: separar origem oficial/IA, votos únicos, promoção e quarentena imediata.
+- [ ] Arena: modos real/IA, filtros e fontes documentais privadas com recuperação de trechos.
+- [ ] Arena: selos, correção sob demanda, curadoria e testes dos fluxos.

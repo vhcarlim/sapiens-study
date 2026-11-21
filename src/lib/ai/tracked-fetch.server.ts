@@ -6,7 +6,7 @@ import { dailyLimit, quotaExceeded, type BYOKProvider } from "@/lib/ai-quota";
 export type AIIdentity = { userId: string; supabase: SupabaseClient<Database> };
 
 /** Identity is supplied only after the caller's server authentication. Logs contain no prompts. */
-export async function createTrackedAiFetch(identity: AIIdentity, feature: string, upstream: typeof fetch = fetch, opts: { simpleStream?: boolean } = {}): Promise<typeof fetch> {
+export async function createTrackedAiFetch(identity: AIIdentity, feature: string, upstream: typeof fetch = fetch, opts: { simpleStream?: boolean; gateway?: typeof fetch } = {}): Promise<typeof fetch> {
   const { data: prefs, error } = await identity.supabase.from("ai_preferences").select("study_model,study_effort,document_model,document_effort,monthly_token_goal").eq("user_id", identity.userId).maybeSingle();
   if (error) throw new Error("Não foi possível consultar suas preferências de IA.");
   const choice = resolveAIChoice(prefs, feature);
@@ -42,7 +42,7 @@ export async function createTrackedAiFetch(identity: AIIdentity, feature: string
     };
     try {
       const routed = usesOwnKey && ownKey ? byok.routeOwnKey(ownKey, body, !!opts.simpleStream, upstream, init?.signal) : null;
-      const response = await (routed ?? upstream(input, { ...init, body: JSON.stringify(body) }));
+      const response = await (routed ?? (opts.gateway ?? upstream)(input, { ...init, body: JSON.stringify(body) }));
       if (routed && (response.status === 401 || response.status === 403)) { status = "failed"; await finish(); throw new Error("Sua chave de IA foi recusada pelo provedor. Confira-a em Configurações › IA."); }
       if (routed && response.status === 429) { status = "failed"; await finish(); throw new Error("Sua chave de IA atingiu o limite do provedor. Tente mais tarde ou remova a chave para usar a IA do site."); }
       runId = response.headers.get("X-Lovable-AIG-Run-ID");

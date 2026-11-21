@@ -359,12 +359,20 @@ export type Database = {
           board_key: string
           created_at: string
           created_by: string | null
+          document_name: string
+          exam_year: number | null
           fingerprint: string
+          grounding_chunks: Json
+          grounding_type: string
           id: string
+          likes_count: number
           origin_label: string
           payload: Json
+          quarantined: boolean
           report_count: number
+          reports_count: number
           source: string
+          source_origin: string
           status: string
           subject_key: string
           topic_key: string
@@ -373,12 +381,20 @@ export type Database = {
           board_key: string
           created_at?: string
           created_by?: string | null
+          document_name?: string
+          exam_year?: number | null
           fingerprint?: string
+          grounding_chunks?: Json
+          grounding_type?: string
           id?: string
+          likes_count?: number
           origin_label?: string
           payload: Json
+          quarantined?: boolean
           report_count?: number
+          reports_count?: number
           source?: string
+          source_origin?: string
           status?: string
           subject_key: string
           topic_key: string
@@ -387,12 +403,20 @@ export type Database = {
           board_key?: string
           created_at?: string
           created_by?: string | null
+          document_name?: string
+          exam_year?: number | null
           fingerprint?: string
+          grounding_chunks?: Json
+          grounding_type?: string
           id?: string
+          likes_count?: number
           origin_label?: string
           payload?: Json
+          quarantined?: boolean
           report_count?: number
+          reports_count?: number
           source?: string
+          source_origin?: string
           status?: string
           subject_key?: string
           topic_key?: string
@@ -418,6 +442,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "question_bank_seen_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          report_details: string | null
+          report_reason: string | null
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          report_details?: string | null
+          report_reason?: string | null
+          user_id?: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          report_details?: string | null
+          report_reason?: string | null
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_feedback_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "question_bank"
@@ -688,6 +750,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_tracks"
             referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      source_documents: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          name: string
+          source_id: string | null
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          source_id?: string | null
+          track_id: string
+          user_id?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          source_id?: string | null
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_documents_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_documents_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "study_tracks"
+            referencedColumns: ["id"]
           },
         ]
       }

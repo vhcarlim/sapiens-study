@@ -1,10 +1,15 @@
 import { AIControls } from "@/components/AIControls";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { DocumentMaterials } from "@/components/DocumentMaterials";
+import { QuestionFeedback } from "@/components/QuestionFeedback";
+import type { QuestionMeta } from "@/lib/question-quality";
+import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowRight, Check, Flag, Loader2, Repeat, SlidersHorizontal, Swords, Timer, Trophy, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Repeat, SlidersHorizontal, Swords, Timer, Trophy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTrack } from "@/lib/tracks";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,8 +17,7 @@ import { activitiesQuery, saveActivity, skillsQuery, todayStr } from "@/lib/data
 import { computeExamWeights, examBlocksQuery, skillRulesQuery } from "@/lib/exam-rules";
 import { masteryQuery } from "@/lib/reviews";
 import { EXAM_BOARDS, groupTopics, recommendTopic, sessionMinutes, type ArenaObjective, type ArenaOpen, type ArenaVerdict } from "@/lib/arena";
-import { arenaDiscuss, arenaEvaluate, arenaMarkRepeated, arenaObjective, arenaOpen, arenaReportQuestion } from "@/lib/arena.functions";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { arenaDiscuss, arenaEvaluate, arenaMarkRepeated, arenaObjective, arenaOpen, arenaOfficialCount } from "@/lib/arena.functions";
 import { DEFAULT_PREFS, DIFFICULTIES, QUESTION_STYLES, STYLE_KEYS, type ArenaPrefs, type Difficulty } from "@/lib/arena-prefs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +31,7 @@ import { cn } from "@/lib/utils";
 import { distillRound, saveLearnings } from "@/lib/learnings";
 
 export const Route = createFileRoute("/_authenticated/arena")({
-  validateSearch: z.object({ skill: z.string().optional(), topic: z.string().optional() }),
+  validateSearch: z.object({ skill: z.string().optional(), topic: z.string().optional(), question: z.string().uuid().optional() }),
   head: () => ({ meta: [
     { title: "Arena de estudo ativo · Sapiens Study" },
     { name: "description", content: "Estude um tópico do edital com questões no padrão da banca, debate de alternativas e correção da sua explicação." },
@@ -40,7 +44,7 @@ export const Route = createFileRoute("/_authenticated/arena")({
 });
 
 type Chat = { role: "user" | "assistant"; content: string };
-type Round = { q: ArenaObjective; picked: string | null; chat: Chat[] };
+type Round = { q: ArenaObjective & Partial<QuestionMeta>; picked: string | null; chat: Chat[] };
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : "Algo deu errado.");
 
 function Arena() {
@@ -48,6 +52,13 @@ function Arena() {
   const search = Route.useSearch();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const objective = useServerFn(arenaObjective);
+  const officialCount = useServerFn(arenaOfficialCount);
+  const [mode, setMode] = useState<"official" | "ai">("ai");
+  const [generation, setGeneration] = useState<"quick" | "rag">("quick");
+  const [year, setYear] = useState("");
+  const [documentIds, setDocumentIds] = useState<string[]>([]);
+  const [sharedLoaded, setSharedLoaded] = useState(false);
   const { data: skills = [] } = useQuery(skillsQuery(trackId));
   const { data: acts = [] } = useQuery(activitiesQuery("approved", trackId));
   const withTopics = skills.filter((s) => s.topics?.length);
@@ -89,10 +100,29 @@ function Arena() {
     await qc.invalidateQueries({ queryKey: ["tracks"] });
   }
 
-  async function nextObjective(replaceLast = false) {
+  const filters = { mode, generation, documentIds, ...(year ? { year: Number(year) } : {}) };
+  const { data: realCount, error: countError } = useQuery({ queryKey: ["official-count", trackId, skillId, topic, track?.exam_board, year], queryFn: () => officialCount({ data: { ...ctx, ...filters } }), enabled: mode === "official" && !!skillId && !!topic });
+  const modePanel = <section className="space-y-4 border-y py-4">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Origem das questões">
+      <Button variant={mode === "official" ? "default" : "outline"} aria-pressed={mode === "official"} disabled={!!loading} onClick={() => setMode("official")}>Apenas questões reais</Button>
+      <Button variant={mode === "ai" ? "default" : "outline"} aria-pressed={mode === "ai"} disabled={!!loading} onClick={() => setMode("ai")}>Questões geradas por IA</Button>
+    </div>
+    {mode === "official" ? <div className="space-y-3">
+      <label className="flex flex-wrap items-center gap-2 text-sm">Ano da prova<Input aria-label="Ano da prova" className="w-32" type="number" min={1980} max={2100} placeholder="Todos" value={year} onChange={(e) => setYear(e.target.value)} /></label>
+      <p role="status" className="text-sm text-muted-foreground">{countError ? "Não foi possível consultar a disponibilidade." : realCount === undefined ? "Consultando questões reais…" : `${realCount} questão(ões) real(is) neste filtro.`}</p>
+      {realCount === 0 && <Button variant="outline" size="sm" onClick={() => setMode("ai")}>Alternar para questões geradas por IA<ArrowRight className="size-4" /></Button>}
+    </div> : <div className="space-y-4">
+      <Select value={generation} onValueChange={(v) => setGeneration(v === "rag" ? "rag" : "quick")}><SelectTrigger aria-label="Base da geração"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="quick">Modo Rápido</SelectItem><SelectItem value="rag">Baseado em Meus Documentos / Leis</SelectItem></SelectContent></Select>
+      {generation === "rag" && <DocumentMaterials key={trackId} trackId={trackId} selected={documentIds} onSelect={setDocumentIds} />}
+    </div>}
+  </section>;
+
+  async function nextObjective(replaceLast = false, correctionId?: string) {
     setLoading("Elaborando questão no padrão da banca…"); setFailure(null);
     try {
-      const q = await arenaObjective({ data: { ...ctx, ...genPrefs, avoid: rounds.slice(-20).map((r) => r.q.statement.slice(0, 500)) } });
+      const q = await objective({ data: { ...ctx, ...genPrefs, ...filters, ...(correctionId ? { mode: "ai" as const, correctionId } : {}), ...(search.question && !sharedLoaded && !correctionId ? { questionId: search.question } : {}), avoid: rounds.slice(-20).map((r) => r.q.statement.slice(0, 500)) } });
+      setSharedLoaded(true);
+      if (correctionId) setMode("ai");
       if (q.fromBank) toast.info("Questão do banco compartilhado — sem gastar IA.");
       setRounds((r) => [...(replaceLast ? r.slice(0, -1) : r), { q, picked: null, chat: [] }]);
       setStartedAt((s) => s ?? Date.now());
@@ -163,7 +193,8 @@ function Arena() {
   if (!startedAt) {
     return <div className="mx-auto max-w-2xl space-y-8">
       <header><p className="font-mono text-xs text-track-accent">ARENA DE ESTUDO ATIVO</p><h1 className="mt-1 text-3xl font-bold">Estude um tópico do edital</h1><p className="mt-2 text-muted-foreground">Questões no padrão da sua banca, debate de cada alternativa e correção da sua explicação. O tempo vira estudo registrado ao encerrar.</p><Button asChild variant="outline" size="sm" className="mt-4"><Link to="/provas">Provas anteriores e gabaritos<ArrowRight className="size-4" /></Link></Button></header>
-      <AIControls feature="arena_objective" contextChars={topic.length} busy={!!loading} />
+      {modePanel}
+      {mode === "ai" && <AIControls feature="arena_objective" contextChars={topic.length} busy={!!loading} />}
       {!withTopics.length ? <div className="border-l-2 border-track-accent bg-secondary/40 p-5"><p>Importe o conteúdo programático do edital para liberar a Arena.</p><Button asChild className="mt-3" variant="outline"><Link to="/skills">Ir para Competências</Link></Button></div> : <>
         {rec && <button type="button" onClick={() => { setSkillId(rec.skillId); setTopic(rec.topic); }} className={cn("w-full border-l-2 border-track-accent bg-secondary/40 p-5 text-left transition-colors hover:bg-secondary", skillId === rec.skillId && topic === rec.topic && "ring-1 ring-track-accent")}>
           <p className="font-mono text-xs text-track-accent">RECOMENDADO HOJE · {rec.reason === "novo" ? "AINDA NÃO ESTUDADO" : `ÚLTIMO ESTUDO EM ${rec.lastStudied?.split("-").reverse().join("/")}`}</p>
@@ -176,9 +207,9 @@ function Arena() {
             <Select value={track?.exam_board ?? ""} onValueChange={setBoard}><SelectTrigger><SelectValue placeholder="Selecione a banca" /></SelectTrigger><SelectContent>{EXAM_BOARDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent></Select></label>
         </div>
         {skill && <TopicPicker topics={skill.topics ?? []} value={topic} onPick={setTopic} />}
-        <PrefsPanel prefs={prefs} onChange={setPrefs} />
-        {failure && <p className="text-sm text-destructive">{failure}</p>}
-        <Button size="lg" disabled={!skill || !topic || !!loading} onClick={() => void nextObjective()}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
+        {mode === "ai" && <PrefsPanel prefs={prefs} onChange={setPrefs} />}
+        {failure && <div role="alert" className="space-y-2"><p className="text-sm text-destructive">{failure}</p>{mode === "official" && <Button size="sm" variant="outline" onClick={() => setMode("ai")}>Alternar para questões geradas por IA</Button>}</div>}
+        <Button size="lg" disabled={!skill || !topic || !!loading || (mode === "official" && realCount === 0) || (mode === "ai" && generation === "rag" && !documentIds.length)} onClick={() => void nextObjective()}>{loading ? <><Loader2 className="size-4 animate-spin" />{loading}</> : <><Swords className="size-4" />Entrar na Arena</>}</Button>
       </>}
     </div>;
   }
@@ -190,13 +221,14 @@ function Arena() {
       <div className="flex items-center gap-3"><span className="flex items-center gap-1.5 font-mono text-sm text-muted-foreground"><Timer className="size-4" />{String(Math.floor(elapsed / 60)).padStart(2, "0")}:{String(elapsed % 60).padStart(2, "0")}</span><Button variant="outline" size="sm" disabled={!!loading} onClick={finish}>Encerrar e registrar</Button></div>
     </header>
 
+    {modePanel}
     <AIControls feature={open ? "arena_evaluate" : "arena_objective"} contextChars={open ? open.answer.length + open.q.prompt.length : topic.length} busy={!!loading} />
     {summaryDialog}
     {!open && current && <ObjectiveCard key={rounds.length} index={rounds.length} round={current} ctx={ctx} onChange={(r) => setRounds((all) => [...all.slice(0, -1), r])} onNext={() => { if (!loading) void nextObjective(); }} />}
     {!open && current && !current.picked && <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-mono text-[0.6875rem] text-muted-foreground">Atalhos: tecle a letra da alternativa · Enter avança para a próxima questão</p><Button variant="ghost" size="sm" disabled={!!loading} onClick={() => void markRepeated()}><Repeat className="size-4" />Essa já vi / parecida</Button></div>}
-    {!open && current && <BankMeta q={current.q as ArenaObjective & { bankId?: string | null; origin?: string }} />}
+    {!open && current?.picked && <QuestionFeedback key={current.q.bankId ?? rounds.length} q={current.q} busy={!!loading} onCorrect={(id) => void nextObjective(false, id)} />}
     {!open && current?.picked && <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={!!loading} onClick={() => void nextObjective()}>Outra questão</Button><Button disabled={!!loading} onClick={goOpen}>Explicar com minhas palavras<ArrowRight className="size-4" /></Button></div>}
-    {!open && <PrefsPanel prefs={prefs} onChange={setPrefs} />}
+    {!open && mode === "ai" && <PrefsPanel prefs={prefs} onChange={setPrefs} />}
 
     {open && <section className="space-y-4">
       <p className="font-mono text-xs text-track-accent">DESAFIO DISCURSIVO</p>
@@ -207,7 +239,7 @@ function Arena() {
     </section>}
 
     {loading && <Shimmer>{loading}</Shimmer>}
-    {failure && <p className="text-sm text-destructive">{failure}</p>}
+    {failure && <div role="alert" className="space-y-2"><p className="text-sm text-destructive">{failure}</p>{mode === "official" && <Button variant="outline" size="sm" onClick={() => setMode("ai")}>Alternar para questões geradas por IA</Button>}</div>}
   </div>;
 }
 
@@ -243,7 +275,8 @@ function ObjectiveCard({ index, round, ctx, onChange, onNext }: { index: number;
   }
 
   return <section className="space-y-5">
-    <p className="font-mono text-xs text-muted-foreground">QUESTÃO {index}</p>
+    <div className="flex flex-wrap items-center gap-2"><p className="font-mono text-xs text-muted-foreground">QUESTÃO {index}</p><Badge variant="outline">{q.sourceOrigin === "official" ? "Questão Oficial" : q.groundingType === "user_rag" ? "IA • Baseada na sua Lei/Material (RAG)" : q.sourceOrigin === "ai_community" ? "IA • Validada pela Comunidade" : "IA • Gerada sob Demanda"}</Badge></div>
+    {(q.origin || q.documentName) && <p className="break-words text-xs text-muted-foreground">{q.origin || q.documentName}</p>}
     {q.context && <div className="border-l-2 border-border pl-4 text-sm text-muted-foreground"><MessageResponse>{q.context}</MessageResponse></div>}
     <MessageResponse>{q.statement}</MessageResponse>
     <div className={cn("grid gap-2", q.format === "certo_errado" && "grid-cols-2")}>
@@ -335,26 +368,3 @@ function PrefsPanel({ prefs, onChange }: { prefs: ArenaPrefs; onChange: (p: Aren
   </details>;
 }
 
-const REPORT_REASONS = ["Gabarito errado", "Explicação errada", "Desatualizada (lei mudou)", "Enunciado com erro ou incompleto"];
-
-/** Shows the official origin of a bank question and lets the student flag errors. */
-function BankMeta({ q }: { q: ArenaObjective & { bankId?: string | null; origin?: string } }) {
-  const [sent, setSent] = useState(false);
-  if (!q.bankId) return null;
-  async function report(reason: string) {
-    try {
-      const r = await arenaReportQuestion({ data: { questionId: q.bankId!, reason } });
-      setSent(true);
-      toast.success(r.already ? "Você já tinha reportado esta questão." : "Obrigado! A questão será revisada.");
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível reportar."); }
-  }
-  return <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-    <span className="font-mono">{q.origin ? `Questão oficial · ${q.origin}` : "Questão do banco compartilhado"}</span>
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" disabled={sent}><Flag className="size-4" />{sent ? "Reportada" : "Reportar erro"}</Button></DropdownMenuTrigger>
-      <DropdownMenuContent align="end"><DropdownMenuLabel>O que está errado?</DropdownMenuLabel>
-        {REPORT_REASONS.map((r) => <DropdownMenuItem key={r} onSelect={() => void report(r)}>{r}</DropdownMenuItem>)}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </div>;
-}

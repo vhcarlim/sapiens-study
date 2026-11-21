@@ -13,6 +13,7 @@ import { syncSource } from "@/lib/sync.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { DocumentMaterials } from "@/components/DocumentMaterials";
 
 export const Route = createFileRoute("/_authenticated/sources")({
   head: () => ({ meta: [{ title: "Fontes — Sapiens Study" }, { name: "description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:title", content: "Fontes — Sapiens Study" }, { property: "og:description", content: "Organize as fontes e plataformas da sua trilha de estudos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
@@ -55,6 +56,7 @@ function SourcesPage() {
           <SourceCard key={s.id} s={s} />
         ))}
       </div>
+      <DocumentMaterials key={trackId} trackId={trackId} />
       <form onSubmit={add} className="flex flex-wrap gap-2 rounded-lg border border-dashed p-4">
         <input
           type="color"

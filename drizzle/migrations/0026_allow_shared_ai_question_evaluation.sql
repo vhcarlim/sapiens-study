@@ -1,0 +1,2 @@
+DROP POLICY "quality questions readable" ON public.question_bank;
+CREATE POLICY "quality questions readable" ON public.question_bank FOR SELECT TO authenticated USING (public.has_role(auth.uid(),'admin') OR created_by = auth.uid() OR (NOT quarantined AND grounding_type <> 'user_rag' AND ((status='active' AND source_origin IN ('official','ai_community')) OR (status='pending' AND source_origin='ai_ephemeral'))));

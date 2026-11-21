@@ -23,13 +23,13 @@ export const Route = createFileRoute("/_authenticated/banco")({
 });
 
 type Status = "pending" | "active" | "disabled";
-type Row = { id: string; status: string; origin_label: string; subject_key: string; topic_key: string; board_key: string; report_count: number; source: string; payload: { statement?: string; answer?: string; options?: { letter: string; text: string }[]; explanations?: { letter: string; why: string }[] } };
+type Row = { id: string; status: string; source_origin: string; grounding_type: string; quarantined: boolean; likes_count: number; reports_count: number; origin_label: string; subject_key: string; topic_key: string; board_key: string; report_count: number; source: string; payload: { statement?: string; answer?: string; options?: { letter: string; text: string }[]; explanations?: { letter: string; why: string }[] } };
 const STATUS: Record<Status, string> = { pending: "Pendentes", active: "Ativas", disabled: "Desativadas" };
 
 const bankQuery = (status: Status) => ({
   queryKey: ["bank-admin", status],
   queryFn: async () => {
-    const { data, error } = await supabase.from("question_bank").select("id,status,origin_label,subject_key,topic_key,board_key,report_count,source,payload")
+    const { data, error } = await supabase.from("question_bank").select("id,status,origin_label,subject_key,topic_key,board_key,report_count,source,payload,source_origin,grounding_type,likes_count,reports_count,quarantined")
       .eq("status", status).order("report_count", { ascending: false }).order("created_at", { ascending: false }).limit(500);
     if (error) throw error;
     return data as unknown as Row[];
@@ -41,6 +41,7 @@ function BancoPage() {
   const { data: isAdmin, isLoading } = useQuery(isAdminQuery(user.id));
   const [status, setStatus] = useState<Status>("pending");
   const [q, setQ] = useState("");
+  const [originFilter, setOriginFilter] = useState("all");
   const [view, setView] = useState<Row | null>(null);
   const qc = useQueryClient();
   const { data: rows = [] } = useQuery({ ...bankQuery(status), enabled: !!isAdmin });
@@ -49,15 +50,16 @@ function BancoPage() {
     const t = q.trim().toLowerCase();
     const m = new Map<string, Row[]>();
     for (const r of rows) {
+      if (originFilter !== "all" && r.source_origin !== originFilter) continue;
       if (t && !`${r.origin_label} ${r.subject_key} ${r.topic_key} ${r.payload.statement ?? ""}`.toLowerCase().includes(t)) continue;
-      const k = r.origin_label || (r.source === "ai" ? "Geradas por IA" : "Sem origem");
+      const k = r.source_origin === "official" ? `Oficiais · ${r.origin_label || "Sem identificação"}` : r.grounding_type === "user_rag" ? "IA · Materiais privados" : r.source_origin === "ai_community" ? "IA · Comunidade" : "IA · Aguardando avaliação";
       m.set(k, [...(m.get(k) ?? []), r]);
     }
     return [...m.entries()];
-  }, [rows, q]);
+  }, [rows, q, originFilter]);
 
   async function setMany(ids: string[], next: Status) {
-    const { error } = await supabase.from("question_bank").update({ status: next, ...(next === "active" ? { report_count: 0 } : {}) }).in("id", ids);
+    const { error } = await supabase.from("question_bank").update({ status: next, quarantined: next === "disabled" ? true : next === "active" ? false : true }).in("id", ids);
     if (error) { toast.error("Não foi possível atualizar."); return; }
     toast.success(`${ids.length} questão(ões) ${next === "active" ? "ativada(s)" : next === "disabled" ? "desativada(s)" : "atualizada(s)"}.`);
     setView(null);
@@ -70,12 +72,13 @@ function BancoPage() {
   return <div className="space-y-6">
     <header className="space-y-1">
       <h1 className="flex items-center gap-2 font-serif text-3xl"><Database className="size-6 text-primary" />Banco de questões</h1>
-      <p className="text-sm text-muted-foreground">Questões importadas chegam pendentes. Confira e aprove por prova; só as ativas aparecem na Arena. Três denúncias de alunos desativam uma questão automaticamente.</p>
+      <p className="text-sm text-muted-foreground">Oficiais e IA são acervos separados. Um relato suspende a questão até revisão; aprovar uma questão de IA nunca a transforma em oficial.</p>
     </header>
     <div className="flex flex-wrap items-center gap-2">
       {(Object.keys(STATUS) as Status[]).map((s) => <Button key={s} size="sm" variant={s === status ? "default" : "outline"} onClick={() => setStatus(s)}>{STATUS[s]}</Button>)}
       <Input className="ml-auto max-w-xs" placeholder="Buscar prova, matéria, enunciado…" value={q} onChange={(e) => setQ(e.target.value)} />
     </div>
+    <div className="flex flex-wrap gap-2">{[["all", "Todas as origens"], ["official", "Oficiais"], ["ai_community", "IA · Comunidade"], ["ai_ephemeral", "IA · Novas"]].map(([value, label]) => <Button key={value} size="sm" variant={originFilter === value ? "secondary" : "ghost"} onClick={() => setOriginFilter(value ?? "all")}>{label}</Button>)}</div>
     {!groups.length && <p className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">Nada em “{STATUS[status]}”.</p>}
     {groups.map(([label, items]) => <section key={label} className="rounded-xl border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
@@ -89,7 +92,7 @@ function BancoPage() {
         {items.map((r) => <li key={r.id} className="flex items-start gap-3 p-3 text-sm">
           <div className="min-w-0 flex-1">
             <p className="line-clamp-2">{r.payload.statement}</p>
-            <div className="mt-1 flex flex-wrap gap-1.5"><Badge variant="secondary">{r.subject_key}</Badge><Badge variant="outline">{r.topic_key}</Badge>{r.report_count > 0 && <Badge variant="destructive">{r.report_count} denúncia(s)</Badge>}</div>
+            <div className="mt-1 flex flex-wrap gap-1.5"><Badge variant="secondary">{r.subject_key}</Badge><Badge variant="outline">{r.topic_key}</Badge><Badge variant="outline">{r.source_origin === "official" ? "Oficial" : "IA"} · {r.likes_count} curtida(s)</Badge>{r.quarantined && <Badge variant="destructive">Em quarentena</Badge>}{r.reports_count > 0 && <Badge variant="destructive">{r.reports_count} relato(s)</Badge>}</div>
           </div>
           <Button size="icon" variant="ghost" aria-label="Ver questão" onClick={() => setView(r)}><Eye className="size-4" /></Button>
         </li>)}
