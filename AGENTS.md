@@ -41,3 +41,4 @@
 - Track-owned source_documents provide bounded article chunks by lexical retrieval; Gateway SDK runs behind tracked transport, while BYOK uses provider fetch. Why: grounded questions with no embedding cost and preserved quotas/preferences.
 - MCP uses OAuth client-claim verification and caller-scoped RLS clients in `src/lib/mcp`; read-only tools avoid AI costs and generated transport routes remain plugin-owned.
 - OAuth login validates local return paths once and preserves consent through password, signup and social login; browser-local WebMCP tools stay in their owning screen with fail-open telemetry.
+- Domain contexts (tracks, practice, retention, progression, content, ai-quota, planning) expose public ports at `src/lib/contexts/<ctx>/index.ts`; import only those across contexts, reference aggregates by ID (boundary test). Why: DDD without risky moves.
