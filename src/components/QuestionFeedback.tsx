@@ -19,7 +19,7 @@ export function QuestionFeedback({ q, busy, onCorrect }: { q: Partial<QuestionMe
     const selected = REPORT_REASONS.find((r) => r === reason);
     if (!selected) return;
     setSending(true);
-    try { await report({ data: { questionId: id, reason: selected, details } }); setReported(true); setDialog(false); toast.success("Questão em quarentena até revisão."); }
+    try { await report({ data: { questionId: id, reason: selected, details } }); setReported(true); setDialog(false); toast.success("Obrigado! A denúncia foi enviada para a revisão da administração."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível relatar."); }
     finally { setSending(false); }
   }

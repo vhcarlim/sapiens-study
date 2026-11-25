@@ -211,6 +211,13 @@
       "when": 1795285705615,
       "tag": "0029_harden_rewards_reports_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795573807342,
+      "tag": "0030_feedback_counts_only",
+      "breakpoints": true
     }
   ]
 }

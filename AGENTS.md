@@ -37,7 +37,7 @@
 - `/caderno` (`study_learnings`) is filled by `distillRound` from Arena rounds at session end, no AI call.
 - AI cost control: `createTrackedAiFetch` enforces per-plan daily caps (`src/lib/ai-quota.ts`) and routes AES-encrypted own keys server-side; Arena serves the shared `question_bank` first.
 - Individual AI quota exemptions use the protected `ai_entitlements` unlimited plan, not roles or client overrides; usage tracking and provider billing remain active.
-- Official/AI provenance never crosses; token ingestion stays pending, Arena filters origin/topic/board/year and quarantine. Atomic unique feedback promotes AI at three likes/no reports and quarantines on one report; private RAG stays owner-only. Why: separate authenticity, quality and privacy.
+- Official/AI provenance never crosses; token ingestion stays pending, Arena filters origin/topic/board/year and quarantine. Unique likes/reports only count; only admins disable or promote questions (abuse-proof); private RAG stays owner-only. Why: separate authenticity, quality and privacy.
 - Track-owned source_documents provide bounded article chunks by lexical retrieval; Gateway SDK runs behind tracked transport, while BYOK uses provider fetch. Why: grounded questions with no embedding cost and preserved quotas/preferences.
 - MCP uses OAuth client-claim verification and caller-scoped RLS clients in `src/lib/mcp`; read-only tools avoid AI costs and generated transport routes remain plugin-owned.
 - OAuth login validates local return paths once and preserves consent through password, signup and social login; browser-local WebMCP tools stay in their owning screen with fail-open telemetry.
