@@ -31,7 +31,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Award, Clock, Flame, Layers } from "lucide-react";
+import { Award, Clock, Flame, Layers, Plus } from "lucide-react";
+import { openQuickLog } from "@/lib/quick-log";
 import { MATERIALS, materialOf } from "@/lib/study-meta";
 import { type Activity, activitiesQuery, allActivitiesQuery, allSkillsQuery, allSourcesQuery, fmtMinutes, skillsQuery, sourcesQuery } from "@/lib/data";
 import { ActivityRow } from "@/components/ActivityRow";
@@ -185,9 +186,16 @@ function Dashboard() {
         <div><p className="font-mono text-sm text-track-accent">// {format(studyCalendarDate(now), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
         <h1 className="mt-1 text-3xl font-bold">{global ? "Visão global" : track?.name}</h1>
         {global && <p className="mt-1 text-sm text-muted-foreground">Todas as trilhas somadas · competências com o mesmo nome são unificadas</p>}</div>
-        <div className="flex items-center gap-2">
-          <Seg value={scope} onChange={setScope} opts={[["track", "Esta trilha"], ["all", "Todas as trilhas"]]} />
-          {userId && <SoundToggle userId={userId} trackId={trackId} />}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <Seg value={scope} onChange={setScope} opts={[["track", "Esta trilha"], ["all", "Todas as trilhas"]]} />
+            {userId && <SoundToggle userId={userId} trackId={trackId} />}
+          </div>
+          <span title={trackId ? "Registro rápido (Ctrl + K)" : "Selecione uma trilha específica para registrar atividades"}>
+            <Button size="sm" disabled={!trackId} onClick={openQuickLog}>
+              <Plus className="size-4" /> Registrar atividade <span className="kbd-cap ml-1">Ctrl K</span>
+            </Button>
+          </span>
         </div>
       </div>
 

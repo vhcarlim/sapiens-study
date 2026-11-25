@@ -17,6 +17,7 @@ import { UserNav } from "@/components/UserNav";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TextSizeControl } from "@/components/TextSizeControl";
+import { QUICK_LOG_EVENT } from "@/lib/quick-log";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -59,6 +60,13 @@ function TrackLayout() {
   useEffect(() => {
     setOpen(false);
   }, [trackId]);
+
+  // Telas que pedem o registro rápido (ex.: botão "Registrar atividade" no Painel)
+  useEffect(() => {
+    const onQuickLog = () => setOpen(true);
+    window.addEventListener(QUICK_LOG_EVENT, onQuickLog);
+    return () => window.removeEventListener(QUICK_LOG_EVENT, onQuickLog);
+  }, []);
 
   // Ctrl/Cmd+K = quick log
   useEffect(() => {
