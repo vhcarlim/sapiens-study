@@ -44,19 +44,20 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "track_id": {
               "type": "string",
               "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "description": "ID da trilha retornado por list_study_tracks."
             }
           },
           "required": [
             "track_id"
           ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -70,14 +71,17 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "track_id": {
               "type": "string",
               "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "description": "ID da trilha retornado por list_study_tracks."
             },
             "kind": {
+              "description": "Filtrar tipo de aprendizado.",
               "type": "string",
               "enum": [
                 "rule",
@@ -85,34 +89,32 @@
                 "mistake",
                 "chat",
                 "note"
-              ],
-              "description": "Filtrar tipo de aprendizado."
+              ]
             },
             "starred_only": {
-              "type": "boolean",
               "default": false,
-              "description": "Mostrar somente favoritos."
+              "description": "Mostrar somente favoritos.",
+              "type": "boolean"
             },
             "offset": {
+              "default": 0,
+              "description": "Quantidade de registros a pular para paginação.",
               "type": "integer",
               "minimum": 0,
-              "maximum": 10000,
-              "default": 0,
-              "description": "Quantidade de registros a pular para paginação."
+              "maximum": 10000
             },
             "limit": {
+              "default": 20,
+              "description": "Máximo de aprendizados retornados, de 1 a 30.",
               "type": "integer",
               "minimum": 1,
-              "maximum": 30,
-              "default": 20,
-              "description": "Máximo de aprendizados retornados, de 1 a 30."
+              "maximum": 30
             }
           },
           "required": [
             "track_id"
           ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       }
