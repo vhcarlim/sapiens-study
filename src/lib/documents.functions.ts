@@ -21,6 +21,12 @@ export const deleteDocument = createServerFn({ method: "POST" }).middleware([req
     if (error) throw new Error("Não foi possível excluir o material.");
     return { ok: true };
   });
+const OFFICIAL_SUFFIXES = [".gov.br", ".leg.br", ".jus.br", ".mp.br", ".def.br", ".tc.br", ".mil.br"];
+/** Only official Brazilian public-sector hosts may be fetched, so the importer cannot be used to probe arbitrary sites. */
+export function isOfficialHost(host: string) {
+  const h = host.toLowerCase().replace(/\.$/, "");
+  return OFFICIAL_SUFFIXES.some((s) => h.endsWith(s) || h === s.slice(1));
+}
 function blockedHost(host: string) {
   const h = host.toLowerCase().replace(/^\[|\]$/g, "");
   return h === "localhost" || h === "metadata" || h.endsWith(".metadata") || h.endsWith(".corp") || h.endsWith(".lan") || h.endsWith(".home") || !h.includes(".") || /^(100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])|198\.1[89]|22[4-9]|2[3-5]\d)\./.test(h) || h.endsWith(".localhost") || h.endsWith(".internal") || h.endsWith(".local") || /^(0|10|127|169\.254|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(h) || /^\d+$/.test(h) || h.includes(":");
@@ -40,8 +46,8 @@ export const importDocumentFromUrl = createServerFn({ method: "POST" }).middlewa
   .handler(async ({ data, context }) => {
     let u: URL;
     try { u = new URL(data.url); } catch { throw new Error("Link inválido."); }
-    const allowed = (x: URL) => ["http:", "https:"].includes(x.protocol) && !x.username && !x.password && (x.port === "" || x.port === "80" || x.port === "443") && !blockedHost(x.hostname);
-    if (!allowed(u)) throw new Error("Use um link público de site oficial.");
+    const allowed = (x: URL) => ["http:", "https:"].includes(x.protocol) && !x.username && !x.password && (x.port === "" || x.port === "80" || x.port === "443") && !blockedHost(x.hostname) && isOfficialHost(x.hostname);
+    if (!allowed(u)) throw new Error("Use um link de site oficial (gov.br, leg.br, jus.br, mp.br…). Para outros sites, envie o arquivo ou cole o texto.");
     let res: Response | undefined;
     for (let hop = 0; hop <= 3; hop++) {
       try {
