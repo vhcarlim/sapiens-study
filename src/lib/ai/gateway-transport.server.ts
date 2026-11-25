@@ -9,7 +9,7 @@ const request = z.object({
   model: ModelSchema, instructions: z.string(),
   input: z.union([z.string(), z.array(z.object({ role: z.enum(["user", "assistant", "system", "developer"]), content: z.union([z.string(), z.array(content)]) }))]),
   reasoning: z.object({ effort: EffortSchema }),
-  text: z.object({ format: z.object({ type: z.literal("json_schema"), name: z.string(), strict: z.boolean(), schema: z.record(z.unknown()) }) }).optional(),
+  text: z.object({ format: z.object({ type: z.literal("json_schema"), name: z.string(), strict: z.boolean(), schema: z.record(z.string(), z.unknown()) }) }).optional(),
 });
 /** Tracked fetch resolves preferences/BYOK first; only Gateway-bound requests enter the SDK. */
 export const gatewayTransport: typeof fetch = async (_input, init) => {
