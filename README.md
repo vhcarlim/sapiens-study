@@ -1,4 +1,4 @@
-# Skill Growth Tracker
+# Sapiens Study
 
 Projeto sapiens-study, plataforma de estudos.
 
