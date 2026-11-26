@@ -48,6 +48,8 @@ import { protectionQuery } from "@/lib/engagement";
 import { ExamCountdown, PriorityMission, StreakProtection, TrophyShelf, SoundToggle } from "@/components/StudyEngagement";
 import { pastExamsQuery } from "@/lib/past-exams";
 import { SkillMasteryViews } from "@/components/SkillMasteryViews";
+import { CityCard } from "@/components/city/CityCard";
+import { buildCityState } from "@/lib/contexts/progression";
 import { TodayPlanCard } from "@/components/StudyPlanCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -177,6 +179,18 @@ function Dashboard() {
   const todayXp = dailyXp(acts, reviewResults, studyDay(now));
   const milestones = acts.filter((a) => a.type === "certificate" || a.type === "level").slice(0, 6);
   const dayList = byDay.get(selected) ?? [];
+  const cityState = useMemo(() => {
+    const lvl = masteryLevel(totalXp);
+    const updated = new Map(mastery.map((m) => [m.skill_id, m.updated_at]));
+    const scores = mastery.map((m) => m.last_score).filter((v): v is number => v != null);
+    return buildCityState({
+      level: lvl.level, xpToNext: lvl.xpToNext, streak: stats.streak,
+      skills: skillData.map((s) => ({ id: s.id, name: s.name, mastery: s.mastery, reviewed: s.reviewed, fragile: s.fragile, updatedAt: updated.get(s.id) ?? null })),
+      questionItems: acts.filter((a) => a.material === "questions").reduce((n, a) => n + a.quantity, 0),
+      avgScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null,
+      examDate: global ? null : track?.exam_date ?? null, now,
+    });
+  }, [totalXp, mastery, stats.streak, skillData, acts, global, track?.exam_date, now]);
 
   if (isLoading) return <PageSkeleton />;
 
@@ -216,6 +230,8 @@ function Dashboard() {
           </div>
         );
       })()}
+
+      <CityCard state={cityState} />
 
       {!global && track?.exam_date && <ExamCountdown examDate={track.exam_date} name={track.name} now={now} />}
       {!global && <TodayPlanCard />}
