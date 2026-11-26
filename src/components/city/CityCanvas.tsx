@@ -13,7 +13,7 @@ export const DISTRICT_POS: Record<District, [number, number, number]> = {
 type Palette = { ground: string; rock: string; stone: string; roof: string; accent: string; leaf: string; water: string; window: string; sky: string };
 const PAL: Record<"day" | "night", Palette> = {
   day: { ground: "#c9b88f", rock: "#8a7a62", stone: "#efe6d2", roof: "#2f4fb3", accent: "#c8673f", leaf: "#6f8f4e", water: "#7fa3c9", window: "#3a3a3a", sky: "#e9e1cf" },
-  night: { ground: "#1e2a22", rock: "#151a17", stone: "#3a4740", roof: "#2b6b4a", accent: "#7dff9a", leaf: "#2f5a3c", water: "#13241c", window: "#ffd27a", sky: "#0b0f0c" },
+  night: { ground: "#2c3d31", rock: "#1d2420", stone: "#5b6b62", roof: "#2b6b4a", accent: "#7dff9a", leaf: "#2f5a3c", water: "#13241c", window: "#ffd27a", sky: "#0b0f0c" },
 };
 
 function Island({ p }: { p: Palette }) {
@@ -69,7 +69,7 @@ function Lamps({ night, p }: { night: boolean; p: Palette }) {
 
 function Particles({ night }: { night: boolean }) {
   const ref = useRef<THREE.Points>(null);
-  const geo = useMemo(() => { const g = new THREE.BufferGeometry(); const a = new Float32Array(300); for (let i = 0; i < 300; i++) a[i] = ((i * 9301 + 49297) % 233280) / 233280 * 14 - 7; g.setAttribute("position", new THREE.BufferAttribute(a, 3)); return g; }, []);
+  const geo = useMemo(() => { const g = new THREE.BufferGeometry(); const a = new Float32Array(300); for (let i = 0; i < 300; i++) { const v = Math.sin(i * 127.1 + 311.7) * 43758.5453; a[i] = (v - Math.floor(v)) * 14 - 7; } g.setAttribute("position", new THREE.BufferAttribute(a, 3)); return g; }, []);
   useFrame((_, d) => { if (ref.current) ref.current.rotation.y += Math.min(d, 0.05) * 0.05; });
   return <points ref={ref} geometry={geo} position={[0, 3, 0]}><pointsMaterial size={0.06} color={night ? "#9dffb4" : "#ffffff"} transparent opacity={0.7} /></points>;
 }
@@ -101,8 +101,8 @@ export default function CityCanvas({ state, night, particles, target, zoom, redu
     <Canvas shadows dpr={[1, 1.75]} camera={{ position: [9, 8, 11], fov: 40 }} onCreated={() => setReady(true)} onPointerMissed={() => onSelect("geral")}>
       <color attach="background" args={[p.sky]} />
       <fog attach="fog" args={[p.sky, 18, 40]} />
-      <hemisphereLight args={[night ? "#3b5a48" : "#fff6e0", p.rock, night ? 0.35 : 0.8]} />
-      <directionalLight castShadow position={[6, 10, 4]} intensity={night ? 0.35 : 1.6} color={night ? "#9fc7ff" : "#fff1d6"} shadow-mapSize={[1024, 1024]} />
+      <hemisphereLight args={[night ? "#3b5a48" : "#fff6e0", p.rock, night ? 0.9 : 0.8]} />
+      <directionalLight castShadow position={[6, 10, 4]} intensity={night ? 0.8 : 1.6} color={night ? "#9fc7ff" : "#fff1d6"} shadow-mapSize={[1024, 1024]} />
       <Environment resolution={64}><Lightformer intensity={night ? 0.4 : 1.6} position={[0, 5, 0]} scale={[10, 10, 1]} /><Lightformer intensity={0.6} color="#8bb" position={[-5, 1, -1]} rotation-y={Math.PI / 2} scale={[20, 1, 1]} /></Environment>
       <Island p={p} />
       <Citadel stage={state.citadel.stage} p={p} night={night} go={() => onSelect("cidadela")} />
