@@ -1,3 +1,4 @@
+import { CreditFooter } from "@/components/CreditFooter";
 import { isAdminQuery } from "@/lib/admin";
 import { TrackProvider, useTrack } from "@/lib/tracks";
 import { TrackSelector } from "@/components/TrackSelector";
@@ -129,6 +130,7 @@ function TrackLayout() {
       <main className="page-transition mx-auto max-w-7xl px-4 pb-24 pt-8 md:pb-8">
         {loading ? <PageSkeleton /> : error ? <p className="text-destructive">Não foi possível carregar suas trilhas. Tente recarregar a página.</p> : trackId ? <div key={trackId} className="border-t-2 border-track-accent pt-6 transition-colors duration-500"><Outlet /></div> : <div className="py-16 text-center"><LayersEmpty /></div>}
       </main>
+      <div className="pb-16 md:pb-0"><CreditFooter /></div>
       <nav aria-label="Principal (celular)" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 backdrop-blur md:hidden">
         {nav.map((n) => (
           <Link key={n.to} to={n.to} className="relative flex flex-col items-center gap-0.5 py-2 text-[0.625rem] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/15" activeProps={{ className: "!text-track-accent" }}>

@@ -42,3 +42,4 @@
 - MCP uses OAuth client-claim verification and caller-scoped RLS clients in `src/lib/mcp`; read-only tools avoid AI costs and generated transport routes remain plugin-owned.
 - OAuth login validates local return paths once and preserves consent through password, signup and social login; browser-local WebMCP tools stay in their owning screen with fail-open telemetry.
 - Domain contexts (tracks, practice, retention, progression, content, ai-quota, planning) expose public ports at `src/lib/contexts/<ctx>/index.ts`; import only those across contexts, reference aggregates by ID (boundary test). Why: DDD without risky moves.
+- Free non-profit app: no paid plans; AI = per-person + site-wide daily caps in ai-quota.ts, own keys bypass. Why: bounded maintainer cost.

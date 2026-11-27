@@ -55,7 +55,7 @@ function Arena() {
   const objective = useServerFn(arenaObjective);
   const officialCount = useServerFn(arenaOfficialCount);
   const markAnswered = useServerFn(arenaMarkAnswered);
-  const [mode, setMode] = useState<"official" | "ai">("ai");
+  const [mode, setMode] = useState<"official" | "ai">("official");
   const [generation, setGeneration] = useState<"quick" | "rag">("quick");
   const [year, setYear] = useState("");
   const [documentIds, setDocumentIds] = useState<string[]>([]);

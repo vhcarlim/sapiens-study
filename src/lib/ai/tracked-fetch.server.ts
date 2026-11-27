@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { resolveAIChoice, responseUsage } from "@/lib/ai-settings";
-import { dailyLimit, quotaExceeded, type BYOKProvider } from "@/lib/ai-quota";
+import { communityCapReached, dailyLimit, quotaExceeded, type BYOKProvider } from "@/lib/ai-quota";
 
 export type AIIdentity = { userId: string; supabase: SupabaseClient<Database> };
 
@@ -16,11 +16,13 @@ export async function createTrackedAiFetch(identity: AIIdentity, feature: string
   const ownKey = keyRow ? { provider: keyRow.provider as BYOKProvider, model: keyRow.model, apiKey: await byok.decryptKey(keyRow.key_cipher, keyRow.key_iv) } : null;
   const usesOwnKey = !!ownKey && (ownKey.provider === "openai" || ownKey.provider === "openrouter" || !!opts.simpleStream);
   if (!usesOwnKey) {
-    const [{ data: ent }, { count }] = await Promise.all([
+    const [{ data: ent }, { count }, { count: globalCount }] = await Promise.all([
       admin.from("ai_entitlements").select("plan").eq("user_id", identity.userId).maybeSingle(),
       admin.from("ai_usage").select("id", { count: "exact", head: true }).eq("user_id", identity.userId).eq("byok", false).gte("created_at", saoPauloMidnightIso()),
+      admin.from("ai_usage").select("id", { count: "exact", head: true }).eq("byok", false).gte("created_at", saoPauloMidnightIso()),
     ]);
-    if (quotaExceeded(ent?.plan, count ?? 0)) throw new Error(`Limite diário de IA atingido (${dailyLimit(ent?.plan)} usos). Continue com questões do banco, volte amanhã ou conecte sua própria chave em Configurações › IA.`);
+    if (ent?.plan !== "ilimitado" && communityCapReached(globalCount ?? 0)) throw new Error("A IA comunitária do Sapiens Study esgotou por hoje. O site é gratuito e sem fins lucrativos: continue com as questões reais do banco, volte amanhã ou conecte sua própria chave (há opções gratuitas) em Configurações › IA.");
+    if (quotaExceeded(ent?.plan, count ?? 0)) throw new Error(`Sua cota diária da IA comunitária acabou (${dailyLimit(ent?.plan)} usos). Continue com questões do banco, volte amanhã ou conecte sua própria chave em Configurações › IA.`);
   }
   return async (input, init) => {
     if (typeof init?.body !== "string") throw new Error("Pedido de IA inválido.");

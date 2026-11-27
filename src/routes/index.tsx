@@ -70,7 +70,7 @@ function Index() {
         <section className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:pt-28">
           <div className="rise-in inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur">
             <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-            Feito para concursos de alto nível
+            Gratuito para sempre · código aberto · feito para concurseiros
           </div>
           <h1 className="rise-in mt-6 max-w-4xl text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl" style={{ animationDelay: "80ms" }}>
             Estude o que cai. <br />
@@ -143,8 +143,8 @@ function Index() {
           <FooterCol title="Atalhos" items={["Ctrl + K  ·  buscar", "?  ·  ajuda", "A–E  ·  responder", "Enter  ·  confirmar"]} mono />
         </div>
         <div className="mx-auto flex max-w-6xl items-center justify-between border-t border-border/40 px-6 py-5 font-mono text-xs text-muted-foreground">
-          <span>© 2026 Sapiens Study</span>
-          <span className="inline-flex items-center gap-2"><span className="size-1.5 rounded-full bg-primary" /> Todos os sistemas operando</span>
+          <span>Feito por Victor Hugo Carlim Pedroni dos Passos · sem fins lucrativos · licença MIT</span>
+          <Link to="/sobre" className="hover:text-foreground hover:underline">Sobre o projeto</Link>
         </div>
       </footer>
     </div>

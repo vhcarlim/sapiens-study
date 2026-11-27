@@ -28,9 +28,9 @@ export function QuotaLine() {
   if (!data) return null;
   if (data.byok_provider) return <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><KeyRound className="size-3.5 text-primary" />Usando sua chave {BYOK_PROVIDERS.find(p => p.id === data.byok_provider)?.name} · sem limite diário</p>;
   const limit = dailyLimit(data.plan);
-  if (!Number.isFinite(limit)) return <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="size-3.5" />IA do site · sem limite diário · {data.used} usos hoje</p>;
+  if (!Number.isFinite(limit)) return <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Zap className="size-3.5" />Apoiador · sem limite diário · {data.used} usos hoje</p>;
   const left = Math.max(0, limit - data.used);
-  return <p className={`flex items-center gap-1.5 text-xs ${left === 0 ? "text-destructive" : "text-muted-foreground"}`}><Zap className="size-3.5" />Plano {PLAN_NAMES[data.plan]}: {left} de {limit} usos de IA restantes hoje</p>;
+  return <p className={`flex items-center gap-1.5 text-xs ${left === 0 ? "text-destructive" : "text-muted-foreground"}`}><Zap className="size-3.5" />IA {PLAN_NAMES[data.plan]}: {left} de {limit} usos restantes hoje</p>;
 }
 
 export function OwnKeyPanel() {
@@ -63,7 +63,8 @@ export function OwnKeyPanel() {
       <span>Conectada: <strong>{BYOK_PROVIDERS.find(p => p.id === data.byok_provider)?.name}</strong> · <span className="font-mono text-xs">{data.byok_model}</span></span>
       <Button variant="outline" size="sm" disabled={busy} onClick={onRemove}><Trash2 className="size-4" />Remover</Button>
     </div> : <>
-      <p className="text-xs text-muted-foreground">Use uma chave de API paga por você para estudar sem limite diário. Assinaturas como ChatGPT Plus ou Claude Pro não geram chave — crie uma no painel de desenvolvedor do provedor.</p>
+      <p className="text-xs text-muted-foreground">O Sapiens Study é gratuito e sem fins lucrativos: a IA comunitária tem um limite diário por pessoa e um teto para o site inteiro. Com sua própria chave, você estuda sem limite. <strong>Opções gratuitas:</strong> o Google AI Studio (Gemini) tem nível grátis e o OpenRouter oferece modelos gratuitos.</p>
+      <p className="text-xs text-muted-foreground"> Assinaturas como ChatGPT Plus ou Claude Pro não geram chave — crie uma no painel de desenvolvedor do provedor.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5"><Label>Provedor</Label>
           <Select value={provider} onValueChange={(v) => { const selected = BYOK_PROVIDERS.find(x => x.id === v); if (!selected) return; setProvider(selected.id); setModel(selected.defaultModel); }}>

@@ -1,6 +1,10 @@
 # Sapiens Study
 
-Projeto sapiens-study, plataforma de estudos.
+Plataforma de estudos para concursos **gratuita, de código aberto (MIT) e sem fins lucrativos**, criada por Victor Hugo Carlim Pedroni dos Passos.
+
+- Funciona sem IA: banco de questões reais, plano de estudos, Caderno, provas e Cidade Sapiens.
+- IA comunitária: pequena cota diária por pessoa e teto global do site; uso livre com a própria chave (OpenAI, Gemini, Claude, OpenRouter).
+- Contribuições são bem-vindas: abra uma issue ou um pull request.
 
 This project was built with [Lovable](https://lovable.dev).
 

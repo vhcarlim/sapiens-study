@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bankKey, dailyLimit, quotaExceeded } from "@/lib/ai-quota";
+import { bankKey, communityCapReached, COMMUNITY_DAILY_CAP, dailyLimit, quotaExceeded } from "@/lib/ai-quota";
 import { chatToResponsesStream, toChat } from "@/lib/ai/byok.server";
 
 describe("cota diária de IA", () => {
@@ -14,7 +14,11 @@ describe("cota diária de IA", () => {
     expect(quotaExceeded("ilimitado", 1000000)).toBe(false);
     expect(quotaExceeded("free", 20)).toBe(true);
   });
-  it("planos pagos têm limites maiores", () => { expect(dailyLimit("basico")).toBe(200); expect(dailyLimit("avancado")).toBe(800); });
+  it("antigos planos pagos voltam à cota comunitária", () => { expect(dailyLimit("basico")).toBe(20); expect(dailyLimit("avancado")).toBe(20); });
+  it("teto global do site bloqueia ao atingir o limite diário", () => {
+    expect(communityCapReached(COMMUNITY_DAILY_CAP - 1)).toBe(false);
+    expect(communityCapReached(COMMUNITY_DAILY_CAP)).toBe(true);
+  });
 });
 
 describe("banco de questões", () => {

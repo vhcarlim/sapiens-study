@@ -1,9 +1,14 @@
 import { z } from "zod";
 
-/** Built-in AI calls allowed per São Paulo day, by plan. Own-key calls never count. */
-export const DAILY_AI_LIMITS = { free: 20, basico: 200, avancado: 800, ilimitado: Infinity } as const;
+/** Community AI (paid by the maintainer) per person per São Paulo day. Own-key calls never count. */
+export const DAILY_AI_LIMITS = { free: 20, ilimitado: Infinity } as const;
 export type AIPlan = keyof typeof DAILY_AI_LIMITS;
-export const PLAN_NAMES: Record<AIPlan, string> = { free: "Gratuito", basico: "Básico", avancado: "Avançado", ilimitado: "Sem limite" };
+export const PLAN_NAMES: Record<AIPlan, string> = { free: "Comunitária", ilimitado: "Apoiador" };
+/** Site-wide ceiling for community AI calls per São Paulo day; protects the maintainer's credits. */
+export const COMMUNITY_DAILY_CAP = 1500;
+export function communityCapReached(usedToday: number) {
+  return usedToday >= COMMUNITY_DAILY_CAP;
+}
 
 export function dailyLimit(plan: string | null | undefined) {
   return DAILY_AI_LIMITS[(plan ?? "free") as AIPlan] ?? DAILY_AI_LIMITS.free;
